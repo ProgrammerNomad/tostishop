@@ -114,16 +114,93 @@ jQuery(document).ready(function($) {
         }
     }
     
+    // Enhanced Payment Methods
+    function enhancePaymentMethods() {
+        // Add event listeners to payment method radio buttons
+        document.querySelectorAll('.wc_payment_methods input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                // Remove selected class from all methods
+                document.querySelectorAll('.wc_payment_method').forEach(method => {
+                    method.classList.remove('selected');
+                });
+                
+                // Add selected class to chosen method
+                if (this.checked) {
+                    this.closest('.wc_payment_method').classList.add('selected');
+                }
+            });
+        });
+        
+        // Set initial selected state
+        const checkedRadio = document.querySelector('.wc_payment_methods input[type="radio"]:checked');
+        if (checkedRadio) {
+            checkedRadio.closest('.wc_payment_method').classList.add('selected');
+        }
+    }
+    
+    // Enhanced Place Order Button
+    function enhancePlaceOrderButton() {
+        const placeOrderBtn = document.getElementById('place_order');
+        const placeOrderText = placeOrderBtn?.querySelector('.place-order-text');
+        const placeOrderSpinner = placeOrderBtn?.querySelector('.place-order-spinner');
+        
+        if (placeOrderBtn) {
+            // Add click handler for loading state
+            placeOrderBtn.addEventListener('click', function(e) {
+                // Basic validation before showing loading
+                const requiredFields = document.querySelectorAll('.woocommerce-checkout [required]');
+                let hasErrors = false;
+                
+                requiredFields.forEach(field => {
+                    if (!field.value.trim()) {
+                        hasErrors = true;
+                        field.style.borderColor = '#ef4444';
+                        setTimeout(() => {
+                            field.style.borderColor = '';
+                        }, 3000);
+                    }
+                });
+                
+                if (!hasErrors) {
+                    this.classList.add('processing');
+                    if (placeOrderText) placeOrderText.style.opacity = '0';
+                    if (placeOrderSpinner) placeOrderSpinner.classList.remove('hidden');
+                    
+                    // Disable the button to prevent double submission
+                    this.disabled = true;
+                }
+            });
+            
+            // Mobile sticky behavior
+            if (window.innerWidth <= 640) {
+                placeOrderBtn.classList.add('mobile-sticky');
+            }
+            
+            // Update on window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth <= 640) {
+                    placeOrderBtn.classList.add('mobile-sticky');
+                } else {
+                    placeOrderBtn.classList.remove('mobile-sticky');
+                }
+            });
+        }
+    }
+    
     // Initialize all functions
     initCouponToggle();
     initCouponSubmission();
     enhanceFormElements();
     initMobileEnhancements();
+    enhancePaymentMethods();
+    enhancePlaceOrderButton();
     
     // Re-initialize after checkout updates
     $(document.body).on('updated_checkout', function() {
         initCouponToggle();
         enhanceFormElements();
+        enhancePaymentMethods();
+        enhancePlaceOrderButton();
     });
 });
 

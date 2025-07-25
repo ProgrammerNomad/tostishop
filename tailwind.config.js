@@ -56,7 +56,15 @@ module.exports = {
           900: '#212529',
         },
       },
+      minHeight: {
+        '44': '44px',  // Touch targets
+        '48': '48px',
+        '52': '52px',
+        '56': '56px',
+        '60': '60px',
+      },
       spacing: {
+        '15': '3.75rem',  // For product images
         '18': '4.5rem',
         '88': '22rem',
       },
