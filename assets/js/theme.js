@@ -233,32 +233,45 @@ jQuery(document).ready(function($) {
         const originalMainImage = $mainImage.html();
         const originalThumbnails = $thumbnails.clone();
         
+        // Color swatch functionality
+        $('.color-swatch input[type="radio"]').on('change', function() {
+            $('.color-swatch span').removeClass('border-primary').addClass('border-gray-300');
+            if (this.checked) {
+                $(this).siblings('span').removeClass('border-gray-300').addClass('border-primary');
+            }
+        });
+        
         $form.on('found_variation', function(event, variation) {
             // Handle variation found - update main product image
             if (variation.image && variation.image.src) {
-                // Update main image
-                $mainImage.html(`
-                    <img src="${variation.image.src}" 
-                         alt="${variation.image.alt || ''}"
-                         class="w-full h-full object-cover">
-                `);
+                // Update main image with smooth transition
+                $mainImage.fadeOut(200, function() {
+                    $(this).html(`
+                        <img src="${variation.image.src}" 
+                             alt="${variation.image.alt || ''}"
+                             class="w-full h-full object-cover main-product-image"
+                             style="display: block;">
+                    `);
+                    $(this).fadeIn(200);
+                });
                 
-                // Update gallery thumbnails if variation has gallery
-                if (variation.image.gallery_thumbnail_src) {
-                    // Create new thumbnail for variation
-                    const $newThumbnail = $(`
-                        <button onclick="updateMainImage('${variation.image.src}')" 
-                                class="flex-none w-16 h-16 bg-gray-100 rounded border-2 border-blue-500 overflow-hidden">
-                            <img src="${variation.image.gallery_thumbnail_src}" 
-                                 alt="${variation.image.alt || ''}"
-                                 class="w-full h-full object-cover">
-                        </button>
+                // Update first thumbnail to show variation image
+                const $firstThumbnail = $thumbnails.first();
+                if ($firstThumbnail.length) {
+                    const thumbnailSrc = variation.image.gallery_thumbnail_src || variation.image.src;
+                    $firstThumbnail.html(`
+                        <img src="${thumbnailSrc}" 
+                             alt="${variation.image.alt || ''}"
+                             class="w-full h-full object-cover">
                     `);
                     
-                    // Reset all thumbnail borders and add to first
-                    $thumbnails.removeClass('border-blue-500').addClass('border-gray-200');
-                    $thumbnails.first().replaceWith($newThumbnail);
+                    // Update onclick function
+                    $firstThumbnail.attr('onclick', `updateMainImage('${variation.image.src}')`);
                 }
+                
+                // Reset all thumbnail borders and highlight first
+                $thumbnails.removeClass('border-blue-500').addClass('border-gray-200');
+                $firstThumbnail.removeClass('border-gray-200').addClass('border-blue-500');
             }
             
             // Update price display if needed
@@ -292,35 +305,46 @@ jQuery(document).ready(function($) {
         });
         
         $form.on('reset_data', function() {
-            // Handle variation reset - restore original images
-            $mainImage.html(originalMainImage);
+            // Handle variation reset - restore original images with transition
+            $mainImage.fadeOut(200, function() {
+                $(this).html(originalMainImage);
+                $(this).fadeIn(200);
+            });
             
             // Restore original thumbnails
             $thumbnails.each(function(index) {
                 if (originalThumbnails[index]) {
-                    $(this).replaceWith(originalThumbnails.eq(index).clone());
+                    $(this).replaceWith(originalThumbnails.eq(index).clone(true));
                 }
             });
             
             // Reset thumbnail states
-            $('.product-gallery button').removeClass('border-blue-500').addClass('border-gray-200');
-            $('.product-gallery button').first().removeClass('border-gray-200').addClass('border-blue-500');
+            setTimeout(function() {
+                $('.product-gallery button').removeClass('border-blue-500').addClass('border-gray-200');
+                $('.product-gallery button').first().removeClass('border-gray-200').addClass('border-blue-500');
+            }, 100);
         });
     });
     
     // Add global function for manual image updates
     window.updateMainImage = function(imageSrc) {
         const $mainImage = $('.product-gallery .bg-gray-100');
-        $mainImage.html(`
-            <img src="${imageSrc}" 
-                 alt="Product Image"
-                 class="w-full h-full object-cover">
-        `);
+        const $currentButton = $(event.target).closest('button');
+        
+        // Update main image with transition
+        $mainImage.fadeOut(200, function() {
+            $(this).html(`
+                <img src="${imageSrc}" 
+                     alt="Product Image"
+                     class="w-full h-full object-cover"
+                     style="display: block;">
+            `);
+            $(this).fadeIn(200);
+        });
         
         // Update thumbnail states
         $('.product-gallery button').removeClass('border-blue-500').addClass('border-gray-200');
-        event.target.closest('button').classList.remove('border-gray-200');
-        event.target.closest('button').classList.add('border-blue-500');
+        $currentButton.removeClass('border-gray-200').addClass('border-blue-500');
     };
     
     // Gallery navigation function

@@ -5,7 +5,7 @@
 
 get_header(); ?>
 
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-7xl xl:max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
     
     <!-- Breadcrumbs -->
     <?php tostishop_breadcrumbs(); ?>

@@ -19,21 +19,23 @@ get_header(); ?>
 		</div>
 		
 		<!-- Account Layout -->
-		<div class="lg:grid lg:grid-cols-4 lg:gap-8">
+		<div class="lg:grid lg:grid-cols-12 lg:gap-8">
 			
 			<!-- Sidebar Navigation -->
-			<div class="lg:col-span-1 mb-8 lg:mb-0">
-				<?php
-				/**
-				 * My Account navigation.
-				 */
-				do_action( 'woocommerce_account_navigation' ); ?>
+			<div class="lg:col-span-3 xl:col-span-2 mb-8 lg:mb-0">
+				<div class="lg:sticky lg:top-8">
+					<?php
+					/**
+					 * My Account navigation.
+					 */
+					do_action( 'woocommerce_account_navigation' ); ?>
+				</div>
 			</div>
 			
 			<!-- Main Content -->
-			<div class="lg:col-span-3">
+			<div class="lg:col-span-9 xl:col-span-10">
 				<div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[600px] lg:min-h-[700px]">
-					<div class="p-6 lg:p-8">
+					<div class="p-6 lg:p-8 xl:p-10">
 						<?php
 							/**
 							 * My Account content.

@@ -153,19 +153,48 @@ get_header(); ?>
                             foreach ($attributes as $attribute_name => $options) :
                                 $attribute_label = wc_attribute_label($attribute_name);
                             ?>
-                                <div>
+                                <div class="variation-attribute" data-attribute="<?php echo esc_attr($attribute_name); ?>">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
                                         <?php echo esc_html($attribute_label); ?>
                                     </label>
-                                    <select name="<?php echo esc_attr('attribute_' . sanitize_title($attribute_name)); ?>" 
-                                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                        <option value=""><?php printf(__('Choose %s', 'tostishop'), $attribute_label); ?></option>
-                                        <?php foreach ($options as $option) : ?>
-                                            <option value="<?php echo esc_attr($option); ?>"><?php echo esc_html($option); ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
+                                    
+                                    <?php if (strtolower($attribute_label) === 'color' || strpos(strtolower($attribute_name), 'color') !== false) : ?>
+                                        <!-- Color swatches -->
+                                        <div class="flex flex-wrap gap-2">
+                                            <?php foreach ($options as $option) : ?>
+                                                <label class="color-swatch cursor-pointer">
+                                                    <input type="radio" 
+                                                           name="<?php echo esc_attr('attribute_' . sanitize_title($attribute_name)); ?>" 
+                                                           value="<?php echo esc_attr($option); ?>"
+                                                           class="sr-only">
+                                                    <span class="block w-8 h-8 rounded-full border-2 border-gray-300 hover:border-gray-400 transition-colors duration-200"
+                                                          style="background-color: <?php echo esc_attr(strtolower($option)); ?>;"
+                                                          title="<?php echo esc_attr($option); ?>"></span>
+                                                </label>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php else : ?>
+                                        <!-- Regular dropdown -->
+                                        <select name="<?php echo esc_attr('attribute_' . sanitize_title($attribute_name)); ?>" 
+                                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent variation-select">
+                                            <option value=""><?php printf(__('Choose %s', 'tostishop'), $attribute_label); ?></option>
+                                            <?php foreach ($options as $option) : ?>
+                                                <option value="<?php echo esc_attr($option); ?>"><?php echo esc_html($option); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    <?php endif; ?>
                                 </div>
                             <?php endforeach; ?>
+                            
+                            <!-- Hidden variation ID field -->
+                            <input type="hidden" name="variation_id" class="variation_id" value="0" />
+                            <input type="hidden" name="product_id" value="<?php echo esc_attr($product->get_id()); ?>" />
+                            
+                            <!-- Variation data container -->
+                            <div class="woocommerce-variation-add-to-cart variations_button" style="display: none;">
+                                <div class="woocommerce-variation-price"></div>
+                                <div class="woocommerce-variation-availability"></div>
+                            </div>
                         </div>
                     <?php endif; ?>
                     
