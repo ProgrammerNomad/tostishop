@@ -166,6 +166,48 @@ function tostishop_checkout_scripts() {
 add_action('wp_enqueue_scripts', 'tostishop_checkout_scripts');
 
 /**
+ * Dequeue conflicting scripts and styles
+ */
+function tostishop_cleanup_checkout() {
+    if (is_checkout()) {
+        // Remove conflicting scripts
+        wp_dequeue_script('tostishop-checkout-enhanced');
+        wp_dequeue_script('tostishop-checkout');
+        wp_dequeue_script('tostishop-checkout-login');
+        
+        // Remove bloated CSS
+        wp_dequeue_style('tostishop-custom');
+        
+        // Enqueue minimal checkout assets
+        wp_enqueue_style(
+            'tostishop-checkout-minimal',
+            get_template_directory_uri() . '/assets/css/checkout-minimal.css',
+            array(),
+            '1.0.0'
+        );
+        
+        wp_enqueue_script(
+            'tostishop-checkout-minimal',
+            get_template_directory_uri() . '/assets/js/checkout-minimal.js',
+            array('jquery', 'wc-checkout'),
+            '1.0.0',
+            true
+        );
+    }
+}
+add_action('wp_enqueue_scripts', 'tostishop_cleanup_checkout', 999);
+
+/**
+ * Debug checkout form
+ */
+function tostishop_debug_checkout_form() {
+    if (is_checkout() && WP_DEBUG) {
+        echo '<script>console.log("Checkout debug: Form action should be ' . esc_js(wc_get_checkout_url()) . '");</script>';
+    }
+}
+add_action('wp_footer', 'tostishop_debug_checkout_form');
+
+/**
  * Register widget areas
  */
 function tostishop_widgets_init() {
