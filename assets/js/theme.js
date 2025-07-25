@@ -119,20 +119,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                   button.closest('[data-product-id]')?.querySelector('.product-title')?.textContent || 
                                   'Product';
                 
-                if (typeof tostishopNotifications !== 'undefined') {
-                    tostishopNotifications.cart(`${productName} added to cart!`, [
-                        {
-                            text: 'View Cart',
-                            action: 'view-cart',
-                            class: 'bg-white bg-opacity-20 text-white hover:bg-opacity-30 transition-all duration-200'
-                        },
-                        {
-                            text: 'Continue Shopping',
-                            action: 'continue-shopping',
-                            class: 'bg-transparent border border-white border-opacity-30 text-white hover:bg-white hover:bg-opacity-10 transition-all duration-200'
-                        }
-                    ]);
-                }
+                // Trigger custom event for notifications
+                $(document).trigger('tostishop_product_added_to_cart', [productName]);
+                
+                // Also trigger WooCommerce event if available
+                $(document.body).trigger('added_to_cart', [null, null, button]);
                 
                 // Reset button after 2 seconds
                 setTimeout(() => {
@@ -149,8 +140,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 button.innerHTML = 'Error - Try Again';
                 
                 // Show error notification
-                if (typeof tostishopNotifications !== 'undefined') {
-                    tostishopNotifications.error('Error adding product to cart. Please try again.');
+                if (window.tostishopNotifications) {
+                    window.tostishopNotifications.error('Error adding product to cart. Please try again.');
                 }
                 
                 setTimeout(() => {
@@ -255,26 +246,45 @@ jQuery(document).ready(function($) {
         const $mainImage = $gallery.find('.bg-gray-100');
         const $thumbnails = $gallery.find('[data-thumbnail]');
         
-        // Store original images
+        // Store original images for reset functionality
         const originalMainImage = $mainImage.html();
-        const originalThumbnails = $thumbnails.clone();
+        const originalThumbnails = $thumbnails.map(function() { return $(this).clone(true); }).get();
         
-        // Color swatch functionality
+        // Enhanced color swatch functionality with variation integration
         $('.color-swatch input[type="radio"]').on('change', function() {
-            $('.color-swatch span').removeClass('border-primary').addClass('border-gray-300');
+            // Remove active state from all color swatches
+            $('.color-swatch span').removeClass('border-primary').addClass('border-gray-200');
+            $('.color-swatch span').css({
+                'transform': 'scale(1)',
+                'box-shadow': '',
+                'border-width': '1px'
+            });
+            
+            // Add active state to selected swatch
             if (this.checked) {
-                $(this).siblings('span').removeClass('border-gray-300').addClass('border-primary');
+                const $span = $(this).siblings('span');
+                $span.removeClass('border-gray-200').addClass('border-primary');
+                $span.css({
+                    'border-width': '3px',
+                    'box-shadow': '0 0 0 2px white, 0 0 0 4px #14175b',
+                    'transform': 'scale(1.1)'
+                });
             }
+            
+            // Trigger variation form to check for matches
+            $form.trigger('check_variations');
         });
-        
+
+        // Handle variation found event - update images and UI
         $form.on('found_variation', function(event, variation) {
-            // Handle variation found - update main product image
+            console.log('Variation found:', variation);
+            
+            // Update main product image with smooth transition
             if (variation.image && variation.image.src) {
-                // Update main image with smooth transition
                 $mainImage.fadeOut(200, function() {
                     $(this).html(`
                         <img src="${variation.image.src}" 
-                             alt="${variation.image.alt || ''}"
+                             alt="${variation.image.alt || 'Product variation'}"
                              class="w-full h-full object-cover main-product-image"
                              style="display: block;">
                     `);
@@ -284,35 +294,38 @@ jQuery(document).ready(function($) {
                 // Update first thumbnail to show variation image
                 const $firstThumbnail = $thumbnails.first();
                 if ($firstThumbnail.length) {
-                    const thumbnailSrc = variation.image.gallery_thumbnail_src || variation.image.src;
-                    $firstThumbnail.html(`
-                        <img src="${thumbnailSrc}" 
-                             alt="${variation.image.alt || ''}"
-                             class="w-full h-full object-cover">
-                    `);
-                    
-                    // Update onclick function
-                    $firstThumbnail.attr('onclick', `updateMainImage('${variation.image.src}')`);
+                    const thumbnailSrc = variation.image.gallery_thumbnail_src || variation.image.thumb_src || variation.image.src;
+                    $firstThumbnail.fadeOut(100, function() {
+                        $(this).html(`
+                            <img src="${thumbnailSrc}" 
+                                 alt="${variation.image.alt || 'Product variation'}"
+                                 class="w-full h-full object-cover">
+                        `);
+                        
+                        // Update click handler for thumbnail
+                        $(this).attr('onclick', `updateMainImage('${variation.image.src}')`);
+                        $(this).fadeIn(100);
+                    });
                 }
                 
-                // Reset all thumbnail borders and highlight first
+                // Reset all thumbnail borders and highlight the first one
                 $thumbnails.removeClass('border-blue-500').addClass('border-gray-200');
                 $firstThumbnail.removeClass('border-gray-200').addClass('border-blue-500');
             }
             
-            // Update price display if needed
+            // Update price display
             if (variation.price_html) {
-                $('.product-price, .single-product-price').html(variation.price_html);
+                $('.product-price, .single-product-price, .woocommerce-Price-amount').html(variation.price_html);
             }
             
-            // Update stock status
+            // Update stock status with better styling
             if (variation.is_in_stock !== undefined) {
                 const $stockStatus = $('.stock-status');
                 if (variation.is_in_stock) {
                     $stockStatus.html(`
                         <div class="flex items-center text-green-600">
                             <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                             </svg>
                             <span class="font-medium">In Stock</span>
                         </div>
@@ -321,17 +334,25 @@ jQuery(document).ready(function($) {
                     $stockStatus.html(`
                         <div class="flex items-center text-red-600">
                             <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                             </svg>
                             <span class="font-medium">Out of Stock</span>
                         </div>
                     `);
                 }
             }
+
+            // Update availability text
+            if (variation.availability_html) {
+                $('.woocommerce-variation-availability').html(variation.availability_html);
+            }
         });
-        
+
+        // Handle variation reset - restore original images
         $form.on('reset_data', function() {
-            // Handle variation reset - restore original images with transition
+            console.log('Variation data reset');
+            
+            // Restore main image with transition
             $mainImage.fadeOut(200, function() {
                 $(this).html(originalMainImage);
                 $(this).fadeIn(200);
@@ -340,15 +361,31 @@ jQuery(document).ready(function($) {
             // Restore original thumbnails
             $thumbnails.each(function(index) {
                 if (originalThumbnails[index]) {
-                    $(this).replaceWith(originalThumbnails.eq(index).clone(true));
+                    const $original = $(originalThumbnails[index]).clone(true);
+                    $(this).replaceWith($original);
                 }
             });
             
-            // Reset thumbnail states
+            // Reset color swatches
+            $('.color-swatch span').removeClass('border-primary').addClass('border-gray-200');
+            $('.color-swatch span').css({
+                'border-width': '1px',
+                'box-shadow': '',
+                'transform': 'scale(1)'
+            });
+            $('.color-swatch input[type="radio"]').prop('checked', false);
+            
+            // Reset thumbnail states after a brief delay
             setTimeout(function() {
                 $('.product-gallery button').removeClass('border-blue-500').addClass('border-gray-200');
                 $('.product-gallery button').first().removeClass('border-gray-200').addClass('border-blue-500');
-            }, 100);
+            }, 250);
+        });
+
+        // Handle variation selection change for dropdowns
+        $form.on('change', '.variation-select', function() {
+            // Trigger the variation form to find matching variation
+            $form.trigger('check_variations');
         });
     });
     
@@ -395,10 +432,49 @@ jQuery(document).ready(function($) {
         }
     };
     
-    // Enhanced cart updates
+    // Enhanced cart updates and WooCommerce integration
     $(document.body).on('updated_cart_totals updated_checkout', function() {
-        // Reinitialize any cart-specific JavaScript
         console.log('Cart updated');
+    });
+
+    // Listen for WooCommerce add to cart events
+    $(document.body).on('added_to_cart', function(event, fragments, cart_hash, $button) {
+        const productName = $button.closest('.product-item')?.find('h3')?.text() || 
+                          $button.closest('[data-product-id]')?.find('.product-title')?.text() || 
+                          'Product';
+        
+        if (window.tostishopNotifications) {
+            window.tostishopNotifications.cart(`${productName} added to cart!`, [
+                {
+                    text: 'View Cart',
+                    action: 'view-cart',
+                    class: 'bg-white bg-opacity-20 text-white hover:bg-opacity-30 transition-all duration-200'
+                },
+                {
+                    text: 'Continue Shopping',
+                    action: 'continue-shopping',
+                    class: 'bg-transparent border border-white border-opacity-30 text-white hover:bg-white hover:bg-opacity-10 transition-all duration-200'
+                }
+            ]);
+        }
+    });
+
+    // Custom event for manual cart additions
+    $(document).on('tostishop_product_added_to_cart', function(event, productName) {
+        if (window.tostishopNotifications) {
+            window.tostishopNotifications.cart(`${productName} added to cart!`, [
+                {
+                    text: 'View Cart',
+                    action: 'view-cart',
+                    class: 'bg-white bg-opacity-20 text-white hover:bg-opacity-30 transition-all duration-200'
+                },
+                {
+                    text: 'Continue Shopping', 
+                    action: 'continue-shopping',
+                    class: 'bg-transparent border border-white border-opacity-30 text-white hover:bg-white hover:bg-opacity-10 transition-all duration-200'
+                }
+            ]);
+        }
     });
     
 });

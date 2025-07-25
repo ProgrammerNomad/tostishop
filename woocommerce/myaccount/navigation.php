@@ -26,9 +26,18 @@ do_action( 'woocommerce_before_account_navigation' );
 	</div>
 
 	<!-- Navigation Menu -->
-	<ul class="woocommerce-MyAccount-navigation-list lg:!block" 
+	<ul class="woocommerce-MyAccount-navigation-list lg:block space-y-2 lg:space-y-1" 
 		:class="{ 'hidden': !mobileMenuOpen }" 
-		class="lg:block space-y-2 lg:space-y-1">
+		x-show="mobileMenuOpen || window.innerWidth >= 1024"
+		x-transition:enter="transition ease-out duration-200"
+		x-transition:enter-start="opacity-0 transform scale-95"
+		x-transition:enter-end="opacity-100 transform scale-100"
+		x-transition:leave="transition ease-in duration-75"
+		x-transition:leave-start="opacity-100 transform scale-100"
+		x-transition:leave-end="opacity-0 transform scale-95"
+		style="display: block;"
+		class="lg:!block"
+		>
 		<?php foreach ( wc_get_account_menu_items() as $endpoint => $label ) : ?>
 			<li class="<?php echo wc_get_account_menu_item_classes( $endpoint ); ?>">
 				<a href="<?php echo esc_url( wc_get_account_endpoint_url( $endpoint ) ); ?>" 

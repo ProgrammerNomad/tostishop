@@ -158,14 +158,58 @@ get_header(); ?>
                                         <?php echo esc_html($attribute_label); ?>
                                     </label>
                                     
-                                    <!-- Always use dropdown for better UX -->
-                                    <select name="<?php echo esc_attr('attribute_' . sanitize_title($attribute_name)); ?>" 
-                                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent variation-select">
-                                        <option value=""><?php printf(__('Choose %s', 'tostishop'), $attribute_label); ?></option>
-                                        <?php foreach ($options as $option) : ?>
-                                            <option value="<?php echo esc_attr($option); ?>"><?php echo esc_html($option); ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
+                                    <?php 
+                                    // Check if this is a color attribute and show swatches
+                                    $is_color_attr = (strpos(strtolower($attribute_name), 'color') !== false || strpos(strtolower($attribute_name), 'colour') !== false);
+                                    
+                                    if ($is_color_attr && count($options) <= 8) : ?>
+                                        <!-- Color Swatches -->
+                                        <div class="flex flex-wrap gap-3">
+                                            <?php foreach ($options as $option) : 
+                                                $color_value = strtolower(trim($option));
+                                                $bg_color = '';
+                                                
+                                                // Map common color names to hex values
+                                                $color_map = array(
+                                                    'red' => '#dc2626', 'blue' => '#2563eb', 'green' => '#16a34a', 
+                                                    'yellow' => '#eab308', 'purple' => '#9333ea', 'pink' => '#ec4899',
+                                                    'black' => '#000000', 'white' => '#ffffff', 'gray' => '#6b7280',
+                                                    'grey' => '#6b7280', 'navy' => '#1e3a8a', 'orange' => '#ea580c',
+                                                    'brown' => '#a16207', 'beige' => '#d6d3d1', 'cream' => '#fef7ed'
+                                                );
+                                                
+                                                if (isset($color_map[$color_value])) {
+                                                    $bg_color = $color_map[$color_value];
+                                                } elseif (preg_match('/^#[a-f0-9]{6}$/i', $color_value)) {
+                                                    $bg_color = $color_value;
+                                                } else {
+                                                    $bg_color = '#6b7280'; // Default gray
+                                                }
+                                                
+                                                $border_style = ($bg_color === '#ffffff') ? 'border-2 border-gray-300' : 'border border-gray-200';
+                                            ?>
+                                                <label class="color-swatch cursor-pointer group">
+                                                    <input type="radio" 
+                                                           name="<?php echo esc_attr('attribute_' . sanitize_title($attribute_name)); ?>" 
+                                                           value="<?php echo esc_attr($option); ?>"
+                                                           class="sr-only variation-radio"
+                                                           data-attribute="<?php echo esc_attr($attribute_name); ?>">
+                                                    <span class="block w-8 h-8 rounded-full <?php echo $border_style; ?> transition-all duration-200 hover:scale-110"
+                                                          style="background-color: <?php echo esc_attr($bg_color); ?>;"
+                                                          title="<?php echo esc_attr($option); ?>"></span>
+                                                </label>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php else : ?>
+                                        <!-- Regular Dropdown -->
+                                        <select name="<?php echo esc_attr('attribute_' . sanitize_title($attribute_name)); ?>" 
+                                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent variation-select">
+                                            <option value=""><?php printf(__('Choose %s', 'tostishop'), $attribute_label); ?></option>
+                                            <?php foreach ($options as $option) : ?>
+                                                <option value="<?php echo esc_attr($option); ?>"><?php echo esc_html($option); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    <?php endif; ?>
                                 </div>
                             <?php endforeach; ?>
                             
