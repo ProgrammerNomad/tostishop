@@ -10,20 +10,21 @@
  * happen. When this occurs the version of the template file will be bumped and
  * the readme will list any important changes.
  *
- * @see https://docs.woocommerce.com/document/template-structure/
+ * @see https://woocommerce.com/document/template-structure/
  * @package WooCommerce\Templates
  * @version 5.2.0
  */
 
 defined( 'ABSPATH' ) || exit;
 ?>
-
-<div class="shop_table woocommerce-checkout-review-order-table">
-	
-	<!-- Order Items -->
-	<div class="space-y-4 mb-6">
-		<h4 class="font-medium text-gray-900 border-b border-gray-200 pb-2"><?php _e('Order Items', 'tostishop'); ?></h4>
-		
+<table class="shop_table woocommerce-checkout-review-order-table">
+	<thead>
+		<tr>
+			<th class="product-name"><?php esc_html_e( 'Product', 'woocommerce' ); ?></th>
+			<th class="product-total"><?php esc_html_e( 'Subtotal', 'woocommerce' ); ?></th>
+		</tr>
+	</thead>
+	<tbody>
 		<?php
 		do_action( 'woocommerce_review_order_before_cart_contents' );
 
@@ -32,123 +33,78 @@ defined( 'ABSPATH' ) || exit;
 
 			if ( $_product && $_product->exists() && $cart_item['quantity'] > 0 && apply_filters( 'woocommerce_checkout_cart_item_visible', true, $cart_item, $cart_item_key ) ) {
 				?>
-				<div class="flex items-start space-x-3 py-3 border-b border-gray-100 last:border-b-0">
-					<!-- Product Image -->
-					<div class="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
-						<?php echo $_product->get_image( array( 64, 64 ), array( 'class' => 'w-full h-full object-cover' ) ); ?>
-					</div>
-					
-					<!-- Product Details -->
-					<div class="flex-1 min-w-0">
-						<div class="flex items-start justify-between">
-							<div class="flex-1">
-								<h5 class="text-sm font-medium text-gray-900 leading-tight">
-									<?php echo wp_kses_post( apply_filters( 'woocommerce_cart_item_name', $_product->get_name(), $cart_item, $cart_item_key ) ); ?>
-								</h5>
-								
-								<!-- Product Meta -->
-								<?php echo wc_get_formatted_cart_item_data( $cart_item ); ?>
-								
-								<!-- Quantity -->
-								<div class="text-xs text-gray-500 mt-1">
-									<?php printf( __('Qty: %s', 'tostishop'), $cart_item['quantity'] ); ?>
-								</div>
-							</div>
-							
-							<!-- Price -->
-							<div class="text-sm font-medium text-gray-900 ml-4">
-								<?php echo apply_filters( 'woocommerce_cart_item_subtotal', WC()->cart->get_product_subtotal( $_product, $cart_item['quantity'] ), $cart_item, $cart_item_key ); ?>
-							</div>
-						</div>
-					</div>
-				</div>
+				<tr class="<?php echo esc_attr( apply_filters( 'woocommerce_cart_item_class', 'cart_item', $cart_item, $cart_item_key ) ); ?>">
+					<td class="product-name">
+						<?php echo wp_kses_post( apply_filters( 'woocommerce_cart_item_name', $_product->get_name(), $cart_item, $cart_item_key ) ) . '&nbsp;'; ?>
+						<?php echo apply_filters( 'woocommerce_checkout_cart_item_quantity', ' <strong class="product-quantity">' . sprintf( '&times;&nbsp;%s', $cart_item['quantity'] ) . '</strong>', $cart_item, $cart_item_key ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						<?php echo wc_get_formatted_cart_item_data( $cart_item ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					</td>
+					<td class="product-total">
+						<?php echo apply_filters( 'woocommerce_cart_item_subtotal', WC()->cart->get_product_subtotal( $_product, $cart_item['quantity'] ), $cart_item, $cart_item_key ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+					</td>
+				</tr>
 				<?php
 			}
 		}
 
 		do_action( 'woocommerce_review_order_after_cart_contents' );
 		?>
-	</div>
+	</tbody>
+	<tfoot>
 
-	<!-- Cart Totals -->
-	<div class="space-y-3 border-t border-gray-200 pt-4">
-		
-		<!-- Subtotal -->
-		<div class="flex items-center justify-between text-sm">
-			<span class="text-gray-600"><?php _e( 'Subtotal', 'woocommerce' ); ?></span>
-			<span class="font-medium text-gray-900"><?php wc_cart_totals_subtotal_html(); ?></span>
-		</div>
+		<tr class="cart-subtotal">
+			<th><?php esc_html_e( 'Subtotal', 'woocommerce' ); ?></th>
+			<td><?php wc_cart_totals_subtotal_html(); ?></td>
+		</tr>
 
-		<!-- Shipping -->
 		<?php foreach ( WC()->cart->get_coupons() as $code => $coupon ) : ?>
-			<div class="flex items-center justify-between text-sm">
-				<span class="text-gray-600"><?php wc_cart_totals_coupon_label( $coupon ); ?></span>
-				<span class="font-medium text-green-600"><?php wc_cart_totals_coupon_html( $coupon ); ?></span>
-			</div>
+			<tr class="cart-discount coupon-<?php echo esc_attr( sanitize_title( $code ) ); ?>">
+				<th><?php wc_cart_totals_coupon_label( $coupon ); ?></th>
+				<td><?php wc_cart_totals_coupon_html( $coupon ); ?></td>
+			</tr>
 		<?php endforeach; ?>
 
 		<?php if ( WC()->cart->needs_shipping() && WC()->cart->show_shipping() ) : ?>
+
 			<?php do_action( 'woocommerce_review_order_before_shipping' ); ?>
-			<div class="shipping-section border-t border-gray-200 pt-3">
-				<div class="flex items-center justify-between text-sm mb-3">
-					<span class="font-medium text-gray-900"><?php _e( 'Shipping', 'woocommerce' ); ?></span>
-				</div>
-				
-				<div class="space-y-2">
-					<?php wc_cart_totals_shipping_html(); ?>
-				</div>
-			</div>
+
+			<?php wc_cart_totals_shipping_html(); ?>
+
 			<?php do_action( 'woocommerce_review_order_after_shipping' ); ?>
+
 		<?php endif; ?>
 
 		<?php foreach ( WC()->cart->get_fees() as $fee ) : ?>
-			<div class="flex items-center justify-between text-sm">
-				<span class="text-gray-600"><?php echo esc_html( $fee->name ); ?></span>
-				<span class="font-medium text-gray-900"><?php wc_cart_totals_fee_html( $fee ); ?></span>
-			</div>
+			<tr class="fee">
+				<th><?php echo esc_html( $fee->name ); ?></th>
+				<td><?php wc_cart_totals_fee_html( $fee ); ?></td>
+			</tr>
 		<?php endforeach; ?>
 
 		<?php if ( wc_tax_enabled() && ! WC()->cart->display_prices_including_tax() ) : ?>
 			<?php if ( 'itemized' === get_option( 'woocommerce_tax_total_display' ) ) : ?>
-				<?php foreach ( WC()->cart->get_tax_totals() as $code => $tax ) : ?>
-					<div class="flex items-center justify-between text-sm">
-						<span class="text-gray-600"><?php echo esc_html( $tax->label ); ?></span>
-						<span class="font-medium text-gray-900"><?php echo wp_kses_post( $tax->formatted_amount ); ?></span>
-					</div>
+				<?php foreach ( WC()->cart->get_tax_totals() as $code => $tax ) : // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited ?>
+					<tr class="tax-rate tax-rate-<?php echo esc_attr( sanitize_title( $code ) ); ?>">
+						<th><?php echo esc_html( $tax->label ); ?></th>
+						<td><?php echo wp_kses_post( $tax->formatted_amount ); ?></td>
+					</tr>
 				<?php endforeach; ?>
 			<?php else : ?>
-				<div class="flex items-center justify-between text-sm">
-					<span class="text-gray-600"><?php echo esc_html( WC()->countries->tax_or_vat() ); ?></span>
-					<span class="font-medium text-gray-900"><?php wc_cart_totals_taxes_total_html(); ?></span>
-				</div>
+				<tr class="tax-total">
+					<th><?php echo esc_html( WC()->countries->tax_or_vat() ); ?></th>
+					<td><?php wc_cart_totals_taxes_total_html(); ?></td>
+				</tr>
 			<?php endif; ?>
 		<?php endif; ?>
 
-		<!-- Total -->
-		<div class="flex items-center justify-between text-lg font-bold text-gray-900 border-t border-gray-200 pt-3">
-			<span><?php _e( 'Total', 'woocommerce' ); ?></span>
-			<span><?php wc_cart_totals_order_total_html(); ?></span>
-		</div>
-	</div>
+		<?php do_action( 'woocommerce_review_order_before_order_total' ); ?>
 
-	<!-- Shipping Methods -->
-	<?php if ( WC()->cart->needs_shipping() && WC()->cart->show_shipping() ) : ?>
-		<div class="shipping-methods-section border-t border-gray-200 pt-6 mt-6">
-			<h4 class="font-medium text-gray-900 mb-4"><?php _e('Shipping Methods', 'tostishop'); ?></h4>
-			<div class="space-y-3">
-				<?php woocommerce_order_review_shipping(); ?>
-			</div>
-		</div>
-	<?php endif; ?>
+		<tr class="order-total">
+			<th><?php esc_html_e( 'Total', 'woocommerce' ); ?></th>
+			<td><?php wc_cart_totals_order_total_html(); ?></td>
+		</tr>
 
-	<!-- Payment Methods -->
-	<div class="payment-methods-section border-t border-gray-200 pt-6 mt-6">
-		<h4 class="font-medium text-gray-900 mb-4"><?php _e('Payment Method', 'tostishop'); ?></h4>
-		
-		<?php if ( WC()->cart->needs_payment() ) : ?>
-			<div id="payment" class="woocommerce-checkout-payment">
-				<?php woocommerce_checkout_payment(); ?>
-			</div>
-		<?php endif; ?>
-	</div>
-</div>
+		<?php do_action( 'woocommerce_review_order_after_order_total' ); ?>
+
+	</tfoot>
+</table>
