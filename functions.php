@@ -365,27 +365,55 @@ add_action('wp_ajax_tostishop_update_cart_item', 'tostishop_ajax_update_cart_ite
 add_action('wp_ajax_nopriv_tostishop_update_cart_item', 'tostishop_ajax_update_cart_item');
 
 function tostishop_ajax_update_cart_item() {
+    // Check if WooCommerce is available
+    if (!class_exists('WooCommerce')) {
+        wp_send_json_error('WooCommerce not available');
+        return;
+    }
+    
+    // Check nonce
     if (!wp_verify_nonce($_POST['nonce'], 'tostishop_nonce')) {
-        wp_die('Security check failed');
+        wp_send_json_error('Security check failed');
+        return;
+    }
+    
+    // Get and validate parameters
+    if (!isset($_POST['cart_item_key']) || !isset($_POST['quantity'])) {
+        wp_send_json_error('Missing required parameters');
+        return;
     }
     
     $cart_item_key = sanitize_text_field($_POST['cart_item_key']);
     $quantity = absint($_POST['quantity']);
     
-    if ($quantity == 0) {
-        WC()->cart->remove_cart_item($cart_item_key);
-    } else {
-        WC()->cart->set_quantity($cart_item_key, $quantity);
+    // Check if cart item exists
+    if (!WC()->cart->get_cart_item($cart_item_key)) {
+        wp_send_json_error('Cart item not found');
+        return;
     }
     
-    WC()->cart->calculate_totals();
-    
-    wp_send_json_success(array(
-        'cart_count' => WC()->cart->get_cart_contents_count(),
-        'cart_total' => WC()->cart->get_cart_total(),
-        'cart_subtotal' => WC()->cart->get_cart_subtotal(),
-        'fragments' => apply_filters('woocommerce_add_to_cart_fragments', array())
-    ));
+    try {
+        if ($quantity == 0) {
+            $result = WC()->cart->remove_cart_item($cart_item_key);
+        } else {
+            $result = WC()->cart->set_quantity($cart_item_key, $quantity);
+        }
+        
+        if ($result) {
+            WC()->cart->calculate_totals();
+            
+            wp_send_json_success(array(
+                'cart_count' => WC()->cart->get_cart_contents_count(),
+                'cart_total' => WC()->cart->get_cart_total(),
+                'cart_subtotal' => WC()->cart->get_cart_subtotal(),
+                'fragments' => apply_filters('woocommerce_add_to_cart_fragments', array())
+            ));
+        } else {
+            wp_send_json_error('Failed to update cart item');
+        }
+    } catch (Exception $e) {
+        wp_send_json_error('Error updating cart: ' . $e->getMessage());
+    }
 }
 
 // Remove cart item via AJAX
@@ -393,25 +421,49 @@ add_action('wp_ajax_tostishop_remove_cart_item', 'tostishop_ajax_remove_cart_ite
 add_action('wp_ajax_nopriv_tostishop_remove_cart_item', 'tostishop_ajax_remove_cart_item');
 
 function tostishop_ajax_remove_cart_item() {
+    // Check if WooCommerce is available
+    if (!class_exists('WooCommerce')) {
+        wp_send_json_error('WooCommerce not available');
+        return;
+    }
+    
+    // Check nonce
     if (!wp_verify_nonce($_POST['nonce'], 'tostishop_nonce')) {
-        wp_die('Security check failed');
+        wp_send_json_error('Security check failed');
+        return;
+    }
+    
+    // Get and validate parameters
+    if (!isset($_POST['cart_item_key'])) {
+        wp_send_json_error('Missing cart item key');
+        return;
     }
     
     $cart_item_key = sanitize_text_field($_POST['cart_item_key']);
     
-    $result = WC()->cart->remove_cart_item($cart_item_key);
+    // Check if cart item exists
+    if (!WC()->cart->get_cart_item($cart_item_key)) {
+        wp_send_json_error('Cart item not found');
+        return;
+    }
     
-    if ($result) {
-        WC()->cart->calculate_totals();
+    try {
+        $result = WC()->cart->remove_cart_item($cart_item_key);
         
-        wp_send_json_success(array(
-            'cart_count' => WC()->cart->get_cart_contents_count(),
-            'cart_total' => WC()->cart->get_cart_total(),
-            'cart_subtotal' => WC()->cart->get_cart_subtotal(),
-            'fragments' => apply_filters('woocommerce_add_to_cart_fragments', array())
-        ));
-    } else {
-        wp_send_json_error();
+        if ($result) {
+            WC()->cart->calculate_totals();
+            
+            wp_send_json_success(array(
+                'cart_count' => WC()->cart->get_cart_contents_count(),
+                'cart_total' => WC()->cart->get_cart_total(),
+                'cart_subtotal' => WC()->cart->get_cart_subtotal(),
+                'fragments' => apply_filters('woocommerce_add_to_cart_fragments', array())
+            ));
+        } else {
+            wp_send_json_error('Failed to remove cart item');
+        }
+    } catch (Exception $e) {
+        wp_send_json_error('Error removing cart item: ' . $e->getMessage());
     }
 }
 

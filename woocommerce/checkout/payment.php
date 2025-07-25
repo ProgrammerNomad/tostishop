@@ -150,18 +150,6 @@ if ( ! wp_doing_ajax() ) {
 	line-height: 1.5;
 }
 
-.payment_box::before {
-	content: '';
-	position: absolute;
-	top: -8px;
-	left: 20px;
-	width: 0;
-	height: 0;
-	border-left: 8px solid transparent;
-	border-right: 8px solid transparent;
-	border-bottom: 8px solid #e5e7eb;
-}
-
 /* Terms and Conditions Styling */
 .woocommerce-terms-and-conditions-wrapper {
 	margin-bottom: 1.5rem;

@@ -12,6 +12,7 @@
             console.log('TostiShopCart: Initializing cart functionality');
             this.addQuantityButtons();
             this.bindEvents();
+            this.addModernModal();
         },
 
         bindEvents: function() {
@@ -24,10 +25,58 @@
             $(document).on('change', '.qty, input[name*="cart["][name*="][qty]"]', this.handleQuantityChange.bind(this));
             
             // Handle quantity button clicks
-            $(document).on('click', '.quantity .plus, .quantity .minus', this.handleQuantityButtons.bind(this));
+            $(document).on('click', '.quantity-controls .plus, .quantity-controls .minus', this.handleQuantityButtons.bind(this));
             
             // Handle cart form submission
             $(document).on('submit', '.woocommerce-cart-form', this.handleCartUpdate.bind(this));
+        },
+
+        addModernModal: function() {
+            if ($('#tostishop-modal').length === 0) {
+                const modalHTML = `
+                    <div id="tostishop-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+                        <div class="bg-white rounded-xl p-6 m-4 max-w-md w-full shadow-2xl transform transition-all">
+                            <div class="text-center">
+                                <div class="mb-4">
+                                    <svg class="w-12 h-12 mx-auto text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </div>
+                                <h3 id="modal-title" class="text-lg font-semibold text-gray-900 mb-2"></h3>
+                                <p id="modal-message" class="text-gray-600 mb-6"></p>
+                                <div class="flex space-x-3">
+                                    <button id="modal-cancel" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">Cancel</button>
+                                    <button id="modal-confirm" class="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                $('body').append(modalHTML);
+                
+                // Bind modal events
+                $('#modal-cancel, #tostishop-modal').on('click', function(e) {
+                    if (e.target === this) {
+                        TostiShopCart.hideModal();
+                    }
+                });
+            }
+        },
+
+        showConfirmationModal: function(title, message, confirmCallback) {
+            $('#modal-title').text(title);
+            $('#modal-message').text(message);
+            $('#tostishop-modal').removeClass('hidden').addClass('flex');
+            
+            // Remove previous event listeners and add new one
+            $('#modal-confirm').off('click').on('click', function() {
+                TostiShopCart.hideModal();
+                confirmCallback();
+            });
+        },
+
+        hideModal: function() {
+            $('#tostishop-modal').addClass('hidden').removeClass('flex');
         },
 
         addQuantityButtons: function() {
@@ -36,35 +85,14 @@
             // Look for all quantity inputs in the cart
             $('.qty, input[name*="cart["][name*="][qty]"]').each(function() {
                 const $input = $(this);
-                const $wrapper = $input.closest('.quantity, .flex');
+                const $wrapper = $input.closest('.quantity-controls');
                 
-                // Skip if already has buttons or if not in cart form
-                if ($wrapper.find('.plus, .minus').length > 0 || !$input.closest('.woocommerce-cart-form').length) {
+                // Skip if not in a quantity-controls wrapper (buttons already exist)
+                if ($wrapper.length === 0) {
                     return;
                 }
                 
-                // Ensure wrapper has proper styling
-                if (!$wrapper.hasClass('quantity')) {
-                    $wrapper.addClass('quantity').css({
-                        'display': 'flex',
-                        'align-items': 'center',
-                        'border': '1px solid #d1d5db',
-                        'border-radius': '0.5rem',
-                        'overflow': 'hidden'
-                    });
-                }
-                
-                // Create minus button
-                const $minusBtn = $('<button type="button" class="minus">−</button>');
-                
-                // Create plus button
-                const $plusBtn = $('<button type="button" class="plus">+</button>');
-                
-                // Insert buttons
-                $wrapper.prepend($minusBtn);
-                $wrapper.append($plusBtn);
-                
-                console.log('TostiShopCart: Added buttons for quantity input');
+                console.log('TostiShopCart: Found quantity input with buttons already present');
             });
         },
 
@@ -72,10 +100,16 @@
             e.preventDefault();
             console.log('TostiShopCart: Quantity button clicked');
             
-            const $button = $(e.target);
-            const $input = $button.siblings('.qty');
-            const currentValue = parseInt($input.val()) || 0;
+            const $button = $(e.currentTarget);
+            const $input = $button.siblings('.qty').length > 0 ? $button.siblings('.qty') : $button.parent().find('.qty');
             
+            if ($input.length === 0) {
+                console.log('TostiShopCart: No quantity input found');
+                return;
+            }
+            
+            const currentValue = parseInt($input.val()) || 0;
+
             if ($button.hasClass('plus')) {
                 const maxValue = parseInt($input.attr('max')) || 9999;
                 if (currentValue < maxValue) {
@@ -87,13 +121,16 @@
                     $input.val(currentValue - 1).trigger('change');
                 }
             }
-        },
-
-        handleQuantityChange: function(e) {
+        },        handleQuantityChange: function(e) {
             console.log('TostiShopCart: Quantity changed');
             
             const $input = $(e.target);
-            const cartItemKey = this.extractCartItemKey($input.attr('name'));
+            
+            // Try to get cart item key from data attribute first, then from name attribute
+            let cartItemKey = $input.data('cart-item-key') || $input.attr('data-cart-item-key');
+            if (!cartItemKey) {
+                cartItemKey = this.extractCartItemKey($input.attr('name'));
+            }
             
             if (!cartItemKey) {
                 console.log('TostiShopCart: No cart item key found');
@@ -128,11 +165,14 @@
                 return;
             }
             
-            if (!confirm('Are you sure you want to remove this item from your cart?')) {
-                return;
-            }
-            
-            this.removeCartItem(cartItemKey, $cartItem);
+            // Show modern confirmation modal
+            this.showConfirmationModal(
+                'Remove Item',
+                'Are you sure you want to remove this item from your cart?',
+                () => {
+                    this.removeCartItem(cartItemKey, $cartItem);
+                }
+            );
         },
 
         updateCartItemQuantity: function(cartItemKey, quantity, $cartItem) {
@@ -316,6 +356,138 @@
                     $notification.remove();
                 }, 300);
             }, 3000);
+        },
+
+        showConfirmationModal: function(title, message, onConfirm) {
+            // Remove any existing modals
+            $('.tostishop-modal').remove();
+            
+            const modalHTML = `
+                <div class="tostishop-modal fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity modal-overlay" aria-hidden="true"></div>
+                        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                        <div class="modal-content inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                            <div class="sm:flex sm:items-start">
+                                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                                    <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                    </svg>
+                                </div>
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">${title}</h3>
+                                    <div class="mt-2">
+                                        <p class="text-sm text-gray-500">${message}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                                <button type="button" class="modal-confirm w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors duration-200">
+                                    Confirm
+                                </button>
+                                <button type="button" class="modal-cancel mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm transition-colors duration-200">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            $('body').append(modalHTML);
+            
+            const $modal = $('.tostishop-modal');
+            
+            // Show modal with animation
+            setTimeout(() => {
+                $modal.find('.modal-overlay').addClass('opacity-100');
+                $modal.find('.modal-content').addClass('opacity-100 translate-y-0 sm:scale-100');
+            }, 10);
+            
+            // Handle confirm
+            $modal.find('.modal-confirm').on('click', function() {
+                TostiShopCart.hideModal();
+                if (onConfirm) onConfirm();
+            });
+            
+            // Handle cancel and overlay click
+            $modal.find('.modal-cancel, .modal-overlay').on('click', function() {
+                TostiShopCart.hideModal();
+            });
+            
+            // Handle escape key
+            $(document).on('keydown.modal', function(e) {
+                if (e.keyCode === 27) {
+                    TostiShopCart.hideModal();
+                }
+            });
+        },
+
+        hideModal: function() {
+            const $modal = $('.tostishop-modal');
+            if ($modal.length) {
+                $modal.find('.modal-overlay').removeClass('opacity-100');
+                $modal.find('.modal-content').removeClass('opacity-100 translate-y-0 sm:scale-100');
+                setTimeout(() => {
+                    $modal.remove();
+                }, 300);
+            }
+            $(document).off('keydown.modal');
+        },
+
+        updateCartTotals: function(data) {
+            if (data && data.fragments) {
+                // Update WooCommerce fragments
+                $.each(data.fragments, function(key, value) {
+                    $(key).replaceWith(value);
+                });
+            }
+            
+            // Update cart count in header if available
+            if (data.cart_count !== undefined) {
+                $('.cart-count, [data-cart-count]').text(data.cart_count);
+                
+                // Hide cart count if empty
+                if (data.cart_count === 0) {
+                    $('.cart-count, [data-cart-count]').addClass('hidden');
+                } else {
+                    $('.cart-count, [data-cart-count]').removeClass('hidden');
+                }
+            }
+            
+            // Update cart total displays
+            if (data.cart_total !== undefined) {
+                $('.cart-total, [data-cart-total]').html(data.cart_total);
+            }
+            
+            // Update cart subtotal displays  
+            if (data.cart_subtotal !== undefined) {
+                $('.cart-subtotal, [data-cart-subtotal]').html(data.cart_subtotal);
+            }
+            
+            // Trigger custom event for other scripts
+            $(document.body).trigger('tostishop_cart_updated', [data]);
+        },
+
+        updateCartCount: function(count) {
+            $('.cart-count, [data-cart-count]').text(count);
+            
+            if (count === 0) {
+                $('.cart-count, [data-cart-count]').addClass('hidden');
+            } else {
+                $('.cart-count, [data-cart-count]').removeClass('hidden');
+            }
+        },
+
+        extractCartItemKey: function(inputName) {
+            if (!inputName) return null;
+            
+            const match = inputName.match(/cart\[([^\]]+)\]/);
+            const key = match ? match[1] : null;
+            
+            console.log('TostiShopCart: Extracted cart item key:', key, 'from name:', inputName);
+            
+            return key;
         }
     };
 

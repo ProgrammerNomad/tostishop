@@ -25,13 +25,24 @@ if ( apply_filters( 'woocommerce_checkout_show_terms', true ) && function_exists
 		?>
 
 		<?php if ( wc_terms_and_conditions_checkbox_enabled() ) : ?>
-			<p class="form-row validate-required">
-				<label class="woocommerce-form__label woocommerce-form__label-for-checkbox checkbox">
-				<input type="checkbox" class="woocommerce-form__input woocommerce-form__input-checkbox input-checkbox" name="terms" <?php checked( apply_filters( 'woocommerce_terms_is_checked_default', isset( $_POST['terms'] ) ), true ); // WPCS: input var ok, csrf ok. ?> id="terms" />
-					<span class="woocommerce-terms-and-conditions-checkbox-text"><?php wc_terms_and_conditions_checkbox_text(); ?></span>&nbsp;<abbr class="required" title="<?php esc_attr_e( 'required', 'woocommerce' ); ?>">*</abbr>
+			<div class="form-row validate-required bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 mt-3">
+				<label class="flex items-start space-x-3 cursor-pointer group">
+					<div class="flex-shrink-0 mt-0.5">
+						<input type="checkbox" 
+							   class="w-4 h-4 text-primary bg-white border-gray-300 rounded focus:ring-primary focus:ring-2 transition-all duration-200" 
+							   name="terms" 
+							   <?php checked( apply_filters( 'woocommerce_terms_is_checked_default', isset( $_POST['terms'] ) ), true ); ?> 
+							   id="terms" />
+					</div>
+					<div class="flex-1 leading-relaxed">
+						<span class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors duration-200">
+							<?php wc_terms_and_conditions_checkbox_text(); ?>
+						</span>
+						<span class="text-red-500 ml-1 font-medium" aria-label="required">*</span>
+					</div>
 				</label>
 				<input type="hidden" name="terms-field" value="1" />
-			</p>
+			</div>
 		<?php endif; ?>
 	</div>
 	<?php

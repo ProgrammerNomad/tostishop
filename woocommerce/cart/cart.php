@@ -245,26 +245,32 @@ get_header(); ?>
                                         </div>
                                         
                                         <div class="flex items-center justify-between mt-4">
-                                            <!-- Quantity -->
-                                            <div class="quantity border border-gray-300 rounded-lg">
+                                            <!-- Quantity Controls -->
+                                            <div class="quantity-controls flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                                                <button type="button" class="minus flex items-center justify-center w-10 h-10 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-800">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                                    </svg>
+                                                </button>
                                                 <?php
                                                 if ( $_product->is_sold_individually() ) {
-                                                    $product_quantity = sprintf( '1 <input type="hidden" name="cart[%s][qty]" value="1" />', $cart_item_key );
+                                                    $product_quantity = sprintf( '<input type="number" class="qty text-center w-16 h-10 border-0 focus:ring-0 focus:outline-none" name="cart[%s][qty]" value="1" readonly />', $cart_item_key );
                                                 } else {
-                                                    $product_quantity = woocommerce_quantity_input(
-                                                        array(
-                                                            'input_name'   => "cart[{$cart_item_key}][qty]",
-                                                            'input_value'  => $cart_item['quantity'],
-                                                            'max_value'    => $_product->get_max_purchase_quantity(),
-                                                            'min_value'    => '0',
-                                                            'product_name' => $_product->get_name(),
-                                                        ),
-                                                        $_product,
-                                                        false
+                                                    $product_quantity = sprintf(
+                                                        '<input type="number" class="qty text-center w-16 h-10 border-0 focus:ring-0 focus:outline-none" name="cart[%s][qty]" value="%s" min="0" max="%s" step="1" data-cart-item-key="%s" />',
+                                                        $cart_item_key,
+                                                        esc_attr( $cart_item['quantity'] ),
+                                                        esc_attr( $_product->get_max_purchase_quantity() ),
+                                                        esc_attr( $cart_item_key )
                                                     );
                                                 }
-                                                echo apply_filters( 'woocommerce_cart_item_quantity', $product_quantity, $cart_item_key, $cart_item );
+                                                echo $product_quantity;
                                                 ?>
+                                                <button type="button" class="plus flex items-center justify-center w-10 h-10 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-800">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                                    </svg>
+                                                </button>
                                             </div>
                                             
                                             <!-- Price -->
@@ -300,25 +306,31 @@ get_header(); ?>
                                 
                                 <!-- Quantity -->
                                 <div class="col-span-2 flex justify-center">
-                                    <div class="quantity">
-                                    <?php
-                                    if ( $_product->is_sold_individually() ) {
-                                        $product_quantity = sprintf( '1 <input type="hidden" name="cart[%s][qty]" value="1" />', $cart_item_key );
-                                    } else {
-                                        $product_quantity = woocommerce_quantity_input(
-                                            array(
-                                                'input_name'   => "cart[{$cart_item_key}][qty]",
-                                                'input_value'  => $cart_item['quantity'],
-                                                'max_value'    => $_product->get_max_purchase_quantity(),
-                                                'min_value'    => '0',
-                                                'product_name' => $_product->get_name(),
-                                            ),
-                                            $_product,
-                                            false
-                                        );
-                                    }
-                                    echo apply_filters( 'woocommerce_cart_item_quantity', $product_quantity, $cart_item_key, $cart_item );
-                                    ?>
+                                    <div class="quantity-controls flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                                        <button type="button" class="minus flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-800">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                            </svg>
+                                        </button>
+                                        <?php
+                                        if ( $_product->is_sold_individually() ) {
+                                            $product_quantity = sprintf( '<input type="number" class="qty text-center w-12 h-8 border-0 focus:ring-0 focus:outline-none text-sm" name="cart[%s][qty]" value="1" readonly />', $cart_item_key );
+                                        } else {
+                                            $product_quantity = sprintf(
+                                                '<input type="number" class="qty text-center w-12 h-8 border-0 focus:ring-0 focus:outline-none text-sm" name="cart[%s][qty]" value="%s" min="0" max="%s" step="1" data-cart-item-key="%s" />',
+                                                $cart_item_key,
+                                                esc_attr( $cart_item['quantity'] ),
+                                                esc_attr( $_product->get_max_purchase_quantity() ),
+                                                esc_attr( $cart_item_key )
+                                            );
+                                        }
+                                        echo $product_quantity;
+                                        ?>
+                                        <button type="button" class="plus flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-800">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                            </svg>
+                                        </button>
                                     </div>
                                 </div>
                                 
