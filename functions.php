@@ -58,8 +58,35 @@ function tostishop_checkout_customizations() {
     
     // Hide ship to different address option via CSS
     add_action('wp_head', 'tostishop_hide_ship_to_different_address');
+    
+    // Auto-copy billing data to shipping data
+    add_action('woocommerce_checkout_process', 'tostishop_auto_copy_billing_to_shipping');
 }
 add_action('init', 'tostishop_checkout_customizations');
+
+/**
+ * Auto-copy billing data to shipping data during checkout
+ */
+function tostishop_auto_copy_billing_to_shipping() {
+    // Copy billing fields to shipping fields
+    $billing_fields = array(
+        'first_name',
+        'last_name', 
+        'company',
+        'address_1',
+        'address_2',
+        'city',
+        'state',
+        'postcode',
+        'country'
+    );
+    
+    foreach ($billing_fields as $field) {
+        if (isset($_POST['billing_' . $field])) {
+            $_POST['shipping_' . $field] = $_POST['billing_' . $field];
+        }
+    }
+}
 
 /**
  * Hide ship to different address option via CSS
