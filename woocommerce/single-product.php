@@ -158,31 +158,14 @@ get_header(); ?>
                                         <?php echo esc_html($attribute_label); ?>
                                     </label>
                                     
-                                    <?php if (strtolower($attribute_label) === 'color' || strpos(strtolower($attribute_name), 'color') !== false) : ?>
-                                        <!-- Color swatches -->
-                                        <div class="flex flex-wrap gap-2">
-                                            <?php foreach ($options as $option) : ?>
-                                                <label class="color-swatch cursor-pointer">
-                                                    <input type="radio" 
-                                                           name="<?php echo esc_attr('attribute_' . sanitize_title($attribute_name)); ?>" 
-                                                           value="<?php echo esc_attr($option); ?>"
-                                                           class="sr-only">
-                                                    <span class="block w-8 h-8 rounded-full border-2 border-gray-300 hover:border-gray-400 transition-colors duration-200"
-                                                          style="background-color: <?php echo esc_attr(strtolower($option)); ?>;"
-                                                          title="<?php echo esc_attr($option); ?>"></span>
-                                                </label>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    <?php else : ?>
-                                        <!-- Regular dropdown -->
-                                        <select name="<?php echo esc_attr('attribute_' . sanitize_title($attribute_name)); ?>" 
-                                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent variation-select">
-                                            <option value=""><?php printf(__('Choose %s', 'tostishop'), $attribute_label); ?></option>
-                                            <?php foreach ($options as $option) : ?>
-                                                <option value="<?php echo esc_attr($option); ?>"><?php echo esc_html($option); ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    <?php endif; ?>
+                                    <!-- Always use dropdown for better UX -->
+                                    <select name="<?php echo esc_attr('attribute_' . sanitize_title($attribute_name)); ?>" 
+                                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent variation-select">
+                                        <option value=""><?php printf(__('Choose %s', 'tostishop'), $attribute_label); ?></option>
+                                        <?php foreach ($options as $option) : ?>
+                                            <option value="<?php echo esc_attr($option); ?>"><?php echo esc_html($option); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
                                 </div>
                             <?php endforeach; ?>
                             

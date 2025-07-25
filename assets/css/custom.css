@@ -819,3 +819,171 @@
         color: #374151;
     }
 }
+
+/* Desktop Navigation Visibility Fix */
+@media (min-width: 1024px) {
+    .woocommerce-MyAccount-navigation-list {
+        display: block !important; /* Force show on desktop regardless of Alpine.js state */
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    
+    .woocommerce-MyAccount-navigation .lg\:block {
+        display: block !important;
+    }
+    
+    /* Hide mobile toggle on desktop */
+    .woocommerce-MyAccount-navigation .lg\:hidden {
+        display: none !important;
+    }
+}
+
+/* Notification System Styles */
+#tostishop-notifications {
+    pointer-events: none;
+    z-index: 9999;
+}
+
+#tostishop-notifications > * {
+    pointer-events: auto;
+}
+
+.notification-enter {
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+.notification-enter-active {
+    transform: translateX(0);
+    opacity: 1;
+    transition: all 0.3s ease-out;
+}
+
+.notification-exit {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.notification-exit-active {
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all 0.3s ease-in;
+}
+
+/* Notification action buttons */
+[data-notification-action] {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+[data-notification-action]:hover {
+    transform: scale(1.05);
+}
+
+/* Enhanced Variation Select Styling */
+.variation-select {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23374151' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25em 1.25em;
+    padding-right: 3rem;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+.variation-select:focus {
+    border-color: #14175b;
+    box-shadow: 0 0 0 3px rgba(20, 23, 91, 0.1);
+    outline: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2314175b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+}
+
+/* Enhanced Desktop Layouts */
+@media (min-width: 1280px) {
+    /* Wider containers for desktop */
+    .max-w-7xl.xl\:max-w-\[90rem\] {
+        max-width: 90rem !important;
+    }
+    
+    /* Account page enhancements */
+    .woocommerce-account .lg\:col-span-9.xl\:col-span-10 {
+        grid-column: span 10 / span 10;
+    }
+    
+    .woocommerce-account .xl\:p-12 {
+        padding: 3rem !important;
+    }
+    
+    .woocommerce-account .xl\:min-h-\[800px\] {
+        min-height: 800px !important;
+    }
+    
+    /* Better spacing for larger screens */
+    .woocommerce-account .bg-white.rounded-lg {
+        border-radius: 1rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+    }
+    
+    /* Enhanced navigation for very wide screens */
+    .woocommerce-MyAccount-navigation {
+        min-width: 320px;
+    }
+    
+    .account-nav-link {
+        padding: 1.25rem 1.75rem !important;
+        font-size: 1.1rem !important;
+        margin-bottom: 0.75rem;
+    }
+}
+
+/* Loading and Success States */
+.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.added {
+    background-color: #22c55e !important;
+    color: white !important;
+    border-color: #16a34a !important;
+    transform: scale(1.05);
+    transition: all 0.2s ease;
+}
+
+/* Better focus states for accessibility */
+.variation-select:focus,
+.account-nav-link:focus,
+.button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    outline: 2px solid #14175b;
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .account-nav-link.bg-primary {
+        background: #000 !important;
+        color: #fff !important;
+    }
+    
+    .notification-enter-active,
+    .notification-exit-active {
+        border: 2px solid currentColor;
+    }
+}

@@ -114,6 +114,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     cartCount.textContent = currentCount + parseInt(quantity);
                 }
                 
+                // Show notification with actions
+                const productName = button.closest('.product-item')?.querySelector('h3')?.textContent || 
+                                  button.closest('[data-product-id]')?.querySelector('.product-title')?.textContent || 
+                                  'Product';
+                
+                if (typeof tostishopNotifications !== 'undefined') {
+                    tostishopNotifications.cart(`${productName} added to cart!`, [
+                        {
+                            text: 'View Cart',
+                            action: 'view-cart',
+                            class: 'bg-white bg-opacity-20 text-white hover:bg-opacity-30 transition-all duration-200'
+                        },
+                        {
+                            text: 'Continue Shopping',
+                            action: 'continue-shopping',
+                            class: 'bg-transparent border border-white border-opacity-30 text-white hover:bg-white hover:bg-opacity-10 transition-all duration-200'
+                        }
+                    ]);
+                }
+                
                 // Reset button after 2 seconds
                 setTimeout(() => {
                     button.innerHTML = originalText;
@@ -127,6 +147,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error adding to cart:', error);
                 button.classList.remove('loading');
                 button.innerHTML = 'Error - Try Again';
+                
+                // Show error notification
+                if (typeof tostishopNotifications !== 'undefined') {
+                    tostishopNotifications.error('Error adding product to cart. Please try again.');
+                }
+                
                 setTimeout(() => {
                     button.innerHTML = originalText;
                 }, 2000);

@@ -26,13 +26,13 @@ do_action( 'woocommerce_before_account_navigation' );
 	</div>
 
 	<!-- Navigation Menu -->
-	<ul class="woocommerce-MyAccount-navigation-list" 
+	<ul class="woocommerce-MyAccount-navigation-list lg:!block" 
 		:class="{ 'hidden': !mobileMenuOpen }" 
 		class="lg:block space-y-2 lg:space-y-1">
 		<?php foreach ( wc_get_account_menu_items() as $endpoint => $label ) : ?>
 			<li class="<?php echo wc_get_account_menu_item_classes( $endpoint ); ?>">
 				<a href="<?php echo esc_url( wc_get_account_endpoint_url( $endpoint ) ); ?>" 
-				   class="account-nav-link flex items-center px-4 py-3 lg:py-2 text-sm font-medium rounded-lg transition-all duration-200 group
+				   class="account-nav-link flex items-center px-4 py-3 lg:py-3 xl:py-4 text-sm lg:text-base font-medium rounded-lg transition-all duration-200 group
 				          <?php echo wc_get_account_menu_item_classes( $endpoint ) === 'is-active' ? 'bg-primary text-white shadow-sm' : 'text-gray-700 hover:bg-gray-50 hover:text-primary'; ?>">
 					
 					<!-- Icons for each menu item -->
