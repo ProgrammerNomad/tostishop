@@ -56,15 +56,21 @@ function tostishop_checkout_customizations() {
     // Force shipping address to be same as billing address
     add_filter('woocommerce_cart_needs_shipping_address', '__return_false');
     
+<<<<<<< HEAD
     // Remove shipping fields from checkout
     add_filter('woocommerce_checkout_fields', 'tostishop_remove_shipping_fields');
     
     // Auto-copy billing to shipping on checkout
     add_action('woocommerce_checkout_process', 'tostishop_auto_copy_billing_to_shipping');
+=======
+    // Hide ship to different address option via CSS
+    add_action('wp_head', 'tostishop_hide_ship_to_different_address');
+>>>>>>> parent of 291e829 (Auto-copy billing to shipping fields at checkout)
 }
 add_action('init', 'tostishop_checkout_customizations');
 
 /**
+<<<<<<< HEAD
  * Remove shipping fields from checkout
  */
 function tostishop_remove_shipping_fields($fields) {
@@ -75,6 +81,9 @@ function tostishop_remove_shipping_fields($fields) {
 
 /**
  * Auto-copy billing address to shipping address
+=======
+ * Hide ship to different address option via CSS
+>>>>>>> parent of 291e829 (Auto-copy billing to shipping fields at checkout)
  */
 function tostishop_auto_copy_billing_to_shipping() {
     // Copy billing data to shipping
