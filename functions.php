@@ -112,6 +112,11 @@ function tostishop_scripts() {
         wp_enqueue_script('tostishop-checkout', get_template_directory_uri() . '/assets/js/checkout.js', array('jquery', 'wc-checkout'), '1.0.0', true);
     }
     
+    // Cart specific JS
+    if (is_cart()) {
+        wp_enqueue_script('tostishop-cart', get_template_directory_uri() . '/assets/js/cart.js', array('jquery'), '1.0.0', true);
+    }
+    
     // Order confirmation specific JS
     if (is_order_received_page() || is_wc_endpoint_url('order-received')) {
         wp_enqueue_script('tostishop-order-confirmation', get_template_directory_uri() . '/assets/js/order-confirmation.js', array(), '1.0.0', true);
@@ -343,6 +348,61 @@ function tostishop_ajax_add_to_cart() {
         wp_send_json_success(array(
             'cart_count' => WC()->cart->get_cart_contents_count(),
             'cart_total' => WC()->cart->get_cart_total(),
+        ));
+    } else {
+        wp_send_json_error();
+    }
+}
+
+// Update cart item quantity via AJAX
+add_action('wp_ajax_tostishop_update_cart_item', 'tostishop_ajax_update_cart_item');
+add_action('wp_ajax_nopriv_tostishop_update_cart_item', 'tostishop_ajax_update_cart_item');
+
+function tostishop_ajax_update_cart_item() {
+    if (!wp_verify_nonce($_POST['nonce'], 'tostishop_nonce')) {
+        wp_die('Security check failed');
+    }
+    
+    $cart_item_key = sanitize_text_field($_POST['cart_item_key']);
+    $quantity = absint($_POST['quantity']);
+    
+    if ($quantity == 0) {
+        WC()->cart->remove_cart_item($cart_item_key);
+    } else {
+        WC()->cart->set_quantity($cart_item_key, $quantity);
+    }
+    
+    WC()->cart->calculate_totals();
+    
+    wp_send_json_success(array(
+        'cart_count' => WC()->cart->get_cart_contents_count(),
+        'cart_total' => WC()->cart->get_cart_total(),
+        'cart_subtotal' => WC()->cart->get_cart_subtotal(),
+        'fragments' => apply_filters('woocommerce_add_to_cart_fragments', array())
+    ));
+}
+
+// Remove cart item via AJAX
+add_action('wp_ajax_tostishop_remove_cart_item', 'tostishop_ajax_remove_cart_item');
+add_action('wp_ajax_nopriv_tostishop_remove_cart_item', 'tostishop_ajax_remove_cart_item');
+
+function tostishop_ajax_remove_cart_item() {
+    if (!wp_verify_nonce($_POST['nonce'], 'tostishop_nonce')) {
+        wp_die('Security check failed');
+    }
+    
+    $cart_item_key = sanitize_text_field($_POST['cart_item_key']);
+    
+    $result = WC()->cart->remove_cart_item($cart_item_key);
+    
+    if ($result) {
+        WC()->cart->calculate_totals();
+        
+        wp_send_json_success(array(
+            'cart_count' => WC()->cart->get_cart_contents_count(),
+            'cart_total' => WC()->cart->get_cart_total(),
+            'cart_subtotal' => WC()->cart->get_cart_subtotal(),
+            'fragments' => apply_filters('woocommerce_add_to_cart_fragments', array())
         ));
     } else {
         wp_send_json_error();

@@ -194,7 +194,8 @@ get_header(); ?>
                             ?>
                             
                             <!-- Mobile Cart Item -->
-                            <div class="md:hidden p-6">
+                                                        <!-- Mobile Cart Item -->
+                            <div class="md:hidden p-6 cart-item" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>">
                                 <div class="flex space-x-4">
                                     <!-- Product Image -->
                                     <div class="flex-shrink-0">
@@ -229,7 +230,7 @@ get_header(); ?>
                                             <!-- Remove Button -->
                                             <?php
                                             echo apply_filters( 'woocommerce_cart_item_remove_link', sprintf(
-                                                '<a href="%s" class="ml-4 text-gray-400 hover:text-red-500 transition-colors duration-200" aria-label="%s" data-product_id="%s" data-product_sku="%s">
+                                                '<a href="%s" class="ml-4 text-gray-400 hover:text-red-500 transition-colors duration-200 cart-remove-btn" aria-label="%s" data-product_id="%s" data-product_sku="%s" data-cart_item_key="%s">
                                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                                                     </svg>
@@ -237,7 +238,8 @@ get_header(); ?>
                                                 esc_url( wc_get_cart_remove_url( $cart_item_key ) ),
                                                 esc_html__( 'Remove this item', 'woocommerce' ),
                                                 esc_attr( $product_id ),
-                                                esc_attr( $_product->get_sku() )
+                                                esc_attr( $_product->get_sku() ),
+                                                esc_attr( $cart_item_key )
                                             ), $cart_item_key );
                                             ?>
                                         </div>
@@ -275,7 +277,8 @@ get_header(); ?>
                             </div>
                             
                             <!-- Desktop Cart Item -->
-                            <div class="hidden md:grid md:grid-cols-12 gap-4 p-6 items-center">
+                                                        <!-- Desktop Cart Item -->
+                            <div class="hidden md:grid md:grid-cols-12 gap-4 p-6 items-center cart-item" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>">
                                 <!-- Product -->
                                 <div class="col-span-6 flex items-center space-x-4">
                                     <div class="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
@@ -329,7 +332,7 @@ get_header(); ?>
                                     </span>
                                     <?php
                                     echo apply_filters( 'woocommerce_cart_item_remove_link', sprintf(
-                                        '<a href="%s" class="ml-4 text-gray-400 hover:text-red-500 transition-colors duration-200" aria-label="%s" data-product_id="%s" data-product_sku="%s">
+                                        '<a href="%s" class="ml-4 text-gray-400 hover:text-red-500 transition-colors duration-200 cart-remove-btn" aria-label="%s" data-product_id="%s" data-product_sku="%s" data-cart_item_key="%s">
                                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                                             </svg>
@@ -337,7 +340,8 @@ get_header(); ?>
                                         esc_url( wc_get_cart_remove_url( $cart_item_key ) ),
                                         esc_html__( 'Remove this item', 'woocommerce' ),
                                         esc_attr( $product_id ),
-                                        esc_attr( $_product->get_sku() )
+                                        esc_attr( $_product->get_sku() ),
+                                        esc_attr( $cart_item_key )
                                     ), $cart_item_key );
                                     ?>
                                 </div>
@@ -793,24 +797,12 @@ get_header(); ?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-update cart when quantity changes
-    const quantityInputs = document.querySelectorAll('.woocommerce-cart-form .qty');
+    // Basic cart functionality
+    initializeCouponForm();
     
+    // Handle quantity input validation
+    const quantityInputs = document.querySelectorAll('.woocommerce-cart-form .qty');
     quantityInputs.forEach(function(input) {
-        let timeout;
-        
-        input.addEventListener('change', function() {
-            clearTimeout(timeout);
-            timeout = setTimeout(function() {
-                // Trigger cart update
-                const updateButton = document.querySelector('[name="update_cart"]');
-                if (updateButton) {
-                    updateButton.click();
-                }
-            }, 500);
-        });
-        
-        // Handle quantity validation
         input.addEventListener('input', function() {
             const min = parseInt(this.getAttribute('min')) || 0;
             const max = parseInt(this.getAttribute('max')) || 9999;
@@ -822,42 +814,6 @@ document.addEventListener('DOMContentLoaded', function() {
             this.value = value;
         });
     });
-    
-    // Confirm item removal
-    const removeLinks = document.querySelectorAll('.product-remove a');
-    
-    removeLinks.forEach(function(link) {
-        link.addEventListener('click', function(e) {
-            if (!confirm('Are you sure you want to remove this item from your cart?')) {
-                e.preventDefault();
-            }
-        });
-    });
-    
-    // Show loading state when form is being processed
-    const cartForm = document.querySelector('.woocommerce-cart-form');
-    const updateButton = document.querySelector('[name="update_cart"]');
-    
-    if (cartForm && updateButton) {
-        updateButton.addEventListener('click', function() {
-            cartForm.classList.add('processing');
-        });
-    }
-    
-    // Handle AJAX cart updates (if available)
-    if (typeof wc_cart_fragments_params !== 'undefined') {
-        document.body.addEventListener('updated_wc_div', function() {
-            if (cartForm) {
-                cartForm.classList.remove('processing');
-            }
-        });
-    }
-    
-    // Add quantity buttons functionality for better UX
-    addQuantityButtons();
-    
-    // Coupon form functionality
-    initializeCouponForm();
 });
 
 /**
@@ -900,51 +856,5 @@ function initializeCouponForm() {
             }
         });
     }
-}
-
-/**
- * Add plus/minus buttons to quantity inputs for better mobile experience
- */
-function addQuantityButtons() {
-    const quantityInputs = document.querySelectorAll('.woocommerce .quantity .qty');
-    
-    quantityInputs.forEach(function(input) {
-        const wrapper = input.closest('.quantity');
-        if (!wrapper || wrapper.querySelector('.plus')) return; // Already processed
-        
-        // Create minus button
-        const minusBtn = document.createElement('button');
-        minusBtn.type = 'button';
-        minusBtn.className = 'minus';
-        minusBtn.innerHTML = '−';
-        minusBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            let value = parseInt(input.value) || 0;
-            const min = parseInt(input.getAttribute('min')) || 0;
-            if (value > min) {
-                input.value = value - 1;
-                input.dispatchEvent(new Event('change'));
-            }
-        });
-        
-        // Create plus button
-        const plusBtn = document.createElement('button');
-        plusBtn.type = 'button';
-        plusBtn.className = 'plus';
-        plusBtn.innerHTML = '+';
-        plusBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            let value = parseInt(input.value) || 0;
-            const max = parseInt(input.getAttribute('max')) || 9999;
-            if (value < max) {
-                input.value = value + 1;
-                input.dispatchEvent(new Event('change'));
-            }
-        });
-        
-        // Insert buttons
-        wrapper.insertBefore(minusBtn, input);
-        wrapper.appendChild(plusBtn);
-    });
 }
 </script>
