@@ -76,8 +76,7 @@
                             <a href="<?php echo esc_url(home_url('/')); ?>" class="flex items-center">
                                 <img src="<?php echo esc_url($logo[0]); ?>" 
                                      alt="<?php echo esc_attr(get_bloginfo('name')); ?>" 
-                                     class="h-auto max-h-12 md:max-h-16"
-                                     style="width: 200px; max-width: 200px;">
+                                     class="h-auto w-auto max-w-[200px] max-h-12 md:max-h-16">
                             </a>
                         <?php endif; ?>
                     </div>

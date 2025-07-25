@@ -4,24 +4,46 @@ document.addEventListener('DOMContentLoaded', function() {
     // Product grid view toggle
     const gridView = document.getElementById('gridView');
     const listView = document.getElementById('listView');
-    const productGrid = document.querySelector('.products');
+    const productGrid = document.getElementById('productGrid');
     
     if (gridView && listView && productGrid) {
-        gridView.addEventListener('click', function() {
-            productGrid.className = 'products grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6';
-            gridView.classList.add('text-blue-600');
-            gridView.classList.remove('text-gray-600');
-            listView.classList.add('text-gray-600');
-            listView.classList.remove('text-blue-600');
+        gridView.addEventListener('click', function(e) {
+            e.preventDefault();
+            productGrid.className = 'grid grid-cols-2 md:grid-cols-3 gap-6';
+            productGrid.setAttribute('data-view', 'grid');
+            
+            // Update button states
+            gridView.classList.add('bg-primary', 'text-white');
+            gridView.classList.remove('bg-gray-100', 'text-gray-600');
+            listView.classList.remove('bg-primary', 'text-white');
+            listView.classList.add('bg-gray-100', 'text-gray-600');
+            
+            // Update product items for grid view
+            const productItems = productGrid.querySelectorAll('.product-item');
+            productItems.forEach(item => {
+                item.className = 'product-item group';
+            });
+            
             localStorage.setItem('tostiShopGridView', 'grid');
         });
         
-        listView.addEventListener('click', function() {
-            productGrid.className = 'products grid grid-cols-1 gap-6';
-            listView.classList.add('text-blue-600');
-            listView.classList.remove('text-gray-600');
-            gridView.classList.add('text-gray-600');
-            gridView.classList.remove('text-blue-600');
+        listView.addEventListener('click', function(e) {
+            e.preventDefault();
+            productGrid.className = 'grid grid-cols-1 gap-4';
+            productGrid.setAttribute('data-view', 'list');
+            
+            // Update button states
+            listView.classList.add('bg-primary', 'text-white');
+            listView.classList.remove('bg-gray-100', 'text-gray-600');
+            gridView.classList.remove('bg-primary', 'text-white');
+            gridView.classList.add('bg-gray-100', 'text-gray-600');
+            
+            // Update product items for list view
+            const productItems = productGrid.querySelectorAll('.product-item');
+            productItems.forEach(item => {
+                item.className = 'product-item group flex bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow duration-200';
+            });
+            
             localStorage.setItem('tostiShopGridView', 'list');
         });
         
@@ -29,6 +51,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const savedView = localStorage.getItem('tostiShopGridView');
         if (savedView === 'list') {
             listView.click();
+        } else {
+            // Default to grid view
+            gridView.click();
         }
     }
     
@@ -51,51 +76,47 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // AJAX add to cart enhancement
+    // AJAX add to cart enhancement for simple products
     document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('add_to_cart_button') && !e.target.classList.contains('product_type_variable')) {
+        if (e.target.classList.contains('add-to-cart-btn') && !e.target.classList.contains('loading')) {
             e.preventDefault();
             
             const button = e.target;
-            const productId = button.getAttribute('data-product_id');
+            const productId = button.getAttribute('data-product-id');
             const quantity = button.getAttribute('data-quantity') || 1;
             
             // Add loading state
             button.classList.add('loading');
+            const originalText = button.innerHTML;
             button.innerHTML = '<svg class="animate-spin h-4 w-4 mx-auto" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
             
-            // AJAX request
-            fetch(wc_add_to_cart_params.ajax_url, {
+            // Use WooCommerce AJAX add to cart
+            const formData = new FormData();
+            formData.append('action', 'woocommerce_add_to_cart');
+            formData.append('product_id', productId);
+            formData.append('quantity', quantity);
+            
+            fetch(tostishop_ajax.ajax_url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    action: 'woocommerce_add_to_cart',
-                    product_id: productId,
-                    quantity: quantity
-                })
+                body: formData
             })
-            .then(response => response.json())
+            .then(response => response.text())
             .then(data => {
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-                
-                // Update cart count
-                const cartCount = document.querySelector('.cart-count');
-                if (cartCount && data.fragments && data.fragments['.cart-count']) {
-                    cartCount.outerHTML = data.fragments['.cart-count'];
-                }
-                
                 // Show success message
                 button.classList.remove('loading');
-                button.innerHTML = 'Added to Cart';
                 button.classList.add('added');
+                button.innerHTML = 'Added to Cart';
+                
+                // Update cart count if possible
+                const cartCount = document.querySelector('.cart-count');
+                if (cartCount) {
+                    const currentCount = parseInt(cartCount.textContent) || 0;
+                    cartCount.textContent = currentCount + parseInt(quantity);
+                }
                 
                 // Reset button after 2 seconds
                 setTimeout(() => {
-                    button.innerHTML = 'Add to Cart';
+                    button.innerHTML = originalText;
                     button.classList.remove('added');
                 }, 2000);
                 
@@ -107,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 button.classList.remove('loading');
                 button.innerHTML = 'Error - Try Again';
                 setTimeout(() => {
-                    button.innerHTML = 'Add to Cart';
+                    button.innerHTML = originalText;
                 }, 2000);
             });
         }

@@ -14,7 +14,7 @@ if (empty($product) || !$product->is_visible()) {
 <div class="product-item group" data-product-id="<?php echo esc_attr($product->get_id()); ?>">
     
     <!-- Product Image -->
-    <div class="relative bg-gray-100 rounded-lg overflow-hidden mb-4 aspect-square">
+    <div class="product-image relative bg-gray-100 rounded-lg overflow-hidden mb-4 aspect-square">
         <a href="<?php echo esc_url(get_permalink()); ?>" class="block h-full">
             <?php if (has_post_thumbnail()) : ?>
                 <?php the_post_thumbnail('tostishop-product-thumb', array(
@@ -44,7 +44,7 @@ if (empty($product) || !$product->is_visible()) {
     </div>
     
     <!-- Product Info -->
-    <div class="space-y-2">
+    <div class="product-info space-y-2 flex flex-col h-full">
         
         <!-- Category -->
         <?php
@@ -57,9 +57,9 @@ if (empty($product) || !$product->is_visible()) {
             </p>
         <?php endif; ?>
         
-        <!-- Product Title -->
-        <h3 class="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">
-            <a href="<?php echo esc_url(get_permalink()); ?>"><?php the_title(); ?></a>
+        <!-- Product Title - Fixed height for 2 lines -->
+        <h3 class="product-title text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200 h-10 overflow-hidden leading-5">
+            <a href="<?php echo esc_url(get_permalink()); ?>" class="line-clamp-2"><?php the_title(); ?></a>
         </h3>
         
         <!-- Rating -->
@@ -97,7 +97,7 @@ if (empty($product) || !$product->is_visible()) {
             </div>
         <?php endif; ?>
         
-        <!-- Price -->
+        <!-- Price and Stock -->
         <div class="flex items-center justify-between">
             <div class="text-lg font-bold text-gray-900">
                 <?php echo $product->get_price_html(); ?>
@@ -111,8 +111,8 @@ if (empty($product) || !$product->is_visible()) {
             <?php endif; ?>
         </div>
         
-        <!-- Add to Cart Button -->
-        <div class="mt-3">
+        <!-- Add to Cart Button - Always at bottom -->
+        <div class="mt-auto">
             <?php if ($product->is_in_stock()) : ?>
                 <?php if ($product->is_type('simple')) : ?>
                     <button class="w-full bg-blue-600 text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors duration-200 add-to-cart-btn"
