@@ -204,6 +204,47 @@ defined( 'ABSPATH' ) || exit;
 	</div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	const toggleBtn = document.getElementById('toggle-coupon');
+	const couponForm = document.getElementById('coupon-form');
+	
+	if (toggleBtn && couponForm) {
+		toggleBtn.addEventListener('click', function() {
+			couponForm.classList.toggle('hidden');
+			toggleBtn.textContent = couponForm.classList.contains('hidden') ? 
+				'Add Code' : 'Cancel';
+		});
+	}
+	
+	// Handle coupon form submission
+	const form = document.getElementById('coupon-form');
+	if (form) {
+		form.addEventListener('submit', function(e) {
+			e.preventDefault();
+			const couponCode = document.getElementById('coupon_code').value;
+			if (couponCode.trim()) {
+				// Trigger WooCommerce coupon application
+				const checkoutForm = document.querySelector('form.checkout');
+				const input = document.createElement('input');
+				input.type = 'hidden';
+				input.name = 'coupon_code';
+				input.value = couponCode;
+				checkoutForm.appendChild(input);
+				
+				const button = document.createElement('input');
+				button.type = 'hidden';
+				button.name = 'apply_coupon';
+				button.value = 'Apply coupon';
+				checkoutForm.appendChild(button);
+				
+				checkoutForm.submit();
+			}
+		});
+	}
+});
+</script>
+
 <style>
 /* Enhanced Review Order Styling */
 .coupon-form.hidden {

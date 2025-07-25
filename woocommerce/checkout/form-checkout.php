@@ -56,38 +56,7 @@ if ( ! $checkout->is_registration_enabled() && $checkout->is_registration_requir
 			</a>
 		</div>
 
-		<!-- Enhanced Progress Indicator -->
-		<div class="mb-8">
-			<div class="flex items-center justify-center">
-				<div class="flex items-center w-full max-w-2xl">
-					<!-- Step 1: Cart -->
-					<div class="flex items-center text-primary">
-						<div class="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-sm font-medium shadow-lg">
-							<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-								<path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"></path>
-							</svg>
-						</div>
-						<span class="ml-3 text-sm font-medium text-primary hidden sm:block"><?php _e('Cart', 'tostishop'); ?></span>
-					</div>
-					<div class="flex-1 h-1 bg-primary mx-4 rounded-full"></div>
-					
-					<!-- Step 2: Checkout -->
-					<div class="flex items-center text-primary">
-						<div class="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full text-sm font-medium shadow-lg animate-pulse">
-							2
-						</div>
-						<span class="ml-3 text-sm font-medium text-primary hidden sm:block"><?php _e('Checkout', 'tostishop'); ?></span>
-					</div>
-					<div class="flex-1 h-1 bg-gray-200 mx-4 rounded-full"></div>
-					
-					<!-- Step 3: Complete -->
-					<div class="flex items-center text-gray-400">
-						<div class="flex items-center justify-center w-10 h-10 bg-gray-200 text-gray-600 rounded-full text-sm font-medium">3</div>
-						<span class="ml-3 text-sm font-medium text-gray-400 hidden sm:block"><?php _e('Complete', 'tostishop'); ?></span>
-					</div>
-				</div>
-			</div>
-		</div>
+
 
 	<form name="checkout" method="post" class="checkout woocommerce-checkout" action="<?php echo esc_url( wc_get_checkout_url() ); ?>" enctype="multipart/form-data" aria-label="<?php echo esc_attr__( 'Checkout', 'woocommerce' ); ?>">
 
