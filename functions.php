@@ -60,10 +60,11 @@ function tostishop_scripts() {
     wp_script_add_data('alpinejs', 'defer', true);
     
     // Custom JS
-    wp_enqueue_script('tostishop-ui', get_template_directory_uri() . '/assets/js/ui.js', array(), '1.0.0', true);
+    wp_enqueue_script('tostishop-ui', get_template_directory_uri() . '/assets/js/ui.js', array('jquery'), '1.0.0', true);
+    wp_enqueue_script('tostishop-theme', get_template_directory_uri() . '/assets/js/theme.js', array('jquery', 'tostishop-ui'), '1.0.0', true);
     
     // Localize script for AJAX
-    wp_localize_script('tostishop-ui', 'tostishop_ajax', array(
+    wp_localize_script('tostishop-theme', 'tostishop_ajax', array(
         'ajax_url' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('tostishop_nonce'),
     ));

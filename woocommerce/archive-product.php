@@ -52,7 +52,35 @@ get_header(); ?>
                 <!-- Category Filter -->
                 <div class="mb-6">
                     <h4 class="font-medium text-gray-900 mb-3"><?php _e('Categories', 'tostishop'); ?></h4>
-                    <?php the_widget('WC_Widget_Product_Categories'); ?>
+                    <?php 
+                    // Custom category widget to show only categories with products
+                    $categories = get_terms(array(
+                        'taxonomy'     => 'product_cat',
+                        'hide_empty'   => true,
+                        'exclude'      => array(get_option('default_product_cat')),
+                        'hierarchical' => true,
+                        'orderby'      => 'name',
+                        'order'        => 'ASC'
+                    ));
+                    
+                    if (!empty($categories)) :
+                        echo '<ul class="space-y-2">';
+                        foreach ($categories as $category) :
+                            $current_cat = is_product_category() ? get_queried_object_id() : 0;
+                            $is_current = ($current_cat == $category->term_id);
+                            ?>
+                            <li>
+                                <a href="<?php echo esc_url(get_term_link($category)); ?>" 
+                                   class="flex items-center justify-between text-sm <?php echo $is_current ? 'text-blue-600 font-medium' : 'text-gray-600 hover:text-gray-900'; ?>">
+                                    <span><?php echo esc_html($category->name); ?></span>
+                                    <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"><?php echo $category->count; ?></span>
+                                </a>
+                            </li>
+                            <?php
+                        endforeach;
+                        echo '</ul>';
+                    endif;
+                    ?>
                 </div>
                 
                 <!-- Attribute Filters -->
@@ -130,15 +158,44 @@ get_header(); ?>
                 <div class="mt-16 border-t border-gray-200 pt-8">
                     <div class="flex flex-col items-center">
                         <div class="pagination-wrapper">
-                            <?php woocommerce_pagination(); ?>
+                            <?php
+                            global $wp_query;
+                            $total_pages = $wp_query->max_num_pages;
+                            $current_page = max(1, get_query_var('paged'));
+                            
+                            if ($total_pages > 1) {
+                                echo '<nav class="flex items-center justify-center space-x-2" aria-label="Pagination">';
+                                
+                                // Previous button
+                                if ($current_page > 1) {
+                                    echo '<a href="' . esc_url(get_pagenum_link($current_page - 1)) . '" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Previous</a>';
+                                }
+                                
+                                // Page numbers
+                                for ($i = 1; $i <= $total_pages; $i++) {
+                                    if ($i == $current_page) {
+                                        echo '<span class="px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-md">' . $i . '</span>';
+                                    } else {
+                                        echo '<a href="' . esc_url(get_pagenum_link($i)) . '" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">' . $i . '</a>';
+                                    }
+                                }
+                                
+                                // Next button
+                                if ($current_page < $total_pages) {
+                                    echo '<a href="' . esc_url(get_pagenum_link($current_page + 1)) . '" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Next</a>';
+                                }
+                                
+                                echo '</nav>';
+                            }
+                            ?>
                         </div>
-                        <?php if (wc_get_loop_prop('total_pages') > 1) : ?>
+                        <?php if ($total_pages > 1) : ?>
                         <p class="text-sm text-gray-600 mt-4">
                             <?php 
                             printf(
                                 __('Page %1$s of %2$s', 'tostishop'),
-                                max(1, get_query_var('paged')),
-                                wc_get_loop_prop('total_pages')
+                                $current_page,
+                                $total_pages
                             );
                             ?>
                         </p>
