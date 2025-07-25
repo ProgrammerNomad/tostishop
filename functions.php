@@ -61,8 +61,20 @@ function tostishop_checkout_customizations() {
     
     // Hide ship to different address option via CSS
     add_action('wp_head', 'tostishop_hide_ship_to_different_address');
+    
+    // Remove shipping fields from checkout
+    add_filter('woocommerce_checkout_fields', 'tostishop_remove_shipping_fields');
 }
 add_action('init', 'tostishop_checkout_customizations');
+
+/**
+ * Remove shipping fields from checkout completely
+ */
+function tostishop_remove_shipping_fields($fields) {
+    // Remove all shipping fields since we're using billing for everything
+    unset($fields['shipping']);
+    return $fields;
+}
 
 /**
  * Auto-copy billing address to shipping address
