@@ -1,6 +1,6 @@
 <?php
 /**
- * "Order received" message.
+ * "Order received" message - Modern Mobile-First Design
  *
  * This template can be overridden by copying it to yourtheme/woocommerce/checkout/order-received.php.
  *
@@ -18,25 +18,21 @@
  */
 
 defined( 'ABSPATH' ) || exit;
+
+/**
+ * Filter the message shown after a checkout is complete.
+ *
+ * @since 2.2.0
+ *
+ * @param string         $message The message.
+ * @param WC_Order|false $order   The order created during checkout, or false if order data is not available.
+ */
+$message = apply_filters(
+	'woocommerce_thankyou_order_received_text',
+	esc_html( __( 'Thank you. Your order has been received.', 'woocommerce' ) ),
+	$order
+);
+
+// Don't output anything here as this is handled in the parent thankyou.php template
+// This template is kept for compatibility but content is managed by thankyou.php
 ?>
-
-<p class="woocommerce-notice woocommerce-notice--success woocommerce-thankyou-order-received">
-	<?php
-	/**
-	 * Filter the message shown after a checkout is complete.
-	 *
-	 * @since 2.2.0
-	 *
-	 * @param string         $message The message.
-	 * @param WC_Order|false $order   The order created during checkout, or false if order data is not available.
-	 */
-	$message = apply_filters(
-		'woocommerce_thankyou_order_received_text',
-		esc_html( __( 'Thank you. Your order has been received.', 'woocommerce' ) ),
-		$order
-	);
-
-	// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-	echo $message;
-	?>
-</p>

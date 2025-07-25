@@ -129,6 +129,11 @@ function tostishop_scripts() {
         wp_enqueue_script('tostishop-checkout', get_template_directory_uri() . '/assets/js/checkout.js', array('jquery', 'wc-checkout'), '1.0.0', true);
     }
     
+    // Order confirmation specific JS
+    if (is_order_received_page() || is_wc_endpoint_url('order-received')) {
+        wp_enqueue_script('tostishop-order-confirmation', get_template_directory_uri() . '/assets/js/order-confirmation.js', array(), '1.0.0', true);
+    }
+    
     // Localize script for AJAX
     wp_localize_script('tostishop-theme', 'tostishop_ajax', array(
         'ajax_url' => admin_url('admin-ajax.php'),
@@ -239,6 +244,103 @@ function tostishop_breadcrumbs() {
 /**
  * AJAX handlers
  */
+
+// Order confirmation enhancements
+function tostishop_order_confirmation_enhancements() {
+    // Add special styling to order confirmation pages
+    if (is_order_received_page() || is_wc_endpoint_url('order-received')) {
+        // Add viewport meta for better mobile experience
+        add_action('wp_head', function() {
+            echo '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">';
+        }, 1);
+        
+        // Add structured data for order confirmation
+        add_action('wp_head', 'tostishop_order_confirmation_structured_data');
+        
+        // Add print styles
+        add_action('wp_head', function() {
+            echo '<style media="print">
+                .no-print, header, footer, .order-action-btn { display: none !important; }
+                .order-details-card { box-shadow: none !important; border: 1px solid #000 !important; }
+            </style>';
+        });
+    }
+}
+add_action('template_redirect', 'tostishop_order_confirmation_enhancements');
+
+/**
+ * Add structured data for order confirmation
+ */
+function tostishop_order_confirmation_structured_data() {
+    global $wp;
+    
+    if (isset($wp->query_vars['order-received']) && !empty($wp->query_vars['order-received'])) {
+        $order_id = absint($wp->query_vars['order-received']);
+        $order = wc_get_order($order_id);
+        
+        if ($order && $order->get_status() !== 'failed') {
+            $schema = array(
+                '@context' => 'https://schema.org',
+                '@type' => 'Order',
+                'orderNumber' => $order->get_order_number(),
+                'orderDate' => $order->get_date_created()->format('c'),
+                'orderStatus' => 'https://schema.org/OrderProcessing',
+                'priceCurrency' => $order->get_currency(),
+                'price' => $order->get_total(),
+                'url' => $order->get_view_order_url(),
+                'merchant' => array(
+                    '@type' => 'Organization',
+                    'name' => get_bloginfo('name'),
+                    'url' => home_url()
+                ),
+                'customer' => array(
+                    '@type' => 'Person',
+                    'name' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+                    'email' => $order->get_billing_email()
+                )
+            );
+            
+            echo '<script type="application/ld+json">' . json_encode($schema) . '</script>';
+        }
+    }
+}
+
+/**
+ * Customize order confirmation email link
+ */
+function tostishop_order_confirmation_email_text($text, $order) {
+    if ($order && !$order->has_status('failed')) {
+        return __('We\'ve sent a confirmation email to your inbox. Please check your email for order details and tracking information.', 'tostishop');
+    }
+    return $text;
+}
+add_filter('woocommerce_thankyou_order_received_text', 'tostishop_order_confirmation_email_text', 10, 2);
+
+/**
+ * Add order tracking information to confirmation page
+ */
+function tostishop_add_order_tracking_info($order_id) {
+    $order = wc_get_order($order_id);
+    
+    if ($order && !$order->has_status(array('failed', 'cancelled'))) {
+        echo '<div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mt-6">';
+        echo '<div class="flex items-start space-x-3">';
+        echo '<div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">';
+        echo '<svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">';
+        echo '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>';
+        echo '</svg>';
+        echo '</div>';
+        echo '<div>';
+        echo '<h3 class="text-sm font-semibold text-yellow-900 mb-1">' . __('What\'s Next?', 'tostishop') . '</h3>';
+        echo '<p class="text-sm text-yellow-800">';
+        echo __('We\'ll start processing your order right away. You\'ll receive tracking information once your order ships.', 'tostishop');
+        echo '</p>';
+        echo '</div>';
+        echo '</div>';
+        echo '</div>';
+    }
+}
+add_action('woocommerce_thankyou', 'tostishop_add_order_tracking_info', 20);
 
 // Add to cart via AJAX
 add_action('wp_ajax_tostishop_add_to_cart', 'tostishop_ajax_add_to_cart');
@@ -433,3 +535,5 @@ function tostishop_woocommerce_pagination_args($args) {
     $args['type'] = 'array';
     return $args;
 }
+
+add_filter('woocommerce_cart_needs_shipping_address', '__return_false');
