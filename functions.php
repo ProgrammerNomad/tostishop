@@ -49,6 +49,64 @@ function tostishop_setup() {
 add_action('after_setup_theme', 'tostishop_setup');
 
 /**
+ * Checkout Customizations
+ * Remove separate shipping address and combine with billing
+ */
+function tostishop_checkout_customizations() {
+    // Force shipping address to be same as billing address
+    add_filter('woocommerce_cart_needs_shipping_address', '__return_false');
+    
+    // Auto-copy billing to shipping fields
+    add_action('woocommerce_checkout_process', 'tostishop_auto_copy_billing_to_shipping');
+    
+    // Hide ship to different address option via CSS
+    add_action('wp_head', 'tostishop_hide_ship_to_different_address');
+}
+add_action('init', 'tostishop_checkout_customizations');
+
+/**
+ * Auto-copy billing address to shipping address
+ */
+function tostishop_auto_copy_billing_to_shipping() {
+    if (!isset($_POST['ship_to_different_address'])) {
+        $billing_fields = array(
+            'shipping_first_name' => 'billing_first_name',
+            'shipping_last_name' => 'billing_last_name',
+            'shipping_company' => 'billing_company',
+            'shipping_address_1' => 'billing_address_1',
+            'shipping_address_2' => 'billing_address_2',
+            'shipping_city' => 'billing_city',
+            'shipping_state' => 'billing_state',
+            'shipping_postcode' => 'billing_postcode',
+            'shipping_country' => 'billing_country',
+        );
+        
+        foreach ($billing_fields as $shipping_field => $billing_field) {
+            if (isset($_POST[$billing_field])) {
+                $_POST[$shipping_field] = $_POST[$billing_field];
+            }
+        }
+    }
+}
+
+/**
+ * Hide ship to different address option via CSS
+ */
+function tostishop_hide_ship_to_different_address() {
+    if (is_checkout()) {
+        ?>
+        <style>
+        #ship-to-different-address,
+        .woocommerce-shipping-fields h3,
+        .shipping_address {
+            display: none !important;
+        }
+        </style>
+        <?php
+    }
+}
+
+/**
  * Enqueue scripts and styles
  */
 function tostishop_scripts() {

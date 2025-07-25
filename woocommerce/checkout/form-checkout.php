@@ -109,24 +109,19 @@ if ( ! $checkout->is_registration_enabled() && $checkout->is_registration_requir
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
 							</svg>
 						</div>
-						<?php _e('Customer Information', 'tostishop'); ?>
+						<?php _e('Billing and Shipping Details', 'tostishop'); ?>
 						<span class="ml-2 text-sm bg-primary/10 text-primary px-2 py-1 rounded-full">
 							<?php _e('Required', 'tostishop'); ?>
 						</span>
 					</h2>
 					
-					<div class="grid grid-cols-1 lg:grid-cols-2 gap-8" id="customer_details">
-						<div class="col-1 space-y-1">
-							<h3 class="text-lg font-medium text-gray-900 mb-4 pb-2 border-b border-gray-100">
-								<?php _e('Billing Details', 'tostishop'); ?>
-							</h3>
+					<div class="w-full" id="customer_details">
+						<div class="space-y-1">
 							<?php do_action( 'woocommerce_checkout_billing' ); ?>
 						</div>
 
-						<div class="col-2 space-y-1">
-							<h3 class="text-lg font-medium text-gray-900 mb-4 pb-2 border-b border-gray-100">
-								<?php _e('Shipping Details', 'tostishop'); ?>
-							</h3>
+						<!-- Shipping form is now empty as fields are handled in billing -->
+						<div class="hidden">
 							<?php do_action( 'woocommerce_checkout_shipping' ); ?>
 						</div>
 					</div>
