@@ -64,6 +64,15 @@ function tostishop_checkout_customizations() {
 }
 add_action('init', 'tostishop_checkout_customizations');
 
+/**
+ * Auto-copy billing address to shipping address
+ */
+
+
+/**
+ * Hide ship to different address option via CSS
+ */
+
 
 /**
  * Enqueue scripts and styles
