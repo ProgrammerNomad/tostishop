@@ -57,11 +57,13 @@
 <!-- Header -->
 <header class="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16"><?php else : ?>
+        <div class="flex items-center justify-between h-16">
+<?php else : ?>
 <!-- Minimal Header for Cart/Checkout -->
 <header class="bg-white shadow-sm border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-center h-16"><?php endif; ?>
+        <div class="flex items-center justify-center h-16">
+<?php endif; ?>
             
             <?php if (!is_cart() && !is_checkout()) : ?>
             <!-- Mobile menu button -->

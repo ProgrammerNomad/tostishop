@@ -141,6 +141,15 @@
         </div>
     </div>
 </footer>
+<?php else : ?>
+<!-- Minimal Footer for Cart/Checkout -->
+<footer class="bg-white border-t border-gray-200 mt-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="text-center">
+            <p class="text-sm text-gray-600"><?php echo date('Y'); ?> <?php bloginfo('name'); ?>. <?php _e('All rights reserved.', 'tostishop'); ?></p>
+        </div>
+    </div>
+</footer>
 <?php endif; ?>
 
 <?php wp_footer(); ?>
