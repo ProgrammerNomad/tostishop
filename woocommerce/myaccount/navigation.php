@@ -70,12 +70,27 @@ do_action( 'woocommerce_before_account_navigation' );
 					
 					<span class="flex-1"><?php echo esc_html( $label ); ?></span>
 					
-					<!-- Active indicator -->
-					<?php if ( wc_get_account_menu_item_classes( $endpoint ) === 'is-active' ) : ?>
-						<svg class="w-4 h-4 ml-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-							<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-						</svg>
-					<?php endif; ?>
+					<!-- Desktop: Show active indicator and hover arrow -->
+					<div class="hidden lg:flex items-center ml-2">
+						<?php if ( wc_get_account_menu_item_classes( $endpoint ) === 'is-active' ) : ?>
+							<svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+							</svg>
+						<?php else : ?>
+							<svg class="w-4 h-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+							</svg>
+						<?php endif; ?>
+					</div>
+					
+					<!-- Mobile: Show active indicator only -->
+					<div class="lg:hidden">
+						<?php if ( wc_get_account_menu_item_classes( $endpoint ) === 'is-active' ) : ?>
+							<svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+							</svg>
+						<?php endif; ?>
+					</div>
 				</a>
 			</li>
 		<?php endforeach; ?>

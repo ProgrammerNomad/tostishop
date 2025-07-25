@@ -24,12 +24,12 @@ get_header(); ?>
                         <div class="bg-gray-100 rounded-lg overflow-hidden aspect-square">
                             <?php if (has_post_thumbnail()) : ?>
                                 <?php the_post_thumbnail('large', array(
-                                    'class' => 'w-full h-full object-cover',
-                                    'x-show' => 'currentImage === 0'
+                                    'class' => 'w-full h-full object-cover main-product-image',
+                                    'id' => 'main-product-image'
                                 )); ?>
                             <?php endif; ?>
                             
-                            <!-- Gallery Images -->
+                            <!-- Gallery Images (initially hidden) -->
                             <?php
                             $attachment_ids = $product->get_gallery_image_ids();
                             foreach ($attachment_ids as $index => $attachment_id) :
@@ -37,8 +37,9 @@ get_header(); ?>
                             ?>
                                 <img src="<?php echo esc_url($image_url); ?>" 
                                      alt="<?php echo esc_attr(get_post_meta($attachment_id, '_wp_attachment_image_alt', true)); ?>"
-                                     class="w-full h-full object-cover"
-                                     x-show="currentImage === <?php echo $index + 1; ?>">
+                                     class="w-full h-full object-cover gallery-image"
+                                     style="display: none;"
+                                     data-gallery-index="<?php echo $index + 1; ?>">
                             <?php endforeach; ?>
                         </div>
                     </div>
@@ -47,17 +48,17 @@ get_header(); ?>
                     <?php if ($attachment_ids) : ?>
                     <div class="flex space-x-2 overflow-x-auto">
                         <!-- Main thumbnail -->
-                        <button @click="currentImage = 0" 
-                                class="flex-none w-16 h-16 bg-gray-100 rounded border-2 overflow-hidden"
-                                :class="{ 'border-blue-500': currentImage === 0, 'border-gray-200': currentImage !== 0 }">
+                        <button onclick="showGalleryImage(0)" 
+                                class="flex-none w-16 h-16 bg-gray-100 rounded border-2 border-blue-500 overflow-hidden thumbnail-btn"
+                                data-thumbnail="main">
                             <?php the_post_thumbnail('thumbnail', array('class' => 'w-full h-full object-cover')); ?>
                         </button>
                         
                         <!-- Gallery thumbnails -->
                         <?php foreach ($attachment_ids as $index => $attachment_id) : ?>
-                            <button @click="currentImage = <?php echo $index + 1; ?>" 
-                                    class="flex-none w-16 h-16 bg-gray-100 rounded border-2 overflow-hidden"
-                                    :class="{ 'border-blue-500': currentImage === <?php echo $index + 1; ?>, 'border-gray-200': currentImage !== <?php echo $index + 1; ?> }">
+                            <button onclick="showGalleryImage(<?php echo $index + 1; ?>)" 
+                                    class="flex-none w-16 h-16 bg-gray-100 rounded border-2 border-gray-200 overflow-hidden thumbnail-btn"
+                                    data-thumbnail="<?php echo $index + 1; ?>">
                                 <?php echo wp_get_attachment_image($attachment_id, 'thumbnail', false, array('class' => 'w-full h-full object-cover')); ?>
                             </button>
                         <?php endforeach; ?>
@@ -106,7 +107,7 @@ get_header(); ?>
                 <?php endif; ?>
                 
                 <!-- Price -->
-                <div class="text-3xl font-bold text-gray-900">
+                <div class="text-3xl font-bold text-gray-900 product-price">
                     <?php echo $product->get_price_html(); ?>
                 </div>
                 
@@ -118,7 +119,7 @@ get_header(); ?>
                 <?php endif; ?>
                 
                 <!-- Stock Status -->
-                <div class="flex items-center space-x-2">
+                <div class="flex items-center space-x-2 stock-status">
                     <?php if ($product->is_in_stock()) : ?>
                         <div class="flex items-center text-green-600">
                             <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">

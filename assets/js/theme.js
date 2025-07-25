@@ -224,16 +224,126 @@ jQuery(document).ready(function($) {
     
     // WooCommerce variation form enhancements
     $('.variations_form').each(function() {
-        $(this).on('found_variation', function(event, variation) {
-            // Handle variation found
-            console.log('Variation found:', variation);
+        const $form = $(this);
+        const $gallery = $('.product-gallery');
+        const $mainImage = $gallery.find('.bg-gray-100');
+        const $thumbnails = $gallery.find('[data-thumbnail]');
+        
+        // Store original images
+        const originalMainImage = $mainImage.html();
+        const originalThumbnails = $thumbnails.clone();
+        
+        $form.on('found_variation', function(event, variation) {
+            // Handle variation found - update main product image
+            if (variation.image && variation.image.src) {
+                // Update main image
+                $mainImage.html(`
+                    <img src="${variation.image.src}" 
+                         alt="${variation.image.alt || ''}"
+                         class="w-full h-full object-cover">
+                `);
+                
+                // Update gallery thumbnails if variation has gallery
+                if (variation.image.gallery_thumbnail_src) {
+                    // Create new thumbnail for variation
+                    const $newThumbnail = $(`
+                        <button onclick="updateMainImage('${variation.image.src}')" 
+                                class="flex-none w-16 h-16 bg-gray-100 rounded border-2 border-blue-500 overflow-hidden">
+                            <img src="${variation.image.gallery_thumbnail_src}" 
+                                 alt="${variation.image.alt || ''}"
+                                 class="w-full h-full object-cover">
+                        </button>
+                    `);
+                    
+                    // Reset all thumbnail borders and add to first
+                    $thumbnails.removeClass('border-blue-500').addClass('border-gray-200');
+                    $thumbnails.first().replaceWith($newThumbnail);
+                }
+            }
+            
+            // Update price display if needed
+            if (variation.price_html) {
+                $('.product-price, .single-product-price').html(variation.price_html);
+            }
+            
+            // Update stock status
+            if (variation.is_in_stock !== undefined) {
+                const $stockStatus = $('.stock-status');
+                if (variation.is_in_stock) {
+                    $stockStatus.html(`
+                        <div class="flex items-center text-green-600">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span class="font-medium">In Stock</span>
+                        </div>
+                    `);
+                } else {
+                    $stockStatus.html(`
+                        <div class="flex items-center text-red-600">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span class="font-medium">Out of Stock</span>
+                        </div>
+                    `);
+                }
+            }
         });
         
-        $(this).on('reset_data', function() {
-            // Handle variation reset
-            console.log('Variation reset');
+        $form.on('reset_data', function() {
+            // Handle variation reset - restore original images
+            $mainImage.html(originalMainImage);
+            
+            // Restore original thumbnails
+            $thumbnails.each(function(index) {
+                if (originalThumbnails[index]) {
+                    $(this).replaceWith(originalThumbnails.eq(index).clone());
+                }
+            });
+            
+            // Reset thumbnail states
+            $('.product-gallery button').removeClass('border-blue-500').addClass('border-gray-200');
+            $('.product-gallery button').first().removeClass('border-gray-200').addClass('border-blue-500');
         });
     });
+    
+    // Add global function for manual image updates
+    window.updateMainImage = function(imageSrc) {
+        const $mainImage = $('.product-gallery .bg-gray-100');
+        $mainImage.html(`
+            <img src="${imageSrc}" 
+                 alt="Product Image"
+                 class="w-full h-full object-cover">
+        `);
+        
+        // Update thumbnail states
+        $('.product-gallery button').removeClass('border-blue-500').addClass('border-gray-200');
+        event.target.closest('button').classList.remove('border-gray-200');
+        event.target.closest('button').classList.add('border-blue-500');
+    };
+    
+    // Gallery navigation function
+    window.showGalleryImage = function(imageIndex) {
+        const $mainImageContainer = $('.product-gallery .bg-gray-100');
+        const $thumbnails = $('.thumbnail-btn');
+        
+        // Hide all gallery images
+        $('.gallery-image, .main-product-image').hide();
+        
+        // Reset all thumbnail borders
+        $thumbnails.removeClass('border-blue-500').addClass('border-gray-200');
+        
+        if (imageIndex === 0) {
+            // Show main product image
+            $('.main-product-image').show();
+            $('[data-thumbnail="main"]').removeClass('border-gray-200').addClass('border-blue-500');
+        } else {
+            // Show specific gallery image
+            $(`.gallery-image[data-gallery-index="${imageIndex}"]`).show();
+            $(`[data-thumbnail="${imageIndex}"]`).removeClass('border-gray-200').addClass('border-blue-500');
+        }
+    };
     
     // Enhanced cart updates
     $(document.body).on('updated_cart_totals updated_checkout', function() {

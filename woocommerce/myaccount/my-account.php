@@ -15,6 +15,7 @@ get_header(); ?>
 		<!-- Page Title -->
 		<div class="mb-8">
 			<h1 class="text-3xl font-bold text-gray-900"><?php _e( 'My Account', 'tostishop' ); ?></h1>
+			<p class="text-gray-600 mt-2"><?php _e( 'Manage your account settings and view your order history', 'tostishop' ); ?></p>
 		</div>
 		
 		<!-- Account Layout -->
@@ -31,13 +32,15 @@ get_header(); ?>
 			
 			<!-- Main Content -->
 			<div class="lg:col-span-3">
-				<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 lg:p-8">
-					<?php
-						/**
-						 * My Account content.
-						 */
-						do_action( 'woocommerce_account_content' );
-					?>
+				<div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[600px] lg:min-h-[700px]">
+					<div class="p-6 lg:p-8">
+						<?php
+							/**
+							 * My Account content.
+							 */
+							do_action( 'woocommerce_account_content' );
+						?>
+					</div>
 				</div>
 			</div>
 			
