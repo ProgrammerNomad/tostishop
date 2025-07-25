@@ -93,6 +93,42 @@ defined( 'ABSPATH' ) || exit;
 	<!-- Order Totals -->
 	<div class="border-t-2 border-gray-100 pt-6 space-y-4">
 
+		<!-- Coupon Code Section -->
+		<?php if ( wc_coupons_enabled() ) : ?>
+		<div class="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-200">
+			<div class="flex items-center justify-between mb-3">
+				<h4 class="text-sm font-medium text-gray-900 flex items-center">
+					<svg class="w-4 h-4 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+					</svg>
+					<?php _e('Promo Code', 'tostishop'); ?>
+				</h4>
+				<button type="button" class="text-primary text-sm font-medium hover:text-primary/80 transition-colors" id="toggle-coupon">
+					<?php _e('Add Code', 'tostishop'); ?>
+				</button>
+			</div>
+			
+			<form class="coupon-form hidden" method="post" id="coupon-form">
+				<div class="flex space-x-2">
+					<div class="flex-1">
+						<input type="text" 
+							   name="coupon_code" 
+							   id="coupon_code" 
+							   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" 
+							   placeholder="<?php esc_attr_e( 'Enter promo code', 'tostishop' ); ?>" 
+							   value="" />
+					</div>
+					<button type="submit" 
+							name="apply_coupon" 
+							value="<?php esc_attr_e( 'Apply', 'tostishop' ); ?>"
+							class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors">
+						<?php esc_html_e( 'Apply', 'tostishop' ); ?>
+					</button>
+				</div>
+			</form>
+		</div>
+		<?php endif; ?>
+
 		<!-- Subtotal -->
 		<div class="flex justify-between items-center text-base">
 			<span class="text-gray-600 font-medium"><?php esc_html_e( 'Subtotal', 'woocommerce' ); ?></span>
@@ -167,3 +203,137 @@ defined( 'ABSPATH' ) || exit;
 
 	</div>
 </div>
+
+<style>
+/* Enhanced Review Order Styling */
+.coupon-form.hidden {
+	display: none;
+}
+
+.coupon-form {
+	animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+	from {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* Enhanced Coupon Form */
+.coupon-form input[type="text"] {
+	border: 2px solid #e5e7eb;
+	transition: all 0.2s ease;
+}
+
+.coupon-form input[type="text"]:focus {
+	border-color: #14175b;
+	box-shadow: 0 0 0 3px rgba(20, 23, 91, 0.1);
+	outline: none;
+}
+
+.coupon-form button[type="submit"] {
+	background: linear-gradient(135deg, #14175b 0%, #1e3a8a 100%);
+	border: none;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.coupon-form button[type="submit"]:hover {
+	background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%);
+	transform: translateY(-1px);
+	box-shadow: 0 4px 6px -1px rgba(20, 23, 91, 0.3);
+}
+
+/* Mobile Responsive Product Cards */
+@media (max-width: 640px) {
+	.woocommerce-checkout-review-order-table .flex.items-start {
+		flex-direction: column;
+		space-x: 0;
+	}
+	
+	.woocommerce-checkout-review-order-table .flex-shrink-0 {
+		align-self: center;
+		margin-bottom: 0.75rem;
+	}
+	
+	.woocommerce-checkout-review-order-table .flex.justify-between {
+		text-align: center;
+	}
+	
+	.coupon-form .flex {
+		flex-direction: column;
+		space-x: 0;
+	}
+	
+	.coupon-form .flex-1 {
+		margin-bottom: 0.5rem;
+	}
+	
+	.coupon-form button[type="submit"] {
+		width: 100%;
+	}
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	const toggleButton = document.getElementById('toggle-coupon');
+	const couponForm = document.getElementById('coupon-form');
+	
+	if (toggleButton && couponForm) {
+		toggleButton.addEventListener('click', function() {
+			if (couponForm.classList.contains('hidden')) {
+				couponForm.classList.remove('hidden');
+				toggleButton.textContent = '<?php echo esc_js( __( 'Cancel', 'tostishop' ) ); ?>';
+			} else {
+				couponForm.classList.add('hidden');
+				toggleButton.textContent = '<?php echo esc_js( __( 'Add Code', 'tostishop' ) ); ?>';
+			}
+		});
+	}
+	
+	// Handle coupon form submission
+	const couponFormElement = document.getElementById('coupon-form');
+	if (couponFormElement) {
+		couponFormElement.addEventListener('submit', function(e) {
+			e.preventDefault();
+			
+			const couponCode = document.getElementById('coupon_code').value.trim();
+			if (!couponCode) {
+				alert('<?php echo esc_js( __( 'Please enter a coupon code', 'tostishop' ) ); ?>');
+				return;
+			}
+			
+			// Add loading state
+			const submitButton = this.querySelector('button[type="submit"]');
+			const originalText = submitButton.textContent;
+			submitButton.textContent = '<?php echo esc_js( __( 'Applying...', 'tostishop' ) ); ?>';
+			submitButton.disabled = true;
+			
+			// Create form data
+			const formData = new FormData();
+			formData.append('coupon_code', couponCode);
+			formData.append('apply_coupon', '1');
+			
+			// Submit via AJAX or form
+			fetch(window.location.href, {
+				method: 'POST',
+				body: formData
+			}).then(response => {
+				// Reload page to show updated totals
+				window.location.reload();
+			}).catch(error => {
+				console.error('Error:', error);
+				submitButton.textContent = originalText;
+				submitButton.disabled = false;
+			});
+		});
+	}
+});
+</script>
