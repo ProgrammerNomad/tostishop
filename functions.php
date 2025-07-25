@@ -56,26 +56,37 @@ function tostishop_checkout_customizations() {
     // Force shipping address to be same as billing address
     add_filter('woocommerce_cart_needs_shipping_address', '__return_false');
     
-    // Hide ship to different address option via CSS
-    add_action('wp_head', 'tostishop_hide_ship_to_different_address');
+    // Remove shipping fields from checkout
+    add_filter('woocommerce_checkout_fields', 'tostishop_remove_shipping_fields');
+    
+    // Auto-copy billing to shipping on checkout
+    add_action('woocommerce_checkout_process', 'tostishop_auto_copy_billing_to_shipping');
 }
 add_action('init', 'tostishop_checkout_customizations');
 
 /**
- * Hide ship to different address option via CSS
+ * Remove shipping fields from checkout
  */
-function tostishop_hide_ship_to_different_address() {
-    if (is_checkout()) {
-        ?>
-        <style>
-        #ship-to-different-address,
-        .woocommerce-shipping-fields h3,
-        .shipping_address {
-            display: none !important;
-        }
-        </style>
-        <?php
-    }
+function tostishop_remove_shipping_fields($fields) {
+    // Remove all shipping fields
+    unset($fields['shipping']);
+    return $fields;
+}
+
+/**
+ * Auto-copy billing address to shipping address
+ */
+function tostishop_auto_copy_billing_to_shipping() {
+    // Copy billing data to shipping
+    $_POST['shipping_first_name'] = $_POST['billing_first_name'];
+    $_POST['shipping_last_name'] = $_POST['billing_last_name'];
+    $_POST['shipping_company'] = $_POST['billing_company'];
+    $_POST['shipping_address_1'] = $_POST['billing_address_1'];
+    $_POST['shipping_address_2'] = $_POST['billing_address_2'];
+    $_POST['shipping_city'] = $_POST['billing_city'];
+    $_POST['shipping_postcode'] = $_POST['billing_postcode'];
+    $_POST['shipping_country'] = $_POST['billing_country'];
+    $_POST['shipping_state'] = $_POST['billing_state'];
 }
 
 /**
