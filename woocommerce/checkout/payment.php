@@ -40,7 +40,7 @@ if ( ! wp_doing_ajax() ) {
                         wc_get_template( 'checkout/payment-method.php', array( 'gateway' => $gateway ), '', WC()->plugin_path() . '/templates/' );
                     }
                 } else {
-                    echo '<li class="woocommerce-notice woocommerce-notice--info woocommerce-info">' . apply_filters( 'woocommerce_no_available_payment_methods_message', WC()->customer->get_billing_country() ? esc_html__( 'Sorry, it seems that there are no available payment methods for your state. Please contact us if you require assistance or wish to make alternate arrangements.', 'woocommerce' ) : esc_html__( 'Please fill in your details above to see available payment methods.', 'woocommerce' ) ) . '</li>'; // @codingStandardsIgnoreLine
+                    echo '<li class="woocommerce-notice woocommerce-notice--info woocommerce-info">' . apply_filters( 'woocommerce_no_available_payment_methods_message', WC()->customer->get_billing_country() ? esc_html__( 'Sorry, it seems that there are no available payment methods for your state. Please contact us if you require assistance or wish to make alternate arrangements.', 'woocommerce' ) : esc_html__( 'Please fill in your details above to see available payment methods.', 'woocommerce' ) ) . '</li>';
                 }
                 ?>
             </ul>
@@ -65,10 +65,9 @@ if ( ! wp_doing_ajax() ) {
                 <div class="woocommerce-terms-and-conditions checkout-terms-conditions">
                     <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
                         <label class="woocommerce-form__label woocommerce-form__label-for-checkbox checkbox-label flex items-start cursor-pointer">
-                            <input type="checkbox" class="woocommerce-form__input woocommerce-form__input-checkbox input-checkbox mr-3 mt-1" name="terms" <?php checked( apply_filters( 'woocommerce_terms_is_checked_default', isset( $_POST['terms'] ) ), true ); // WPCS: input var ok, csrf ok. ?> id="terms" />
+                            <input type="checkbox" class="woocommerce-form__input woocommerce-form__input-checkbox input-checkbox mr-3 mt-1" name="terms" <?php checked( apply_filters( 'woocommerce_terms_is_checked_default', isset( $_POST['terms'] ) ), true ); ?> id="terms" />
                             <span class="woocommerce-terms-and-conditions-checkbox-text text-sm text-gray-700 leading-relaxed">
                                 <?php
-                                /* translators: %s opening and closing link tags respectively */
                                 printf( __( 'I have read and agree to the website %sterms and conditions%s', 'woocommerce' ), '<a href="' . esc_url( wc_get_page_permalink( 'terms' ) ) . '" class="woocommerce-terms-and-conditions-link text-primary hover:text-blue-600 underline" target="_blank">', '</a>' );
                                 ?>
                                 <span class="required text-red-500 ml-1">*</span>
@@ -81,16 +80,16 @@ if ( ! wp_doing_ajax() ) {
 
         <?php do_action( 'woocommerce_review_order_before_submit' ); ?>
 
-        <!-- Place Order Button -->
+        <!-- CRITICAL: Fixed Place Order Button with all required WooCommerce classes -->
         <button type="submit" 
-                class="button alt checkout-place-order-btn w-full" 
+                class="button alt wc-forward checkout-place-order-btn w-full<?php echo esc_attr( wc_wp_theme_get_element_class_name( 'button' ) ? ' ' . wc_wp_theme_get_element_class_name( 'button' ) : '' ); ?>" 
                 name="woocommerce_checkout_place_order" 
                 id="place_order" 
                 value="<?php esc_attr_e( 'Place order', 'woocommerce' ); ?>" 
                 data-value="<?php esc_attr_e( 'Place order', 'woocommerce' ); ?>">
             <span class="place-order-text"><?php esc_html_e( 'Place Order', 'woocommerce' ); ?></span>
             <div class="place-order-spinner hidden">
-                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg class="animate-spin h-5 w-5 text-white mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
