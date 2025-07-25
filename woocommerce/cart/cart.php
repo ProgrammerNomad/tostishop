@@ -246,7 +246,7 @@ get_header(); ?>
                                         
                                         <div class="flex items-center justify-between mt-4">
                                             <!-- Quantity -->
-                                            <div class="flex items-center border border-gray-300 rounded-lg">
+                                            <div class="quantity border border-gray-300 rounded-lg">
                                                 <?php
                                                 if ( $_product->is_sold_individually() ) {
                                                     $product_quantity = sprintf( '1 <input type="hidden" name="cart[%s][qty]" value="1" />', $cart_item_key );
@@ -300,6 +300,7 @@ get_header(); ?>
                                 
                                 <!-- Quantity -->
                                 <div class="col-span-2 flex justify-center">
+                                    <div class="quantity">
                                     <?php
                                     if ( $_product->is_sold_individually() ) {
                                         $product_quantity = sprintf( '1 <input type="hidden" name="cart[%s][qty]" value="1" />', $cart_item_key );
@@ -318,6 +319,7 @@ get_header(); ?>
                                     }
                                     echo apply_filters( 'woocommerce_cart_item_quantity', $product_quantity, $cart_item_key, $cart_item );
                                     ?>
+                                    </div>
                                 </div>
                                 
                                 <!-- Price -->

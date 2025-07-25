@@ -9,61 +9,70 @@
     // Cart functionality object
     const TostiShopCart = {
         init: function() {
+            console.log('TostiShopCart: Initializing cart functionality');
             this.addQuantityButtons();
             this.bindEvents();
         },
 
         bindEvents: function() {
-            // Handle remove buttons
-            $(document).on('click', '.cart-remove-btn', this.handleRemoveItem);
+            console.log('TostiShopCart: Binding events');
             
-            // Handle quantity changes
-            $(document).on('change', '.cart .qty', this.handleQuantityChange);
+            // Handle remove buttons with direct event binding
+            $(document).on('click', '.cart-remove-btn', this.handleRemoveItem.bind(this));
+            
+            // Handle quantity changes - broader selector to catch all quantity inputs
+            $(document).on('change', '.qty, input[name*="cart["][name*="][qty]"]', this.handleQuantityChange.bind(this));
             
             // Handle quantity button clicks
-            $(document).on('click', '.quantity .plus, .quantity .minus', this.handleQuantityButtons);
+            $(document).on('click', '.quantity .plus, .quantity .minus', this.handleQuantityButtons.bind(this));
+            
+            // Handle cart form submission
+            $(document).on('submit', '.woocommerce-cart-form', this.handleCartUpdate.bind(this));
         },
 
         addQuantityButtons: function() {
-            $('.woocommerce .quantity .qty').each(function() {
+            console.log('TostiShopCart: Adding quantity buttons');
+            
+            // Look for all quantity inputs in the cart
+            $('.qty, input[name*="cart["][name*="][qty]"]').each(function() {
                 const $input = $(this);
-                const $wrapper = $input.closest('.quantity');
+                const $wrapper = $input.closest('.quantity, .flex');
                 
-                if ($wrapper.find('.plus, .minus').length > 0) {
-                    return; // Already processed
+                // Skip if already has buttons or if not in cart form
+                if ($wrapper.find('.plus, .minus').length > 0 || !$input.closest('.woocommerce-cart-form').length) {
+                    return;
+                }
+                
+                // Ensure wrapper has proper styling
+                if (!$wrapper.hasClass('quantity')) {
+                    $wrapper.addClass('quantity').css({
+                        'display': 'flex',
+                        'align-items': 'center',
+                        'border': '1px solid #d1d5db',
+                        'border-radius': '0.5rem',
+                        'overflow': 'hidden'
+                    });
                 }
                 
                 // Create minus button
                 const $minusBtn = $('<button type="button" class="minus">−</button>');
-                $minusBtn.on('click', function(e) {
-                    e.preventDefault();
-                    const currentValue = parseInt($input.val()) || 0;
-                    const minValue = parseInt($input.attr('min')) || 0;
-                    if (currentValue > minValue) {
-                        $input.val(currentValue - 1).trigger('change');
-                    }
-                });
                 
                 // Create plus button
                 const $plusBtn = $('<button type="button" class="plus">+</button>');
-                $plusBtn.on('click', function(e) {
-                    e.preventDefault();
-                    const currentValue = parseInt($input.val()) || 0;
-                    const maxValue = parseInt($input.attr('max')) || 9999;
-                    if (currentValue < maxValue) {
-                        $input.val(currentValue + 1).trigger('change');
-                    }
-                });
                 
                 // Insert buttons
                 $wrapper.prepend($minusBtn);
                 $wrapper.append($plusBtn);
+                
+                console.log('TostiShopCart: Added buttons for quantity input');
             });
         },
 
         handleQuantityButtons: function(e) {
             e.preventDefault();
-            const $button = $(this);
+            console.log('TostiShopCart: Quantity button clicked');
+            
+            const $button = $(e.target);
             const $input = $button.siblings('.qty');
             const currentValue = parseInt($input.val()) || 0;
             
@@ -81,32 +90,58 @@
         },
 
         handleQuantityChange: function(e) {
-            const $input = $(this);
-            const cartItemKey = TostiShopCart.extractCartItemKey($input.attr('name'));
+            console.log('TostiShopCart: Quantity changed');
             
-            if (!cartItemKey) return;
+            const $input = $(e.target);
+            const cartItemKey = this.extractCartItemKey($input.attr('name'));
+            
+            if (!cartItemKey) {
+                console.log('TostiShopCart: No cart item key found');
+                return;
+            }
             
             const quantity = parseInt($input.val()) || 0;
             const $cartItem = $input.closest('.cart-item, [class*="cart_item"]');
             
-            TostiShopCart.updateCartItemQuantity(cartItemKey, quantity, $cartItem);
+            console.log('TostiShopCart: Updating quantity for key:', cartItemKey, 'to:', quantity);
+            
+            this.updateCartItemQuantity(cartItemKey, quantity, $cartItem);
+        },
+
+        handleCartUpdate: function(e) {
+            // Let the default form submission happen for non-AJAX updates
+            console.log('TostiShopCart: Form submitted');
         },
 
         handleRemoveItem: function(e) {
             e.preventDefault();
-            const $button = $(this);
-            const cartItemKey = $button.data('cart-item-key');
+            console.log('TostiShopCart: Remove button clicked');
+            
+            const $button = $(e.target).closest('.cart-remove-btn');
+            const cartItemKey = $button.data('cart_item_key') || $button.attr('data-cart_item_key');
             const $cartItem = $button.closest('.cart-item, [class*="cart_item"]');
+            
+            console.log('TostiShopCart: Removing item with key:', cartItemKey);
+            
+            if (!cartItemKey) {
+                console.log('TostiShopCart: No cart item key found for removal');
+                return;
+            }
             
             if (!confirm('Are you sure you want to remove this item from your cart?')) {
                 return;
             }
             
-            TostiShopCart.removeCartItem(cartItemKey, $cartItem);
+            this.removeCartItem(cartItemKey, $cartItem);
         },
 
         updateCartItemQuantity: function(cartItemKey, quantity, $cartItem) {
-            if (!cartItemKey) return;
+            if (!cartItemKey) {
+                console.log('TostiShopCart: No cart item key provided for update');
+                return;
+            }
+            
+            console.log('TostiShopCart: Making AJAX request to update quantity');
             
             // Show loading state
             $cartItem.css({'opacity': '0.6', 'pointer-events': 'none'});
@@ -118,8 +153,12 @@
                 nonce: tostishop_ajax.nonce
             };
             
+            console.log('TostiShopCart: AJAX data:', data);
+            
             $.post(tostishop_ajax.ajax_url, data)
                 .done(function(response) {
+                    console.log('TostiShopCart: AJAX response:', response);
+                    
                     if (response.success) {
                         // Update cart count
                         TostiShopCart.updateCartCount(response.data.cart_count);
@@ -138,10 +177,12 @@
                             TostiShopCart.showNotification('Cart updated successfully!', 'success');
                         }
                     } else {
+                        console.log('TostiShopCart: AJAX request failed:', response);
                         TostiShopCart.showNotification('Error updating cart. Please try again.', 'error');
                     }
                 })
-                .fail(function() {
+                .fail(function(xhr, status, error) {
+                    console.log('TostiShopCart: AJAX request failed:', xhr, status, error);
                     TostiShopCart.showNotification('Error updating cart. Please try again.', 'error');
                 })
                 .always(function() {
@@ -151,7 +192,12 @@
         },
 
         removeCartItem: function(cartItemKey, $cartItem) {
-            if (!cartItemKey) return;
+            if (!cartItemKey) {
+                console.log('TostiShopCart: No cart item key provided for removal');
+                return;
+            }
+            
+            console.log('TostiShopCart: Making AJAX request to remove item');
             
             // Show loading state
             $cartItem.css({'opacity': '0.6', 'pointer-events': 'none'});
@@ -162,8 +208,12 @@
                 nonce: tostishop_ajax.nonce
             };
             
+            console.log('TostiShopCart: AJAX data:', data);
+            
             $.post(tostishop_ajax.ajax_url, data)
                 .done(function(response) {
+                    console.log('TostiShopCart: AJAX response:', response);
+                    
                     if (response.success) {
                         // Update cart count
                         TostiShopCart.updateCartCount(response.data.cart_count);
@@ -184,10 +234,12 @@
                         
                         TostiShopCart.showNotification('Item removed from cart!', 'success');
                     } else {
+                        console.log('TostiShopCart: AJAX request failed:', response);
                         TostiShopCart.showNotification('Error removing item. Please try again.', 'error');
                     }
                 })
-                .fail(function() {
+                .fail(function(xhr, status, error) {
+                    console.log('TostiShopCart: AJAX request failed:', xhr, status, error);
                     TostiShopCart.showNotification('Error removing item. Please try again.', 'error');
                 })
                 .always(function() {
@@ -197,11 +249,17 @@
         },
 
         extractCartItemKey: function(inputName) {
+            if (!inputName) return null;
+            
             const match = inputName.match(/cart\[([^\]]+)\]/);
-            return match ? match[1] : null;
+            const key = match ? match[1] : null;
+            console.log('TostiShopCart: Extracted cart key from', inputName, ':', key);
+            return key;
         },
 
         updateCartCount: function(count) {
+            console.log('TostiShopCart: Updating cart count to:', count);
+            
             $('[data-cart-count], .cart-count').each(function() {
                 const $el = $(this);
                 $el.text(count);
@@ -214,6 +272,8 @@
         },
 
         updateCartTotals: function(data) {
+            console.log('TostiShopCart: Updating cart totals:', data);
+            
             // Update subtotal
             if (data.cart_subtotal) {
                 $('[data-cart-subtotal]').html(data.cart_subtotal);
@@ -226,6 +286,8 @@
         },
 
         showNotification: function(message, type) {
+            console.log('TostiShopCart: Showing notification:', message, type);
+            
             // Try to use existing notification system
             if (window.tostishopNotifications) {
                 if (type === 'success') {
@@ -259,8 +321,13 @@
 
     // Initialize when document is ready
     $(document).ready(function() {
+        console.log('TostiShopCart: Document ready');
+        
         if ($('body').hasClass('woocommerce-cart')) {
+            console.log('TostiShopCart: Cart page detected, initializing');
             TostiShopCart.init();
+        } else {
+            console.log('TostiShopCart: Not a cart page');
         }
     });
 

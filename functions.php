@@ -115,6 +115,12 @@ function tostishop_scripts() {
     // Cart specific JS
     if (is_cart()) {
         wp_enqueue_script('tostishop-cart', get_template_directory_uri() . '/assets/js/cart.js', array('jquery'), '1.0.0', true);
+        
+        // Localize cart script specifically
+        wp_localize_script('tostishop-cart', 'tostishop_ajax', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('tostishop_nonce'),
+        ));
     }
     
     // Order confirmation specific JS
