@@ -1,0 +1,39 @@
+{
+  "name": "tostishop-theme",
+  "version": "1.0.0",
+  "description": "A blazing-fast, fully responsive WooCommerce theme designed for a mobile-first eCommerce experience.",
+  "main": "index.js",
+  "scripts": {
+    "build": "tailwindcss -i ./assets/css/main.css -o ./style.css --minify",
+    "dev": "tailwindcss -i ./assets/css/main.css -o ./style.css --watch",
+    "build-dev": "tailwindcss -i ./assets/css/main.css -o ./style.css",
+    "postinstall": "npm run build"
+  },
+  "keywords": [
+    "wordpress",
+    "woocommerce",
+    "theme",
+    "mobile-first",
+    "tailwindcss",
+    "alpine.js",
+    "ecommerce"
+  ],
+  "author": "Nomad Programmer",
+  "license": "GPL-2.0-or-later",
+  "devDependencies": {
+    "@tailwindcss/aspect-ratio": "^0.4.2",
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/typography": "^0.5.10",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.3.6"
+  },
+  "dependencies": {
+    "alpinejs": "^3.13.3"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}

@@ -1,0 +1,177 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Components */
+@layer components {
+  .btn-primary {
+    @apply bg-navy-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-navy-700 transition-colors duration-200;
+  }
+  
+  .btn-secondary {
+    @apply bg-silver-100 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-silver-200 transition-colors duration-200;
+  }
+  
+  .btn-accent {
+    @apply bg-accent text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors duration-200;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+  }
+  
+  .input {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent;
+  }
+  
+  .select {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent bg-white;
+  }
+}
+
+/* Custom Utilities */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .aspect-square {
+    aspect-ratio: 1 / 1;
+  }
+  
+  .aspect-video {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+/* WooCommerce Compatibility */
+.woocommerce {
+  .woocommerce-ordering select {
+    @apply select;
+  }
+  
+  .woocommerce-pagination {
+    @apply flex justify-center items-center space-x-2 mt-8;
+  }
+  
+  .woocommerce-pagination .page-numbers {
+    @apply px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors duration-200;
+  }
+  
+  .woocommerce-pagination .page-numbers.current {
+    @apply bg-navy-600 text-white border-navy-600;
+  }
+  
+  .woocommerce-pagination .page-numbers:hover {
+    @apply bg-gray-50;
+  }
+  
+  .woocommerce-pagination .page-numbers.current:hover {
+    @apply bg-navy-700;
+  }
+}
+
+/* Form Styles */
+.woocommerce form .form-row {
+  @apply mb-4;
+}
+
+.woocommerce form .form-row label {
+  @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+.woocommerce form .form-row input[type="text"],
+.woocommerce form .form-row input[type="email"],
+.woocommerce form .form-row input[type="tel"],
+.woocommerce form .form-row input[type="password"],
+.woocommerce form .form-row textarea,
+.woocommerce form .form-row select {
+  @apply input;
+}
+
+/* Price Display */
+.price {
+  @apply font-bold;
+}
+
+.price del {
+  @apply text-gray-500 font-normal;
+}
+
+.price ins {
+  @apply text-green-600 no-underline;
+}
+
+/* Sale Badge */
+.onsale {
+  @apply bg-red-500 text-white text-xs font-bold px-2 py-1 rounded absolute top-2 left-2 z-10;
+}
+
+/* Star Rating */
+.star-rating {
+  @apply flex text-yellow-400;
+}
+
+.star-rating .star {
+  @apply w-4 h-4 fill-current;
+}
+
+/* Responsive Utilities */
+@media (max-width: 640px) {
+  .mobile-hidden {
+    display: none !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .desktop-hidden {
+    display: none !important;
+  }
+}
+
+/* Loading States */
+.loading {
+  @apply opacity-50 pointer-events-none;
+}
+
+.spinner {
+  @apply animate-spin rounded-full h-4 w-4 border-b-2 border-navy-600;
+}
+
+/* Notification Styles */
+.woocommerce-message,
+.woocommerce-info,
+.woocommerce-error {
+  @apply p-4 rounded-lg mb-6 border-l-4;
+}
+
+.woocommerce-message {
+  @apply bg-green-50 border-green-500 text-green-700;
+}
+
+.woocommerce-info {
+  @apply bg-blue-50 border-blue-500 text-blue-700;
+}
+
+.woocommerce-error {
+  @apply bg-red-50 border-red-500 text-red-700;
+}
+
+/* Custom Scrollbars */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full hover:bg-gray-400;
+}

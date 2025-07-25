@@ -1,4 +1,4 @@
-# 🛍️ TostiShop Theme (Mobile-First WooCommerce Theme)
+# TostiShop Theme (Mobile-First WooCommerce Theme)
 
 A blazing-fast, fully responsive WooCommerce theme designed for mobile-first eCommerce experiences.
 
@@ -6,21 +6,34 @@ A blazing-fast, fully responsive WooCommerce theme designed for mobile-first eCo
 
 ## ✅ Features
 
-- ⚡ Ultra-lightweight and fast (Tailwind CSS-based)
-- 📱 Mobile-first design
-- 🛒 Fully WooCommerce-compatible
-- 🧭 Off-canvas navigation & filters
-- 🧷 Sticky add-to-cart CTA on product pages
-- 🌙 Dark mode-ready (optional)
-- 🔍 Minimal JS (Alpine.js or Vanilla JS)
+* ⚡ Ultra-lightweight and fast (Tailwind CSS-based)
+* 📱 Mobile-first design
+* 🛒 Fully WooCommerce-compatible
+* 🗭 Off-canvas navigation & filters
+* 🧷 Sticky add-to-cart CTA on product pages
+* 🌙 Dark mode-ready (optional)
+* 🔍 Minimal JS (Alpine.js or Vanilla JS)
+
+---
+
+## 🎮 Brand Colors
+
+These are the primary colors extracted from the TostiShop logo:
+
+| Color Name         | Hex Code  | Preview   |
+| ------------------ | --------- | --------- |
+| Deep Navy Blue     | `#14175b` | `#14175b` |
+| Bright Red         | `#e42029` | `#e42029` |
+| Light Silver White | `#ecebee` | `#ecebee` |
+
+Use these in your Tailwind config and throughout your UI for consistent branding.
 
 ---
 
 ## 📁 Folder Structure
 
 ```
-
-tostishop-theme/
+tostishop/
 ├── style.css                  # Theme meta + imports
 ├── functions.php              # Enqueues, Woo support, theme setup
 ├── tailwind.config.js         # Tailwind config
@@ -39,18 +52,86 @@ tostishop-theme/
 │   └── js/
 │       └── ui.js              # Minimal JS (optional Alpine.js)
 └── screenshot.png             # Theme preview
-
-````
+```
 
 ---
 
 ## 🧰 Tools & Stack
 
-- [Tailwind CSS](https://tailwindcss.com/)
-- WooCommerce Core
-- [Alpine.js](https://alpinejs.dev/) (optional JS)
-- No jQuery dependencies
-- Optional CDN: Cloudflare or BunnyCDN
+* [Tailwind CSS](https://tailwindcss.com/)
+* WooCommerce Core
+* [Alpine.js](https://alpinejs.dev/) (optional JS)
+* No jQuery dependencies
+* Optional CDN: Cloudflare or BunnyCDN
+
+---
+
+## 🔧 Navigation Menu Strategy
+
+### ✅ Single Menu, Adaptive Layout
+
+Use **one WordPress menu** (e.g. `primary_menu`) and conditionally render it differently on mobile vs desktop:
+
+* ✅ Single source of truth
+* ✅ Simplified management
+* ✅ Consistent UX
+* ✅ SEO and accessibility friendly
+
+### 📱 Mobile View
+
+* Use **off-canvas menu** with Alpine.js or Vanilla JS
+* Tailwind classes:
+
+```html
+<div class="fixed inset-0 bg-black bg-opacity-50 z-40" x-show="isOpen"></div>
+<nav class="fixed left-0 top-0 h-full w-64 bg-white z-50 transform transition-transform" x-bind:class="{ '-translate-x-full': !isOpen }">
+```
+
+### 🖥️ Desktop View
+
+* Horizontal nav with Tailwind:
+
+```html
+<ul class="hidden md:flex space-x-4">
+  <li><a href="#" class="text-primary hover:text-accent">Shop</a></li>
+</ul>
+```
+
+### 💡 PHP Integration Example
+
+```php
+wp_nav_menu([
+  'theme_location' => 'primary',
+  'menu_class' => 'hidden md:flex space-x-6 text-sm font-medium',
+  'container' => false,
+]);
+```
+
+Also render for mobile:
+
+```php
+wp_nav_menu([
+  'theme_location' => 'primary',
+  'menu_class' => 'block md:hidden space-y-4 text-lg p-4',
+  'container' => false,
+]);
+```
+
+### ⚠️ When to Use Separate Menus
+
+Only use separate mobile/desktop menus if:
+
+* You need **completely different links**
+* You want to **simplify mobile UX**
+
+In that case:
+
+```php
+register_nav_menus([
+  'desktop_menu' => 'Desktop Menu',
+  'mobile_menu'  => 'Mobile Menu'
+]);
+```
 
 ---
 
@@ -59,8 +140,8 @@ tostishop-theme/
 ### 1. Clone or Copy Theme
 
 ```bash
-wp-content/themes/tostishop-theme/
-````
+wp-content/themes/tostishop/
+```
 
 ### 2. Install Tailwind CSS
 
@@ -77,7 +158,13 @@ Update `tailwind.config.js`:
 module.exports = {
   content: ["./**/*.php", "./assets/js/*.js"],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: '#14175b', // Deep Navy Blue
+        accent: '#e42029',  // Bright Red
+        light: '#ecebee'    // Light Silver White
+      }
+    },
   },
   plugins: [],
 };
@@ -141,10 +228,9 @@ Customize templates as needed:
 ## 🧑‍💻 Author & License
 
 **Author**: Nomad Programmer
+**Github**: [https://github.com/ProgrammerNomad/tostishop](https://github.com/ProgrammerNomad/tostishop)
 **License**: MIT or GPLv2 (as per WP standards)
 
 ---
 
 > Start small. Ship fast. Optimize later.
-
-```
