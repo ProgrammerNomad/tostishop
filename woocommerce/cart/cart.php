@@ -33,18 +33,138 @@ get_header(); ?>
         
         <?php if (WC()->cart->is_empty()) : ?>
         
-            <!-- Empty Cart -->
-            <div class="text-center py-16">
-                <svg class="w-24 h-24 text-gray-300 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                </svg>
-                <h2 class="text-2xl font-bold text-gray-900 mb-4"><?php _e('Your cart is empty', 'tostishop'); ?></h2>
-                <p class="text-gray-600 mb-8"><?php _e('Looks like you haven\'t added anything to your cart yet.', 'tostishop'); ?></p>
-                <a href="<?php echo esc_url(wc_get_page_permalink('shop')); ?>" 
-                   class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200">
-                    <?php _e('Start Shopping', 'tostishop'); ?>
-                </a>
+            <!-- Modern Empty Cart Design -->
+            <div class="empty-cart-bg bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div class="empty-cart-content text-center px-6 py-12 md:py-20">
+                    <!-- Cart Icon with Animation -->
+                    <div class="empty-cart-icon relative mx-auto mb-8 w-32 h-32 md:w-40 md:h-40">
+                        <div class="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full animate-pulse"></div>
+                        <div class="relative flex items-center justify-center h-full">
+                            <svg class="w-16 h-16 md:w-20 md:h-20 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Empty State Content -->
+                    <div class="max-w-md mx-auto">
+                        <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                            <?php _e('Your cart is empty', 'tostishop'); ?>
+                        </h2>
+                        <p class="text-gray-600 text-base md:text-lg mb-8 leading-relaxed">
+                            <?php _e('Discover amazing products and start building your perfect order today!', 'tostishop'); ?>
+                        </p>
+                        
+                        <!-- Action Buttons -->
+                        <div class="space-y-4">
+                            <a href="<?php echo esc_url(wc_get_page_permalink('shop')); ?>" 
+                               class="empty-cart-cta inline-flex items-center justify-center w-full sm:w-auto bg-gradient-to-r from-primary to-blue-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-primary/90 hover:to-blue-600/90 transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                                </svg>
+                                <?php _e('Start Shopping', 'tostishop'); ?>
+                            </a>
+                            
+                            <!-- Secondary Actions -->
+                            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                                <?php if (get_option('woocommerce_enable_guest_checkout') !== 'yes' && !is_user_logged_in()) : ?>
+                                <a href="<?php echo esc_url(wp_login_url()); ?>" 
+                                   class="text-gray-600 hover:text-primary transition-colors duration-200 font-medium">
+                                    <?php _e('Sign in to view saved items', 'tostishop'); ?>
+                                </a>
+                                <?php endif; ?>
+                                
+                                <?php if (wc_get_page_id('wishlist') > 0) : ?>
+                                <a href="<?php echo esc_url(get_permalink(wc_get_page_id('wishlist'))); ?>" 
+                                   class="text-gray-600 hover:text-primary transition-colors duration-200 font-medium">
+                                    <?php _e('View Wishlist', 'tostishop'); ?>
+                                </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Trust Indicators -->
+                    <div class="mt-12 pt-8 border-t border-gray-100">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+                            <div class="trust-indicator flex flex-col items-center">
+                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mb-2">
+                                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <span class="text-sm font-medium text-gray-700"><?php _e('Quality Products', 'tostishop'); ?></span>
+                            </div>
+                            
+                            <div class="trust-indicator flex flex-col items-center">
+                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mb-2">
+                                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                    </svg>
+                                </div>
+                                <span class="text-sm font-medium text-gray-700"><?php _e('Fast Delivery', 'tostishop'); ?></span>
+                            </div>
+                            
+                            <div class="trust-indicator flex flex-col items-center">
+                                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mb-2">
+                                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                </div>
+                                <span class="text-sm font-medium text-gray-700"><?php _e('Secure Payment', 'tostishop'); ?></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+            
+            <!-- Featured Categories or Products Section -->
+            <?php if (function_exists('wc_get_product_category_list') && get_option('woocommerce_shop_page_display') !== '') : ?>
+            <div class="mt-12">
+                <div class="text-center mb-8">
+                    <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-2">
+                        <?php _e('Popular Categories', 'tostishop'); ?>
+                    </h3>
+                    <p class="text-gray-600">
+                        <?php _e('Browse our most popular product categories', 'tostishop'); ?>
+                    </p>
+                </div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <?php
+                    $product_categories = get_terms(array(
+                        'taxonomy' => 'product_cat',
+                        'number' => 4,
+                        'hide_empty' => true,
+                        'exclude' => array(get_option('default_product_cat'))
+                    ));
+                    
+                    if (!empty($product_categories) && !is_wp_error($product_categories)) :
+                        foreach ($product_categories as $category) :
+                            $thumbnail_id = get_term_meta($category->term_id, 'thumbnail_id', true);
+                            $image_url = $thumbnail_id ? wp_get_attachment_url($thumbnail_id) : wc_placeholder_img_src();
+                    ?>
+                    <a href="<?php echo esc_url(get_term_link($category)); ?>" 
+                       class="category-card group bg-white rounded-xl border border-gray-200 p-6 text-center hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full overflow-hidden">
+                            <img src="<?php echo esc_url($image_url); ?>" 
+                                 alt="<?php echo esc_attr($category->name); ?>"
+                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-200">
+                        </div>
+                        <h4 class="font-semibold text-gray-900 group-hover:text-primary transition-colors duration-200">
+                            <?php echo esc_html($category->name); ?>
+                        </h4>
+                        <p class="text-sm text-gray-500 mt-1">
+                            <?php printf(_n('%s product', '%s products', $category->count, 'tostishop'), $category->count); ?>
+                        </p>
+                    </a>
+                    <?php 
+                        endforeach;
+                    endif;
+                    ?>
+                </div>
+            </div>
+            <?php endif; ?>
             
         <?php else : ?>
         
