@@ -53,17 +53,24 @@
     </nav>
 </div>
 
+<?php if (!is_cart() && !is_checkout()) : ?>
 <!-- Header -->
 <header class="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
+        <div class="flex items-center justify-between h-16"><?php else : ?>
+<!-- Minimal Header for Cart/Checkout -->
+<header class="bg-white shadow-sm border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-center h-16"><?php endif; ?>
             
+            <?php if (!is_cart() && !is_checkout()) : ?>
             <!-- Mobile menu button -->
             <button @click="mobileMenuOpen = true" class="p-2 text-gray-600 lg:hidden">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
             </button>
+            <?php endif; ?>
             
             <!-- Logo -->
             <div class="flex-shrink-0">
@@ -89,6 +96,7 @@
                 <?php endif; ?>
             </div>
             
+            <?php if (!is_cart() && !is_checkout()) : ?>
             <!-- Desktop Navigation -->
             <nav class="hidden lg:flex lg:space-x-8">
                 <?php
@@ -102,10 +110,13 @@
                 ));
                 ?>
             </nav>
+            <?php endif; ?>
             
+            <?php if (!is_checkout()) : ?>
             <!-- Search & Cart -->
             <div class="flex items-center space-x-4">
                 <!-- Search -->
+                <?php if (!is_cart()) : ?>
                 <div class="hidden sm:block">
                     <?php if (function_exists('get_product_search_form')) : ?>
                         <div class="relative">
@@ -120,6 +131,7 @@
                         </div>
                     <?php endif; ?>
                 </div>
+                <?php endif; ?>
                 
                 <!-- Cart -->
                 <?php if (function_exists('WC')) : ?>
@@ -137,6 +149,7 @@
                 </a>
                 <?php endif; ?>
             </div>
+            <?php endif; ?>
         </div>
     </div>
 </header>

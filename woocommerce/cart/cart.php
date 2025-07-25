@@ -1,16 +1,13 @@
 <?php
 /**
- * Cart Page Template
+ * Cart Page Template - Optimized for Conversion
  */
 
 get_header(); ?>
 
 <div class="max-w-7xl xl:max-w-[95rem] 2xl:max-w-[110rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
     
-    <!-- Breadcrumbs -->
-    <?php tostishop_breadcrumbs(); ?>
-    
-    <!-- Page Header -->
+    <!-- Simplified Page Header -->
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900"><?php _e('Shopping Cart', 'tostishop'); ?></h1>
         <p class="text-gray-600 mt-2"><?php _e('Review your items before checkout', 'tostishop'); ?></p>

@@ -1,5 +1,6 @@
 </main>
 
+<?php if (!is_cart() && !is_checkout()) : ?>
 <!-- Footer -->
 <footer class="bg-navy-900 text-white mt-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -140,6 +141,7 @@
         </div>
     </div>
 </footer>
+<?php endif; ?>
 
 <?php wp_footer(); ?>
 </body>

@@ -182,6 +182,36 @@ register_nav_menus([
 
 ---
 
+## 🔧 Header/Footer on Cart & Checkout Pages
+
+### ✅ Recommended Practice
+
+For optimal user experience and conversions:
+
+| Page     | Header       | Footer     | Notes                                  |
+| -------- | ------------ | ---------- | -------------------------------------- |
+| Home     | ✅ Full       | ✅ Full     | Full branding and nav                  |
+| Cart     | ☑️ Minimal   | ☑️ Minimal | Less distraction, allow return to shop |
+| Checkout | ☑️ Logo only | ❌ Hidden   | Maximize focus & trust, no exits       |
+
+### 🧠 PHP Snippet to Conditionally Hide
+
+In `header.php` and `footer.php`:
+
+```php
+<?php if (!is_cart() && !is_checkout()) : ?>
+  <!-- Full Header -->
+<?php endif; ?>
+```
+
+```php
+<?php if (!is_cart() && !is_checkout()) : ?>
+  <!-- Full Footer -->
+<?php endif; ?>
+```
+
+---
+
 ## 🔨 Setup Instructions
 
 ### 1. Clone or Copy Theme
