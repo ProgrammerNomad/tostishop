@@ -33,7 +33,7 @@ Use these in your Tailwind config and throughout your UI for consistent branding
 ## 📁 Folder Structure
 
 ```
-tostishop/
+tostishop-theme/
 ├── style.css                  # Theme meta + imports
 ├── functions.php              # Enqueues, Woo support, theme setup
 ├── tailwind.config.js         # Tailwind config
@@ -63,6 +63,53 @@ tostishop/
 * [Alpine.js](https://alpinejs.dev/) (optional JS)
 * No jQuery dependencies
 * Optional CDN: Cloudflare or BunnyCDN
+
+---
+
+## 🧭 Homepage Blocks (Block Editor)
+
+Use native WordPress **Block Editor** only (no page builders):
+
+### ✅ Suggested Homepage Layout:
+
+1. **Hero Banner Block**
+
+   * Background color/image with CTA button
+   * Highlight a collection or offer
+
+2. **Product Categories Block**
+
+   * Use WooCommerce Product Categories Block
+   * Display with icons or thumbnails
+
+3. **Featured Products Block**
+
+   * Native WooCommerce block
+   * Show 4-8 products (new arrivals, trending, etc.)
+
+4. **Single Highlight Block**
+
+   * Image + text for USPs (Made in India, Fast Delivery)
+
+5. **Customer Testimonials Block**
+
+   * Use core "Testimonials" block or custom block
+
+6. **CTA Signup Block**
+
+   * Email/phone capture form
+   * Styled with Tailwind classes
+
+7. **Blog or Tips Section (Optional)**
+
+   * Latest articles or videos
+
+### 📱 Mobile First Tips
+
+* Use vertical stacking of blocks
+* Avoid complex columns
+* Use full-width images
+* Keep text brief and tappable
 
 ---
 
@@ -140,7 +187,7 @@ register_nav_menus([
 ### 1. Clone or Copy Theme
 
 ```bash
-wp-content/themes/tostishop/
+wp-content/themes/tostishop-theme/
 ```
 
 ### 2. Install Tailwind CSS

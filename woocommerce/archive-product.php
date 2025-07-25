@@ -127,8 +127,23 @@ get_header(); ?>
                 </div>
                 
                 <!-- Pagination -->
-                <div class="mt-12">
-                    <?php woocommerce_pagination(); ?>
+                <div class="mt-16 border-t border-gray-200 pt-8">
+                    <div class="flex flex-col items-center">
+                        <div class="pagination-wrapper">
+                            <?php woocommerce_pagination(); ?>
+                        </div>
+                        <?php if (wc_get_loop_prop('total_pages') > 1) : ?>
+                        <p class="text-sm text-gray-600 mt-4">
+                            <?php 
+                            printf(
+                                __('Page %1$s of %2$s', 'tostishop'),
+                                max(1, get_query_var('paged')),
+                                wc_get_loop_prop('total_pages')
+                            );
+                            ?>
+                        </p>
+                        <?php endif; ?>
+                    </div>
                 </div>
                 
             <?php else : ?>

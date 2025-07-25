@@ -289,3 +289,80 @@ function tostishop_customize_register($wp_customize) {
     )));
 }
 add_action('customize_register', 'tostishop_customize_register');
+
+/**
+ * Enhanced Pagination Function
+ */
+function tostishop_enhanced_pagination() {
+    global $wp_query;
+    
+    $paged = (get_query_var('paged')) ? absint(get_query_var('paged')) : 1;
+    $max_pages = $wp_query->max_num_pages;
+    
+    if ($max_pages <= 1) {
+        return;
+    }
+    
+    echo '<nav class="tostishop-pagination" role="navigation" aria-label="' . __('Pagination Navigation', 'tostishop') . '">';
+    echo '<div class="pagination-wrapper flex flex-wrap justify-center items-center gap-2">';
+    
+    // Previous button
+    if ($paged > 1) {
+        echo '<a href="' . get_pagenum_link($paged - 1) . '" class="pagination-btn pagination-prev flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-1">';
+        echo '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>';
+        echo __('Previous', 'tostishop');
+        echo '</a>';
+    }
+    
+    // Page numbers
+    $range = 2; // Number of pages to show on each side
+    $start = max(1, $paged - $range);
+    $end = min($max_pages, $paged + $range);
+    
+    // First page + dots
+    if ($start > 1) {
+        echo '<a href="' . get_pagenum_link(1) . '" class="pagination-btn page-number inline-flex items-center justify-center min-w-[40px] h-10 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200">1</a>';
+        if ($start > 2) {
+            echo '<span class="pagination-dots inline-flex items-center justify-center min-w-[40px] h-10 px-3 py-2 text-gray-400">...</span>';
+        }
+    }
+    
+    // Page range
+    for ($i = $start; $i <= $end; $i++) {
+        if ($i == $paged) {
+            echo '<span class="pagination-btn page-number current inline-flex items-center justify-center min-w-[40px] h-10 px-3 py-2 text-sm font-medium text-white bg-navy-600 border border-navy-600 rounded-lg shadow-md">' . $i . '</span>';
+        } else {
+            echo '<a href="' . get_pagenum_link($i) . '" class="pagination-btn page-number inline-flex items-center justify-center min-w-[40px] h-10 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200">' . $i . '</a>';
+        }
+    }
+    
+    // Last page + dots
+    if ($end < $max_pages) {
+        if ($end < $max_pages - 1) {
+            echo '<span class="pagination-dots inline-flex items-center justify-center min-w-[40px] h-10 px-3 py-2 text-gray-400">...</span>';
+        }
+        echo '<a href="' . get_pagenum_link($max_pages) . '" class="pagination-btn page-number inline-flex items-center justify-center min-w-[40px] h-10 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200">' . $max_pages . '</a>';
+    }
+    
+    // Next button
+    if ($paged < $max_pages) {
+        echo '<a href="' . get_pagenum_link($paged + 1) . '" class="pagination-btn pagination-next flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-1">';
+        echo __('Next', 'tostishop');
+        echo '<svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>';
+        echo '</a>';
+    }
+    
+    echo '</div>';
+    echo '</nav>';
+}
+
+/**
+ * Filter WooCommerce pagination to use our enhanced version
+ */
+add_filter('woocommerce_pagination_args', 'tostishop_woocommerce_pagination_args');
+function tostishop_woocommerce_pagination_args($args) {
+    $args['prev_text'] = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>' . __('Previous', 'tostishop');
+    $args['next_text'] = __('Next', 'tostishop') . '<svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>';
+    $args['type'] = 'array';
+    return $args;
+}
