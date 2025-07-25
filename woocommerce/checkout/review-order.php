@@ -150,135 +150,231 @@ defined( 'ABSPATH' ) || exit;
 
         <!-- Shipping -->
         <div class="flex justify-between items-center text-base">
-            <span class="text-gray-600 font-medium"><?php esc_html_e( 'Shipping', 'woocommerce' ); ?></span>
-            <span class="font-semibold text-gray-900">
-                <?php wc_cart_totals_shipping_html(); ?>
-            </span>
-        </div>
+		<?php if ( WC()->cart->needs_shipping() && WC()->cart->show_shipping() ) : ?>
 
-        <?php do_action( 'woocommerce_review_order_after_shipping' ); ?>
+			<?php do_action( 'woocommerce_review_order_before_shipping' ); ?>
 
-        <?php endif; ?>
+		<!-- Shipping -->
+		<div class="flex justify-between items-center text-base">
+			<span class="text-gray-600 font-medium"><?php esc_html_e( 'Shipping', 'woocommerce' ); ?></span>
+			<span class="font-semibold text-gray-900">
+				<?php wc_cart_totals_shipping_html(); ?>
+			</span>
+		</div>
 
-        <!-- Fees -->
-        <?php foreach ( WC()->cart->get_fees() as $fee ) : ?>
-            <div class="flex justify-between items-center text-sm">
-                <span class="text-gray-600"><?php echo esc_html( $fee->name ); ?></span>
-                <span class="font-medium text-gray-900"><?php wc_cart_totals_fee_html( $fee ); ?></span>
-            </div>
-        <?php endforeach; ?>
+		<?php do_action( 'woocommerce_review_order_after_shipping' ); ?>
 
-        <!-- Tax -->
-        <?php if ( wc_tax_enabled() && ! WC()->cart->display_prices_including_tax() ) : ?>
-            <?php if ( 'itemized' === get_option( 'woocommerce_tax_total_display' ) ) : ?>
-                <?php foreach ( WC()->cart->get_tax_totals() as $code => $tax ) : ?>
-                    <div class="flex justify-between items-center text-sm">
-                        <span class="text-gray-600"><?php echo esc_html( $tax->label ); ?></span>
-                        <span class="font-medium text-gray-900"><?php echo wp_kses_post( $tax->formatted_amount ); ?></span>
-                    </div>
-                <?php endforeach; ?>
-            <?php else : ?>
-                <div class="flex justify-between items-center text-sm">
-                    <span class="text-gray-600"><?php echo esc_html( WC()->countries->tax_or_vat() ); ?></span>
-                    <span class="font-medium text-gray-900"><?php wc_cart_totals_taxes_total_html(); ?></span>
-                </div>
-            <?php endif; ?>
-        <?php endif; ?>
+		<?php endif; ?>
 
-        <?php do_action( 'woocommerce_review_order_before_order_total' ); ?>
+		<!-- Fees -->
+		<?php foreach ( WC()->cart->get_fees() as $fee ) : ?>
+			<div class="flex justify-between items-center text-sm">
+				<span class="text-gray-600"><?php echo esc_html( $fee->name ); ?></span>
+				<span class="font-medium text-gray-900"><?php wc_cart_totals_fee_html( $fee ); ?></span>
+			</div>
+		<?php endforeach; ?>
 
-        <!-- Total -->
-        <div class="border-t border-gray-200 pt-3">
-            <div class="flex justify-between items-center">
-                <span class="text-lg font-semibold text-gray-900"><?php esc_html_e( 'Total', 'woocommerce' ); ?></span>
-                <span class="text-lg font-bold text-primary"><?php wc_cart_totals_order_total_html(); ?></span>
-            </div>
-        </div>
+		<!-- Tax -->
+		<?php if ( wc_tax_enabled() && ! WC()->cart->display_prices_including_tax() ) : ?>
+			<?php if ( 'itemized' === get_option( 'woocommerce_tax_total_display' ) ) : ?>
+				<?php foreach ( WC()->cart->get_tax_totals() as $code => $tax ) : // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited ?>
+					<div class="flex justify-between items-center text-sm">
+						<span class="text-gray-600"><?php echo esc_html( $tax->label ); ?></span>
+						<span class="font-medium text-gray-900"><?php echo wp_kses_post( $tax->formatted_amount ); ?></span>
+					</div>
+				<?php endforeach; ?>
+			<?php else : ?>
+				<div class="flex justify-between items-center text-sm">
+					<span class="text-gray-600"><?php echo esc_html( WC()->countries->tax_or_vat() ); ?></span>
+					<span class="font-medium text-gray-900"><?php wc_cart_totals_taxes_total_html(); ?></span>
+				</div>
+			<?php endif; ?>
+		<?php endif; ?>
 
-        <?php do_action( 'woocommerce_review_order_after_order_total' ); ?>
+		<?php do_action( 'woocommerce_review_order_before_order_total' ); ?>
 
-    </div>
+		<!-- Order Total -->
+		<div class="flex justify-between items-center text-xl font-bold text-gray-900 bg-gray-50 p-4 rounded-lg border-t-2 border-primary mt-4">
+			<span><?php esc_html_e( 'Total', 'woocommerce' ); ?></span>
+			<span class="text-primary"><?php wc_cart_totals_order_total_html(); ?></span>
+		</div>
 
+		<?php do_action( 'woocommerce_review_order_after_order_total' ); ?>
+
+	</div>
 </div>
 
 <script>
-// Coupon toggle functionality
 document.addEventListener('DOMContentLoaded', function() {
-    const toggleButton = document.getElementById('toggleCouponForm');
-    const formContainer = document.getElementById('couponFormContainer');
-    const toggleText = document.getElementById('couponToggleText');
-    const toggleIcon = document.getElementById('couponToggleIcon');
-    
-    if (toggleButton && formContainer) {
-        toggleButton.addEventListener('click', function() {
-            const isHidden = formContainer.classList.contains('hidden');
-            
-            if (isHidden) {
-                formContainer.classList.remove('hidden');
-                toggleText.textContent = 'Hide';
-                toggleIcon.style.transform = 'rotate(180deg)';
-            } else {
-                formContainer.classList.add('hidden');
-                toggleText.textContent = 'Add Code';
-                toggleIcon.style.transform = 'rotate(0deg)';
-            }
-        });
-    }
+	const toggleBtn = document.getElementById('toggle-coupon');
+	const couponForm = document.getElementById('coupon-form');
+	
+	if (toggleBtn && couponForm) {
+		toggleBtn.addEventListener('click', function() {
+			couponForm.classList.toggle('hidden');
+			toggleBtn.textContent = couponForm.classList.contains('hidden') ? 
+				'Add Code' : 'Cancel';
+		});
+	}
+	
+	// Handle coupon form submission
+	const form = document.getElementById('coupon-form');
+	if (form) {
+		form.addEventListener('submit', function(e) {
+			e.preventDefault();
+			const couponCode = document.getElementById('coupon_code').value;
+			if (couponCode.trim()) {
+				// Trigger WooCommerce coupon application
+				const checkoutForm = document.querySelector('form.checkout');
+				const input = document.createElement('input');
+				input.type = 'hidden';
+				input.name = 'coupon_code';
+				input.value = couponCode;
+				checkoutForm.appendChild(input);
+				
+				const button = document.createElement('input');
+				button.type = 'hidden';
+				button.name = 'apply_coupon';
+				button.value = 'Apply coupon';
+				checkoutForm.appendChild(button);
+				
+				checkoutForm.submit();
+			}
+		});
+	}
 });
 </script>
 
 <style>
-/* Review Order Styling */
-.woocommerce-checkout-review-order-table .shipping-section ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+/* Enhanced Review Order Styling */
+.coupon-form.hidden {
+	display: none;
 }
 
-.woocommerce-checkout-review-order-table .shipping-section li {
-    margin-bottom: 0.5rem;
+.coupon-form {
+	animation: slideDown 0.3s ease-out;
 }
 
-.woocommerce-checkout-review-order-table .shipping-section input[type="radio"] {
-    margin-right: 0.5rem;
-    accent-color: #14175b;
+@keyframes slideDown {
+	from {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
-.woocommerce-checkout-review-order-table .shipping-section label {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    padding: 0.5rem;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.375rem;
-    background-color: #ffffff;
-    transition: all 0.2s ease;
+/* Enhanced Coupon Form */
+.coupon-form input[type="text"] {
+	border: 2px solid #e5e7eb;
+	transition: all 0.2s ease;
 }
 
-.woocommerce-checkout-review-order-table .shipping-section label:hover {
-    border-color: #14175b;
-    background-color: #f8fafc;
+.coupon-form input[type="text"]:focus {
+	border-color: #14175b;
+	box-shadow: 0 0 0 3px rgba(20, 23, 91, 0.1);
+	outline: none;
 }
 
-.woocommerce-checkout-review-order-table .shipping-section input[type="radio"]:checked + label,
-.woocommerce-checkout-review-order-table .shipping-section label:has(input[type="radio"]:checked) {
-    border-color: #14175b;
-    background-color: #eef2ff;
+.coupon-form button[type="submit"] {
+	background: linear-gradient(135deg, #14175b 0%, #1e3a8a 100%);
+	border: none;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.coupon-form button[type="submit"]:hover {
+	background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%);
+	transform: translateY(-1px);
+	box-shadow: 0 4px 6px -1px rgba(20, 23, 91, 0.3);
 }
 
 /* Mobile Responsive Product Cards */
 @media (max-width: 640px) {
-    .woocommerce-checkout-review-order-table .flex.items-start {
-        flex-direction: column;
-    }
-    
-    .woocommerce-checkout-review-order-table .flex-shrink-0 {
-        margin-bottom: 1rem;
-    }
-    
-    .woocommerce-checkout-review-order-table .flex.justify-between {
-        flex-direction: column;
-        align-items: flex-start;
-    }
+	.woocommerce-checkout-review-order-table .flex.items-start {
+		flex-direction: column;
+		space-x: 0;
+	}
+	
+	.woocommerce-checkout-review-order-table .flex-shrink-0 {
+		align-self: center;
+		margin-bottom: 0.75rem;
+	}
+	
+	.woocommerce-checkout-review-order-table .flex.justify-between {
+		text-align: center;
+	}
+	
+	.coupon-form .flex {
+		flex-direction: column;
+		space-x: 0;
+	}
+	
+	.coupon-form .flex-1 {
+		margin-bottom: 0.5rem;
+	}
+	
+	.coupon-form button[type="submit"] {
+		width: 100%;
+	}
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	const toggleButton = document.getElementById('toggle-coupon');
+	const couponForm = document.getElementById('coupon-form');
+	
+	if (toggleButton && couponForm) {
+		toggleButton.addEventListener('click', function() {
+			if (couponForm.classList.contains('hidden')) {
+				couponForm.classList.remove('hidden');
+				toggleButton.textContent = '<?php echo esc_js( __( 'Cancel', 'tostishop' ) ); ?>';
+			} else {
+				couponForm.classList.add('hidden');
+				toggleButton.textContent = '<?php echo esc_js( __( 'Add Code', 'tostishop' ) ); ?>';
+			}
+		});
+	}
+	
+	// Handle coupon form submission
+	const couponFormElement = document.getElementById('coupon-form');
+	if (couponFormElement) {
+		couponFormElement.addEventListener('submit', function(e) {
+			e.preventDefault();
+			
+			const couponCode = document.getElementById('coupon_code').value.trim();
+			if (!couponCode) {
+				alert('<?php echo esc_js( __( 'Please enter a coupon code', 'tostishop' ) ); ?>');
+				return;
+			}
+			
+			// Add loading state
+			const submitButton = this.querySelector('button[type="submit"]');
+			const originalText = submitButton.textContent;
+			submitButton.textContent = '<?php echo esc_js( __( 'Applying...', 'tostishop' ) ); ?>';
+			submitButton.disabled = true;
+			
+			// Create form data
+			const formData = new FormData();
+			formData.append('coupon_code', couponCode);
+			formData.append('apply_coupon', '1');
+			
+			// Submit via AJAX or form
+			fetch(window.location.href, {
+				method: 'POST',
+				body: formData
+			}).then(response => {
+				// Reload page to show updated totals
+				window.location.reload();
+			}).catch(error => {
+				console.error('Error:', error);
+				submitButton.textContent = originalText;
+				submitButton.disabled = false;
+			});
+		});
+	}
+});
+</script>
