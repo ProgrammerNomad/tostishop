@@ -162,27 +162,28 @@ function updateCartCount(count) {
 function initializeQuantityControls() {
     
     // Quantity increase/decrease buttons
-    window.increaseQuantity = function() {
-        const quantityInput = document.getElementById('quantity');
-        if (quantityInput) {
-            const currentValue = parseInt(quantityInput.value) || 1;
-            const maxValue = parseInt(quantityInput.getAttribute('max')) || 999;
-            if (currentValue < maxValue) {
-                quantityInput.value = currentValue + 1;
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('quantity-btn')) {
+            e.preventDefault();
+            
+            const button = e.target;
+            const input = button.parentElement.querySelector('input[type="number"]');
+            const action = button.dataset.action;
+            
+            if (input && action) {
+                let currentValue = parseInt(input.value) || 1;
+                
+                if (action === 'increase') {
+                    input.value = currentValue + 1;
+                } else if (action === 'decrease' && currentValue > 1) {
+                    input.value = currentValue - 1;
+                }
+                
+                // Trigger change event
+                input.dispatchEvent(new Event('change'));
             }
         }
-    };
-    
-    window.decreaseQuantity = function() {
-        const quantityInput = document.getElementById('quantity');
-        if (quantityInput) {
-            const currentValue = parseInt(quantityInput.value) || 1;
-            const minValue = parseInt(quantityInput.getAttribute('min')) || 1;
-            if (currentValue > minValue) {
-                quantityInput.value = currentValue - 1;
-            }
-        }
-    };
+    });
 }
 
 /**
@@ -242,22 +243,28 @@ function hideSearchResults() {
  */
 function initializeProductGallery() {
     
-    // Image zoom on hover (desktop only)
-    const productImages = document.querySelectorAll('.product-image');
-    
-    productImages.forEach(image => {
-        if (window.innerWidth > 1024) {
-            image.addEventListener('mouseenter', function() {
-                this.style.transform = 'scale(1.1)';
-            });
+    // Gallery thumbnail clicks
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('[data-gallery-thumbnail]')) {
+            e.preventDefault();
             
-            image.addEventListener('mouseleave', function() {
-                this.style.transform = 'scale(1)';
-            });
+            const thumbnail = e.target.closest('[data-gallery-thumbnail]');
+            const imageUrl = thumbnail.dataset.imageUrl;
+            const mainImage = document.querySelector('[data-main-image]');
+            
+            if (imageUrl && mainImage) {
+                mainImage.src = imageUrl;
+                
+                // Update active thumbnail
+                document.querySelectorAll('[data-gallery-thumbnail]').forEach(thumb => {
+                    thumb.classList.remove('ring-2', 'ring-primary');
+                });
+                thumbnail.classList.add('ring-2', 'ring-primary');
+            }
         }
     });
     
-    // Touch/swipe support for mobile gallery
+    // Initialize touch gallery for mobile
     initializeTouchGallery();
 }
 
@@ -266,8 +273,8 @@ function initializeProductGallery() {
  */
 function initializeTouchGallery() {
     
-    const gallery = document.querySelector('.product-gallery');
-    if (!gallery || window.innerWidth > 1024) return;
+    const gallery = document.querySelector('[data-product-gallery]');
+    if (!gallery) return;
     
     let startX = 0;
     let currentX = 0;
@@ -283,18 +290,15 @@ function initializeTouchGallery() {
         currentX = e.touches[0].clientX;
     });
     
-    gallery.addEventListener('touchend', function() {
+    gallery.addEventListener('touchend', function(e) {
         if (!isDragging) return;
         
         const diffX = startX - currentX;
-        const threshold = 50;
         
-        if (Math.abs(diffX) > threshold) {
+        if (Math.abs(diffX) > 50) { // Minimum swipe distance
             if (diffX > 0) {
-                // Swipe left - next image
                 nextGalleryImage();
             } else {
-                // Swipe right - previous image
                 previousGalleryImage();
             }
         }
@@ -307,16 +311,30 @@ function initializeTouchGallery() {
  * Navigate to next gallery image
  */
 function nextGalleryImage() {
-    // Implementation for next image
-    console.log('Next image');
+    const thumbnails = document.querySelectorAll('[data-gallery-thumbnail]');
+    const activeThumbnail = document.querySelector('[data-gallery-thumbnail].ring-primary');
+    
+    if (thumbnails.length > 0) {
+        let currentIndex = Array.from(thumbnails).indexOf(activeThumbnail);
+        let nextIndex = (currentIndex + 1) % thumbnails.length;
+        
+        thumbnails[nextIndex].click();
+    }
 }
 
 /**
  * Navigate to previous gallery image
  */
 function previousGalleryImage() {
-    // Implementation for previous image
-    console.log('Previous image');
+    const thumbnails = document.querySelectorAll('[data-gallery-thumbnail]');
+    const activeThumbnail = document.querySelector('[data-gallery-thumbnail].ring-primary');
+    
+    if (thumbnails.length > 0) {
+        let currentIndex = Array.from(thumbnails).indexOf(activeThumbnail);
+        let prevIndex = currentIndex === 0 ? thumbnails.length - 1 : currentIndex - 1;
+        
+        thumbnails[prevIndex].click();
+    }
 }
 
 /**
@@ -324,47 +342,44 @@ function previousGalleryImage() {
  */
 function initializeProductFilters() {
     
-    // Price range slider
-    const priceSlider = document.querySelector('[data-price-slider]');
-    if (priceSlider) {
-        // Implementation for price range functionality
-        console.log('Price slider initialized');
-    }
-    
-    // Filter checkboxes
-    const filterCheckboxes = document.querySelectorAll('[data-filter-checkbox]');
-    filterCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
+    // Filter form submission
+    const filterForm = document.querySelector('[data-product-filters]');
+    if (filterForm) {
+        filterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
             applyFilters();
         });
-    });
+        
+        // Filter changes
+        filterForm.addEventListener('change', function() {
+            applyFilters();
+        });
+    }
 }
 
 /**
  * Apply selected filters
  */
 function applyFilters() {
-    // Collect all selected filters
+    
+    const filterForm = document.querySelector('[data-product-filters]');
+    if (!filterForm) return;
+    
+    const formData = new FormData(filterForm);
     const filters = {};
     
-    // Get price range
-    const minPrice = document.querySelector('[data-min-price]')?.value;
-    const maxPrice = document.querySelector('[data-max-price]')?.value;
-    
-    if (minPrice) filters.min_price = minPrice;
-    if (maxPrice) filters.max_price = maxPrice;
-    
-    // Get selected categories
-    const selectedCategories = [];
-    document.querySelectorAll('[data-category-filter]:checked').forEach(checkbox => {
-        selectedCategories.push(checkbox.value);
-    });
-    
-    if (selectedCategories.length > 0) {
-        filters.categories = selectedCategories;
+    for (let [key, value] of formData.entries()) {
+        if (filters[key]) {
+            if (Array.isArray(filters[key])) {
+                filters[key].push(value);
+            } else {
+                filters[key] = [filters[key], value];
+            }
+        } else {
+            filters[key] = value;
+        }
     }
     
-    // Apply filters via URL or AJAX
     applyFiltersToProducts(filters);
 }
 
@@ -372,8 +387,32 @@ function applyFilters() {
  * Apply filters to product grid
  */
 function applyFiltersToProducts(filters) {
-    // Implementation for filtering products
-    console.log('Applying filters:', filters);
+    
+    const products = document.querySelectorAll('[data-product-item]');
+    
+    products.forEach(product => {
+        let shouldShow = true;
+        
+        // Check each filter
+        for (let [filterKey, filterValue] of Object.entries(filters)) {
+            const productValue = product.dataset[filterKey];
+            
+            if (filterValue && productValue) {
+                const filterValues = Array.isArray(filterValue) ? filterValue : [filterValue];
+                if (!filterValues.includes(productValue)) {
+                    shouldShow = false;
+                    break;
+                }
+            }
+        }
+        
+        // Show/hide product
+        if (shouldShow) {
+            product.style.display = '';
+        } else {
+            product.style.display = 'none';
+        }
+    });
 }
 
 /**
@@ -423,23 +462,32 @@ function removeCartItem(button) {
 }
 
 /**
- * Initialize smooth scrolling
+ * Initialize smooth scrolling - FIXED VERSION
  */
 function initializeSmoothScrolling() {
     
-    document.querySelectorAll('a[href^="#"]').forEach(link => {
-        link.addEventListener('click', function(e) {
-            const targetId = this.getAttribute('href');
-            const targetElement = document.querySelector(targetId);
+    document.addEventListener('click', function(e) {
+        // Only handle anchor links that have a valid href with hash
+        if (e.target.tagName === 'A' || e.target.closest('a')) {
+            const link = e.target.tagName === 'A' ? e.target : e.target.closest('a');
+            const href = link.getAttribute('href');
             
-            if (targetElement) {
-                e.preventDefault();
-                targetElement.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+            // Check if it's a valid anchor link (not just '#' or empty)
+            if (href && href.startsWith('#') && href.length > 1) {
+                const targetId = href.substring(1); // Remove the '#'
+                const targetElement = document.getElementById(targetId);
+                
+                if (targetElement) {
+                    e.preventDefault();
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
             }
-        });
+            // For links with just '#' or empty href, don't prevent default
+            // but also don't try to scroll to anything
+        }
     });
 }
 
@@ -453,9 +501,12 @@ function initializeLazyLoading() {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const img = entry.target;
-                    img.src = img.dataset.src;
-                    img.classList.remove('lazy');
-                    observer.unobserve(img);
+                    if (img.dataset.src) {
+                        img.src = img.dataset.src;
+                        img.removeAttribute('data-src');
+                        img.classList.remove('lazy');
+                        observer.unobserve(img);
+                    }
                 }
             });
         });
@@ -471,30 +522,31 @@ function initializeLazyLoading() {
  */
 function showNotification(message, type = 'success') {
     
-    // Create notification element
+    // Use TostiShop notifications if available
+    if (window.tostishopNotifications) {
+        if (type === 'success') {
+            window.tostishopNotifications.success(message);
+        } else if (type === 'error') {
+            window.tostishopNotifications.error(message);
+        } else {
+            window.tostishopNotifications.info(message);
+        }
+        return;
+    }
+    
+    // Fallback notification
     const notification = document.createElement('div');
-    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full ${
-        type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg text-white ${
+        type === 'success' ? 'bg-green-500' : 
+        type === 'error' ? 'bg-red-500' : 'bg-blue-500'
     }`;
     notification.textContent = message;
     
-    // Add to page
     document.body.appendChild(notification);
     
-    // Animate in
     setTimeout(() => {
-        notification.classList.remove('translate-x-full');
-    }, 100);
-    
-    // Remove after delay
-    setTimeout(() => {
-        notification.classList.add('translate-x-full');
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.parentNode.removeChild(notification);
-            }
-        }, 300);
-    }, 3000);
+        notification.remove();
+    }, 5000);
 }
 
 /**

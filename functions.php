@@ -150,6 +150,22 @@ function tostishop_scripts() {
 add_action('wp_enqueue_scripts', 'tostishop_scripts');
 
 /**
+ * Enqueue checkout-specific scripts
+ */
+function tostishop_checkout_scripts() {
+    if (is_checkout()) {
+        wp_enqueue_script(
+            'tostishop-checkout-login',
+            get_template_directory_uri() . '/assets/js/checkout-login.js',
+            array(),
+            '1.0.0',
+            true
+        );
+    }
+}
+add_action('wp_enqueue_scripts', 'tostishop_checkout_scripts');
+
+/**
  * Register widget areas
  */
 function tostishop_widgets_init() {
