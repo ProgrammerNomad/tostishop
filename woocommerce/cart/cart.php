@@ -228,6 +228,7 @@ get_header(); ?>
                                             </div>
                                             
                                             <!-- Remove Button -->
+<<<<<<< HEAD
                                             <?php
                                             echo apply_filters( 'woocommerce_cart_item_remove_link', sprintf(
                                                 '<a href="%s" class="ml-4 text-gray-400 hover:text-red-500 transition-colors duration-200 cart-remove-btn" aria-label="%s" data-product_id="%s" data-product_sku="%s" data-cart_item_key="%s">
@@ -242,29 +243,32 @@ get_header(); ?>
                                                 esc_attr( $cart_item_key )
                                             ), $cart_item_key );
                                             ?>
+=======
+                                            <button type="button" class="ml-4 text-gray-400 hover:text-red-500" 
+                                                    onclick="removeCartItem('<?php echo esc_js($cart_item_key); ?>')">
+                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                                </svg>
+                                            </button>
+>>>>>>> parent of fb4d8cc (Enhance cart UI and force billing-shipping sync)
                                         </div>
                                         
                                         <div class="flex items-center justify-between mt-4">
                                             <!-- Quantity -->
                                             <div class="flex items-center border border-gray-300 rounded-lg">
-                                                <?php
-                                                if ( $_product->is_sold_individually() ) {
-                                                    $product_quantity = sprintf( '1 <input type="hidden" name="cart[%s][qty]" value="1" />', $cart_item_key );
-                                                } else {
-                                                    $product_quantity = woocommerce_quantity_input(
-                                                        array(
-                                                            'input_name'   => "cart[{$cart_item_key}][qty]",
-                                                            'input_value'  => $cart_item['quantity'],
-                                                            'max_value'    => $_product->get_max_purchase_quantity(),
-                                                            'min_value'    => '0',
-                                                            'product_name' => $_product->get_name(),
-                                                        ),
-                                                        $_product,
-                                                        false
-                                                    );
-                                                }
-                                                echo apply_filters( 'woocommerce_cart_item_quantity', $product_quantity, $cart_item_key, $cart_item );
-                                                ?>
+                                                <button type="button" class="p-2 text-gray-600 hover:text-gray-800" 
+                                                        onclick="updateQuantity('<?php echo esc_js($cart_item_key); ?>', <?php echo $cart_item['quantity'] - 1; ?>)">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                                    </svg>
+                                                </button>
+                                                <span class="px-4 py-2 text-sm font-medium"><?php echo $cart_item['quantity']; ?></span>
+                                                <button type="button" class="p-2 text-gray-600 hover:text-gray-800" 
+                                                        onclick="updateQuantity('<?php echo esc_js($cart_item_key); ?>', <?php echo $cart_item['quantity'] + 1; ?>)">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                                    </svg>
+                                                </button>
                                             </div>
                                             
                                             <!-- Price -->
@@ -300,24 +304,19 @@ get_header(); ?>
                                 
                                 <!-- Quantity -->
                                 <div class="col-span-2 flex justify-center">
-                                    <?php
-                                    if ( $_product->is_sold_individually() ) {
-                                        $product_quantity = sprintf( '1 <input type="hidden" name="cart[%s][qty]" value="1" />', $cart_item_key );
-                                    } else {
-                                        $product_quantity = woocommerce_quantity_input(
-                                            array(
-                                                'input_name'   => "cart[{$cart_item_key}][qty]",
-                                                'input_value'  => $cart_item['quantity'],
-                                                'max_value'    => $_product->get_max_purchase_quantity(),
-                                                'min_value'    => '0',
-                                                'product_name' => $_product->get_name(),
-                                            ),
-                                            $_product,
-                                            false
-                                        );
-                                    }
-                                    echo apply_filters( 'woocommerce_cart_item_quantity', $product_quantity, $cart_item_key, $cart_item );
-                                    ?>
+                                    <div class="flex items-center border border-gray-300 rounded-lg">
+                                        <button type="button" class="p-2 text-gray-600 hover:text-gray-800">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                            </svg>
+                                        </button>
+                                        <span class="px-4 py-2 text-sm font-medium"><?php echo $cart_item['quantity']; ?></span>
+                                        <button type="button" class="p-2 text-gray-600 hover:text-gray-800">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
                                 </div>
                                 
                                 <!-- Price -->
@@ -330,6 +329,7 @@ get_header(); ?>
                                     <span class="text-sm font-bold text-gray-900">
                                         <?php echo apply_filters('woocommerce_cart_item_subtotal', WC()->cart->get_product_subtotal($_product, $cart_item['quantity']), $cart_item, $cart_item_key); ?>
                                     </span>
+<<<<<<< HEAD
                                     <?php
                                     echo apply_filters( 'woocommerce_cart_item_remove_link', sprintf(
                                         '<a href="%s" class="ml-4 text-gray-400 hover:text-red-500 transition-colors duration-200 cart-remove-btn" aria-label="%s" data-product_id="%s" data-product_sku="%s" data-cart_item_key="%s">
@@ -344,6 +344,13 @@ get_header(); ?>
                                         esc_attr( $cart_item_key )
                                     ), $cart_item_key );
                                     ?>
+=======
+                                    <button type="button" class="ml-4 text-gray-400 hover:text-red-500">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    </button>
+>>>>>>> parent of fb4d8cc (Enhance cart UI and force billing-shipping sync)
                                 </div>
                             </div>
                             
@@ -375,84 +382,25 @@ get_header(); ?>
                     <div class="bg-white rounded-lg border border-gray-200 p-6">
                         <h3 class="text-lg font-semibold text-gray-900 mb-6"><?php _e('Order Summary', 'tostishop'); ?></h3>
                         
-                        <!-- Cart Totals Table -->
-                        <div class="space-y-3">
-                            <!-- Subtotal -->
-                            <div class="flex justify-between items-center text-base">
-                                <span class="text-gray-600 font-medium"><?php _e('Subtotal', 'woocommerce'); ?></span>
-                                <span class="font-semibold text-gray-900"><?php wc_cart_totals_subtotal_html(); ?></span>
+                        <?php wc_cart_totals_subtotal_html(); ?>
+                        
+                        <!-- Shipping Calculator -->
+                        <?php if (WC()->cart->needs_shipping() && WC()->cart->show_shipping()) : ?>
+                            <div class="border-t border-gray-200 pt-6 mt-6">
+                                <h4 class="font-medium text-gray-900 mb-4"><?php _e('Shipping', 'tostishop'); ?></h4>
+                                <?php wc_cart_totals_shipping_html(); ?>
                             </div>
-                            
-                            <!-- Coupon Code Section -->
-                            <div class="bg-gray-50 rounded-lg p-4 mb-4 border border-gray-200">
-                                <div class="flex items-center justify-between mb-3">
-                                    <h4 class="text-sm font-medium text-gray-900 flex items-center">
-                                        <svg class="w-4 h-4 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-                                        </svg>
-                                        <?php _e('Coupon Code', 'woocommerce'); ?>
-                                    </h4>
-                                    <button type="button" class="text-primary text-sm font-medium hover:text-primary/80 transition-colors" id="toggle-coupon">
-                                        <?php _e('Add Code', 'tostishop'); ?>
-                                    </button>
-                                </div>
-                                
-                                <div class="coupon-form hidden" id="coupon-form">
-                                    <div class="flex space-x-2">
-                                        <div class="flex-1">
-                                            <input type="text" name="coupon_code" id="coupon_code" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all" placeholder="<?php _e('Enter coupon code', 'woocommerce'); ?>" value="">
-                                        </div>
-                                        <button type="submit" name="apply_coupon" value="<?php esc_attr_e('Apply coupon', 'woocommerce'); ?>" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors">
-                                            <?php _e('Apply', 'woocommerce'); ?>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Applied Coupons -->
-                            <?php foreach (WC()->cart->get_coupons() as $code => $coupon) : ?>
-                                <div class="flex justify-between items-center text-base bg-green-50 p-3 rounded-lg">
-                                    <span class="text-green-700 font-medium">
-                                        <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                        </svg>
-                                        <?php echo apply_filters('woocommerce_cart_totals_coupon_label', esc_html($coupon->get_code()), $coupon); ?>
-                                    </span>
-                                    <span class="text-green-800 font-semibold">
-                                        <?php wc_cart_totals_coupon_html($coupon); ?>
-                                    </span>
-                                </div>
-                            <?php endforeach; ?>
-                            
-                            <!-- Shipping -->
-                            <?php if (WC()->cart->needs_shipping() && WC()->cart->show_shipping()) : ?>
-                                <div class="flex justify-between items-center text-base border-t border-gray-200 pt-3">
-                                    <span class="text-gray-600 font-medium"><?php _e('Shipping', 'woocommerce'); ?></span>
-                                    <div class="text-right">
-                                        <?php wc_cart_totals_shipping_html(); ?>
-                                    </div>
-                                </div>
-                            <?php endif; ?>
-                            
-                            <!-- Tax -->
-                            <?php foreach (WC()->cart->get_tax_totals() as $code => $tax) : ?>
-                                <div class="flex justify-between items-center text-base">
-                                    <span class="text-gray-600 font-medium"><?php echo esc_html($tax->label); ?></span>
-                                    <span class="font-semibold text-gray-900"><?php echo wp_kses_post($tax->formatted_amount); ?></span>
-                                </div>
-                            <?php endforeach; ?>
-                            
-                            <!-- Order Total -->
-                            <div class="flex justify-between items-center text-xl font-bold text-gray-900 bg-gray-50 p-4 rounded-lg border-t-2 border-primary mt-4">
-                                <span><?php _e('Total', 'woocommerce'); ?></span>
-                                <span class="text-primary"><?php wc_cart_totals_order_total_html(); ?></span>
-                            </div>
+                        <?php endif; ?>
+                        
+                        <!-- Cart Totals -->
+                        <div class="border-t border-gray-200 pt-6 mt-6">
+                            <?php wc_cart_totals_order_total_html(); ?>
                         </div>
                         
                         <!-- Proceed to Checkout -->
                         <div class="mt-6">
                             <a href="<?php echo esc_url(wc_get_checkout_url()); ?>" 
-                               class="w-full bg-gradient-to-r from-primary to-blue-600 text-white py-4 px-6 rounded-lg text-center font-semibold hover:from-primary/90 hover:to-blue-600/90 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl block">
+                               class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg text-center font-semibold hover:bg-blue-700 transition-colors duration-200 block">
                                 <?php _e('Proceed to Checkout', 'tostishop'); ?>
                             </a>
                         </div>
@@ -495,6 +443,7 @@ get_header(); ?>
 <?php endif; ?>
 
 <?php get_footer(); ?>
+<<<<<<< HEAD
 
 <style>
 /* Custom styling for WooCommerce quantity inputs */
@@ -858,3 +807,5 @@ function initializeCouponForm() {
     }
 }
 </script>
+=======
+>>>>>>> parent of fb4d8cc (Enhance cart UI and force billing-shipping sync)

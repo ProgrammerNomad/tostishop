@@ -57,6 +57,7 @@ function tostishop_checkout_customizations() {
     add_filter('woocommerce_cart_needs_shipping_address', '__return_false');
     
 <<<<<<< HEAD
+<<<<<<< HEAD
     // Remove shipping fields from checkout
     add_filter('woocommerce_checkout_fields', 'tostishop_remove_shipping_fields');
     
@@ -66,10 +67,15 @@ function tostishop_checkout_customizations() {
     // Hide ship to different address option via CSS
     add_action('wp_head', 'tostishop_hide_ship_to_different_address');
 >>>>>>> parent of 291e829 (Auto-copy billing to shipping fields at checkout)
+=======
+    // Hide ship to different address option via CSS
+    add_action('wp_head', 'tostishop_hide_ship_to_different_address');
+>>>>>>> parent of fb4d8cc (Enhance cart UI and force billing-shipping sync)
 }
 add_action('init', 'tostishop_checkout_customizations');
 
 /**
+<<<<<<< HEAD
 <<<<<<< HEAD
  * Remove shipping fields from checkout
  */
@@ -96,6 +102,22 @@ function tostishop_auto_copy_billing_to_shipping() {
     $_POST['shipping_postcode'] = $_POST['billing_postcode'];
     $_POST['shipping_country'] = $_POST['billing_country'];
     $_POST['shipping_state'] = $_POST['billing_state'];
+=======
+ * Hide ship to different address option via CSS
+ */
+function tostishop_hide_ship_to_different_address() {
+    if (is_checkout()) {
+        ?>
+        <style>
+        #ship-to-different-address,
+        .woocommerce-shipping-fields h3,
+        .shipping_address {
+            display: none !important;
+        }
+        </style>
+        <?php
+    }
+>>>>>>> parent of fb4d8cc (Enhance cart UI and force billing-shipping sync)
 }
 
 /**
