@@ -1,0 +1,169 @@
+/* Minimal Checkout CSS - Tailwind-First Approach */
+
+/* Place Order Button - Essential only */
+#place_order {
+    background: linear-gradient(135deg, #14175b 0%, #1e3a8a 100%) !important;
+    border: none !important;
+    border-radius: 0.75rem !important;
+    color: white !important;
+    font-size: 1.125rem !important;
+    font-weight: 700 !important;
+    padding: 1rem 2rem !important;
+    width: 100% !important;
+    min-height: 56px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-transform: none !important;
+}
+
+#place_order:hover {
+    background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(20, 23, 91, 0.4) !important;
+}
+
+#place_order:disabled,
+#place_order.processing {
+    opacity: 0.7 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+}
+
+/* Payment Methods - Minimal styling */
+.wc_payment_methods {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.wc_payment_method {
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0.5rem !important;
+    padding: 1rem !important;
+    margin-bottom: 1rem !important;
+    background: white !important;
+}
+
+.wc_payment_method input[type="radio"] {
+    margin-right: 0.75rem !important;
+    accent-color: #14175b !important;
+}
+
+.wc_payment_method label {
+    cursor: pointer !important;
+    font-weight: 500 !important;
+}
+
+/* Terms checkbox */
+#terms {
+    margin-right: 0.5rem !important;
+    accent-color: #14175b !important;
+    transform: scale(1.1) !important;
+}
+
+/* Form validation errors */
+.woocommerce-error {
+    background: #fef2f2 !important;
+    border: 1px solid #fecaca !important;
+    color: #dc2626 !important;
+    padding: 1rem !important;
+    border-radius: 0.5rem !important;
+    margin-bottom: 1rem !important;
+}
+
+.woocommerce-message {
+    background: #f0f9ff !important;
+    border: 1px solid #bae6fd !important;
+    color: #0369a1 !important;
+    padding: 1rem !important;
+    border-radius: 0.5rem !important;
+    margin-bottom: 1rem !important;
+}
+
+/* Loading state */
+.processing {
+    opacity: 0.5 !important;
+    pointer-events: none !important;
+}
+
+/* Form fields - minimal styling */
+.woocommerce-checkout input[type="text"],
+.woocommerce-checkout input[type="email"],
+.woocommerce-checkout input[type="tel"],
+.woocommerce-checkout select,
+.woocommerce-checkout textarea {
+    border: 2px solid #e5e7eb !important;
+    border-radius: 0.5rem !important;
+    padding: 0.75rem !important;
+    font-size: 16px !important;
+    transition: border-color 0.2s ease !important;
+    width: 100% !important;
+}
+
+.woocommerce-checkout input:focus,
+.woocommerce-checkout select:focus,
+.woocommerce-checkout textarea:focus {
+    outline: none !important;
+    border-color: #14175b !important;
+    box-shadow: 0 0 0 3px rgba(20, 23, 91, 0.1) !important;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+    #place_order {
+        position: sticky !important;
+        bottom: 1rem !important;
+        z-index: 50 !important;
+        margin: 1rem 0 !important;
+        box-shadow: 0 8px 25px rgba(20, 23, 91, 0.3) !important;
+    }
+    
+    .woocommerce-checkout input,
+    .woocommerce-checkout select,
+    .woocommerce-checkout textarea,
+    .woocommerce-checkout button {
+        min-height: 48px !important;
+    }
+}
+
+/* Hide terms content initially */
+.woocommerce-terms-and-conditions {
+    display: none !important;
+}
+
+/* Coupon form styling */
+.woocommerce-form-coupon-toggle {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 1rem !important;
+    border-radius: 0.5rem !important;
+    margin-bottom: 1rem !important;
+}
+
+.woocommerce-form-coupon {
+    background: white !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 1.5rem !important;
+    border-radius: 0.5rem !important;
+    margin-bottom: 1rem !important;
+}
+
+/* Login form styling */
+.woocommerce-form-login-toggle {
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
+    padding: 1rem !important;
+    border-radius: 0.5rem !important;
+    margin-bottom: 1rem !important;
+}
+
+.woocommerce-form-login {
+    background: white !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 1.5rem !important;
+    border-radius: 0.5rem !important;
+    margin-bottom: 1rem !important;
+}

@@ -1,5 +1,5 @@
 /**
- * TostiShop Theme JavaScript
+ * TostiShop Theme JavaScript - FIXED VERSION
  * Enhanced functionality for modern WooCommerce experience
  */
 
@@ -34,7 +34,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (savedView === 'list') {
             listView.click();
         } else {
-            // Default to grid view
             gridView.click();
         }
     }
@@ -102,10 +101,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                   'Product';
                 
                 // Trigger custom event for notifications
-                $(document).trigger('tostishop_product_added_to_cart', [productName]);
-                
-                // Also trigger WooCommerce event if available
-                $(document.body).trigger('added_to_cart', [null, null, button]);
+                if (typeof jQuery !== 'undefined') {
+                    jQuery(document).trigger('tostishop_product_added_to_cart', [productName]);
+                    
+                    // Also trigger WooCommerce event if available
+                    jQuery(document.body).trigger('added_to_cart', [null, null, button]);
+                }
                 
                 // Reset button after 2 seconds
                 setTimeout(() => {
@@ -152,298 +153,80 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Enhanced modal functionality for product quickview
-    window.openModal = function(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        }
-    };
-    
-    window.closeModal = function(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.classList.add('hidden');
-            document.body.style.overflow = '';
-        }
-    };
-    
-    // Global image update function for product variations
-    window.updateMainImage = function(imageSrc) {
-        const mainImage = document.querySelector('.product-main-image img');
-        if (mainImage && imageSrc) {
-            mainImage.src = imageSrc;
-        }
-    };
-    
-    // Image lazy loading fallback for older browsers
-    if ('IntersectionObserver' in window) {
-        const imageObserver = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const img = entry.target;
-                    if (img.dataset.src) {
-                        img.src = img.dataset.src;
-                        img.removeAttribute('data-src');
-                        img.classList.remove('lazy');
-                        observer.unobserve(img);
-                    }
-                }
-            });
-        });
-        
-        document.querySelectorAll('img[data-src]').forEach(img => {
-            imageObserver.observe(img);
-        });
-    }
-    
-    // Enhanced search functionality - FIXED VERSION
-    const searchForm = document.querySelector('.search-form');
-    if (searchForm) {
-        const searchInput = searchForm.querySelector('input[type="search"]');
-        let searchTimeout;
-        
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                clearTimeout(searchTimeout);
-                const query = this.value.trim();
-                
-                if (query.length > 2) {
-                    searchTimeout = setTimeout(() => {
-                        // Could add live search suggestions here
-                        console.log('Searching for:', query);
-                    }, 300);
-                }
-            });
-        }
-    }
-    
 });
+
+// Global functions for compatibility
+window.openModal = function(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+};
+
+window.closeModal = function(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+};
+
+window.updateMainImage = function(imageSrc) {
+    const mainImage = document.querySelector('.product-main-image img');
+    if (mainImage && imageSrc) {
+        mainImage.src = imageSrc;
+    }
+};
 
 // jQuery document ready (for WooCommerce compatibility)
-jQuery(document).ready(function($) {
-    
-    // Update cart fragments on page load
-    if (typeof wc_cart_fragments_params !== 'undefined') {
-        $(document.body).trigger('wc_fragment_refresh');
-    }
-    
-    // WooCommerce variation form enhancements
-    $('.variations_form').each(function() {
-        const $form = $(this);
-        const $gallery = $('.product-gallery');
-        const $mainImage = $gallery.find('.bg-gray-100');
-        const $thumbnails = $gallery.find('[data-thumbnail]');
+if (typeof jQuery !== 'undefined') {
+    jQuery(document).ready(function($) {
         
-        // Store original images for reset functionality
-        const originalMainImage = $mainImage.html();
-        const originalThumbnails = $thumbnails.map(function() { return $(this).clone(true); }).get();
+        // Update cart fragments on page load
+        if (typeof wc_cart_fragments_params !== 'undefined') {
+            $(document.body).trigger('wc_fragment_refresh');
+        }
         
-        // Enhanced color swatch functionality with variation integration
-        $form.on('woocommerce_variation_has_changed', function() {
-            const chosenAttributes = $form.find('select').serializeArray();
+        // Listen for WooCommerce add to cart events
+        $(document.body).on('added_to_cart', function(event, fragments, cart_hash, $button) {
+            const productName = $button.closest('.product-item')?.find('h3')?.text() || 
+                              $button.closest('[data-product-id]')?.find('.product-title')?.text() || 
+                              'Product';
             
-            // Update color swatches based on available variations
-            $('.color-swatch').each(function() {
-                const $swatch = $(this);
-                const attributeName = $swatch.data('attribute');
-                const attributeValue = $swatch.data('value');
-                
-                // Check if this combination is available
-                const isAvailable = checkVariationAvailability(chosenAttributes, attributeName, attributeValue);
-                
-                if (isAvailable) {
-                    $swatch.removeClass('opacity-50 cursor-not-allowed');
-                    $swatch.addClass('cursor-pointer');
-                } else {
-                    $swatch.addClass('opacity-50 cursor-not-allowed');
-                    $swatch.removeClass('cursor-pointer');
-                }
-            });
+            if (window.tostishopNotifications) {
+                window.tostishopNotifications.cart(productName + ' added to cart!', [
+                    {
+                        text: 'View Cart',
+                        action: 'view-cart',
+                        class: 'bg-white bg-opacity-20 text-white hover:bg-opacity-30 transition-all duration-200'
+                    },
+                    {
+                        text: 'Continue Shopping',
+                        action: 'continue-shopping',
+                        class: 'bg-transparent border border-white border-opacity-30 text-white hover:bg-white hover:bg-opacity-10 transition-all duration-200'
+                    }
+                ]);
+            }
         });
-        
-        // Enhanced variation selection handling
-        $form.on('found_variation', function(event, variation) {
-            // Update main product image if variation has image
-            if (variation.image && variation.image.src) {
-                const $newMainImage = $(`
-                    <img src="${variation.image.src}" 
-                         alt="${variation.image.alt || 'Product variation'}"
-                         class="w-full h-full object-cover">
-                `);
-                $mainImage.html($newMainImage);
-                
-                // Update gallery thumbnails if available
-                if (variation.image.gallery_thumbnail_src) {
-                    const $firstThumbnail = $thumbnails.first();
-                    
-                    $firstThumbnail.fadeOut(200, function() {
-                        $(this).html(`
-                            <img src="${variation.image.gallery_thumbnail_src}" 
-                                 alt="${variation.image.alt || 'Product variation'}"
-                                 class="w-full h-full object-cover">
-                        `);
-                        
-                        // Update click handler for thumbnail
-                        $(this).attr('onclick', `updateMainImage('${variation.image.src}')`);
-                        $(this).fadeIn(100);
-                    });
-                }
-                
-                // Reset all thumbnail borders and highlight the first one
-                $thumbnails.removeClass('border-blue-500').addClass('border-gray-200');
-                $firstThumbnail.removeClass('border-gray-200').addClass('border-blue-500');
-            }
-            
-            // Update price display
-            if (variation.price_html) {
-                $('.product-price, .single-product-price, .woocommerce-Price-amount').html(variation.price_html);
-            }
-            
-            // Update stock status with better styling
-            if (variation.is_in_stock !== undefined) {
-                const $stockStatus = $('.stock-status');
-                if (variation.is_in_stock) {
-                    $stockStatus.html(`
-                        <div class="flex items-center text-green-600">
-                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                            <span class="font-medium">In Stock</span>
-                        </div>
-                    `);
-                } else {
-                    $stockStatus.html(`
-                        <div class="flex items-center text-red-600">
-                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                            </svg>
-                            <span class="font-medium">Out of Stock</span>
-                        </div>
-                    `);
-                }
-            }
 
-            // Update availability text
-            if (variation.availability_html) {
-                $('.woocommerce-variation-availability').html(variation.availability_html);
+        // Custom event for manual cart additions
+        $(document).on('tostishop_product_added_to_cart', function(event, productName) {
+            if (window.tostishopNotifications) {
+                window.tostishopNotifications.cart(productName + ' added to cart!', [
+                    {
+                        text: 'View Cart',
+                        action: 'view-cart',
+                        class: 'bg-white bg-opacity-20 text-white hover:bg-opacity-30 transition-all duration-200'
+                    },
+                    {
+                        text: 'Continue Shopping', 
+                        action: 'continue-shopping',
+                        class: 'bg-transparent border border-white border-opacity-30 text-white hover:bg-white hover:bg-opacity-10 transition-all duration-200'
+                    }
+                ]);
             }
         });
         
-        // Reset to original images when no variation is selected
-        $form.on('reset_data', function() {
-            $mainImage.html(originalMainImage);
-            
-            $thumbnails.each(function(index) {
-                if (originalThumbnails[index]) {
-                    $(this).replaceWith(originalThumbnails[index]);
-                }
-            });
-            
-            // Reset thumbnail highlighting
-            $thumbnails.removeClass('border-blue-500').addClass('border-gray-200');
-            $thumbnails.first().removeClass('border-gray-200').addClass('border-blue-500');
-        });
     });
-    
-    // Enhanced product gallery with keyboard navigation
-    let currentImageIndex = 0;
-    const $galleryImages = $('.product-gallery [data-thumbnail]');
-    
-    // Keyboard navigation for product gallery
-    $(document).on('keydown', function(e) {
-        if ($('.product-gallery').length > 0) {
-            if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                nextImage();
-            } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                previousImage();
-            }
-        }
-    });
-    
-    // Gallery navigation functions
-    window.nextImage = function() {
-        if ($galleryImages.length > 0) {
-            currentImageIndex = (currentImageIndex + 1) % $galleryImages.length;
-            $galleryImages.eq(currentImageIndex).click();
-        }
-    };
-    
-    window.previousImage = function() {
-        if ($galleryImages.length > 0) {
-            currentImageIndex = currentImageIndex === 0 ? $galleryImages.length - 1 : currentImageIndex - 1;
-            $galleryImages.eq(currentImageIndex).click();
-        }
-    };
-    
-    // Update current image index when thumbnail is clicked
-    $galleryImages.on('click', function() {
-        currentImageIndex = $galleryImages.index(this);
-        
-        // Update thumbnail highlighting
-        $galleryImages.removeClass('border-blue-500').addClass('border-gray-200');
-        $(this).removeClass('border-gray-200').addClass('border-blue-500');
-        
-        // Update data-thumbnail attribute for proper tracking
-        const imageIndex = $(this).data('thumbnail');
-        if (imageIndex !== undefined) {
-            $(`[data-thumbnail="${imageIndex}"]`).removeClass('border-gray-200').addClass('border-blue-500');
-        }
-    };
-    
-    // Enhanced cart updates and WooCommerce integration
-    $(document.body).on('updated_cart_totals updated_checkout', function() {
-        console.log('Cart updated');
-    });
-
-    // Listen for WooCommerce add to cart events
-    $(document.body).on('added_to_cart', function(event, fragments, cart_hash, $button) {
-        const productName = $button.closest('.product-item')?.find('h3')?.text() || 
-                          $button.closest('[data-product-id]')?.find('.product-title')?.text() || 
-                          'Product';
-        
-        if (window.tostishopNotifications) {
-            window.tostishopNotifications.cart(`${productName} added to cart!`, [
-                {
-                    text: 'View Cart',
-                    action: 'view-cart',
-                    class: 'bg-white bg-opacity-20 text-white hover:bg-opacity-30 transition-all duration-200'
-                },
-                {
-                    text: 'Continue Shopping',
-                    action: 'continue-shopping',
-                    class: 'bg-transparent border border-white border-opacity-30 text-white hover:bg-white hover:bg-opacity-10 transition-all duration-200'
-                }
-            ]);
-        }
-    });
-
-    // Custom event for manual cart additions
-    $(document).on('tostishop_product_added_to_cart', function(event, productName) {
-        if (window.tostishopNotifications) {
-            window.tostishopNotifications.cart(`${productName} added to cart!`, [
-                {
-                    text: 'View Cart',
-                    action: 'view-cart',
-                    class: 'bg-white bg-opacity-20 text-white hover:bg-opacity-30 transition-all duration-200'
-                },
-                {
-                    text: 'Continue Shopping', 
-                    action: 'continue-shopping',
-                    class: 'bg-transparent border border-white border-opacity-30 text-white hover:bg-white hover:bg-opacity-10 transition-all duration-200'
-                }
-            ]);
-        }
-    });
-    
-});
-
-// Helper function to check variation availability
-function checkVariationAvailability(chosenAttributes, attributeName, attributeValue) {
-    // This would typically check against the available_variations data
-    // For now, we'll return true as a placeholder
-    return true;
 }
