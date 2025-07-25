@@ -206,3 +206,257 @@
     outline: 2px solid #2563eb;
     outline-offset: 2px;
 }
+
+/* My Account Page Styles */
+
+/* Navigation active state fix */
+.woocommerce-MyAccount-navigation .is-active a,
+.woocommerce-MyAccount-navigation .is-active .account-nav-link {
+    background-color: #14175b !important;
+    color: white !important;
+}
+
+/* Account page form styles */
+.woocommerce-MyAccount-content .form-row input,
+.woocommerce-MyAccount-content .form-row select,
+.woocommerce-MyAccount-content .form-row textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    transition: border-color 0.2s ease, ring 0.2s ease;
+}
+
+.woocommerce-MyAccount-content .form-row input:focus,
+.woocommerce-MyAccount-content .form-row select:focus,
+.woocommerce-MyAccount-content .form-row textarea:focus {
+    outline: none;
+    border-color: #14175b;
+    box-shadow: 0 0 0 2px rgba(20, 23, 91, 0.1);
+}
+
+.woocommerce-MyAccount-content .form-row label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.woocommerce-MyAccount-content .required {
+    color: #ef4444;
+}
+
+/* Orders table responsive */
+.woocommerce-orders-table th,
+.woocommerce-orders-table td {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.woocommerce-orders-table th {
+    background-color: #f9fafb;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+}
+
+.woocommerce-orders-table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+/* Account dashboard stats cards */
+.account-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.account-stat-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.account-stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #14175b;
+    margin-bottom: 0.5rem;
+}
+
+.account-stat-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Mobile improvements for account pages */
+@media (max-width: 640px) {
+    .woocommerce-MyAccount-navigation {
+        margin-bottom: 2rem;
+    }
+    
+    .woocommerce-orders-table {
+        display: none;
+    }
+    
+    .account-mobile-orders {
+        display: block;
+    }
+}
+
+@media (min-width: 641px) {
+    .account-mobile-orders {
+        display: none;
+    }
+}
+
+/* Address cards styling */
+.woocommerce-Address {
+    height: 100%;
+}
+
+.woocommerce-Address address {
+    font-style: normal;
+    line-height: 1.6;
+}
+
+/* Edit address form styling */
+.woocommerce-address-fields .form-row {
+    margin-bottom: 1rem;
+}
+
+.woocommerce-address-fields .form-row input,
+.woocommerce-address-fields .form-row select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.woocommerce-address-fields .form-row input:focus,
+.woocommerce-address-fields .form-row select:focus {
+    outline: none;
+    border-color: #14175b;
+    box-shadow: 0 0 0 2px rgba(20, 23, 91, 0.1);
+}
+
+/* Button styling consistency */
+.woocommerce-MyAccount-content .button,
+.woocommerce-MyAccount-content .woocommerce-button,
+.woocommerce-MyAccount-content input[type="submit"] {
+    background-color: #14175b;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.woocommerce-MyAccount-content .button:hover,
+.woocommerce-MyAccount-content .woocommerce-button:hover,
+.woocommerce-MyAccount-content input[type="submit"]:hover {
+    background-color: #1e40af;
+}
+
+.woocommerce-MyAccount-content .button.alt,
+.woocommerce-MyAccount-content .woocommerce-button.alt {
+    background-color: #e5e7eb;
+    color: #374151;
+}
+
+.woocommerce-MyAccount-content .button.alt:hover,
+.woocommerce-MyAccount-content .woocommerce-button.alt:hover {
+    background-color: #d1d5db;
+}
+
+/* Account navigation improvements */
+.woocommerce-MyAccount-navigation ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.woocommerce-MyAccount-navigation li {
+    margin-bottom: 0.25rem;
+}
+
+.woocommerce-MyAccount-navigation a {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: #374151;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    font-size: 0.875rem;
+}
+
+.woocommerce-MyAccount-navigation a:hover {
+    background-color: #f3f4f6;
+    color: #14175b;
+}
+
+.woocommerce-MyAccount-navigation .is-active a {
+    background-color: #14175b;
+    color: white;
+}
+
+/* Responsive table fixes */
+@media (max-width: 768px) {
+    .woocommerce-orders-table,
+    .woocommerce-orders-table thead,
+    .woocommerce-orders-table tbody,
+    .woocommerce-orders-table th,
+    .woocommerce-orders-table td,
+    .woocommerce-orders-table tr {
+        display: block;
+    }
+    
+    .woocommerce-orders-table thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+    
+    .woocommerce-orders-table tr {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: white;
+    }
+    
+    .woocommerce-orders-table td {
+        border: none;
+        position: relative;
+        padding-left: 50%;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+    
+    .woocommerce-orders-table td:before {
+        content: attr(data-title) ": ";
+        position: absolute;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        font-weight: 600;
+        color: #374151;
+    }
+}
