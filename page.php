@@ -1,13 +1,23 @@
 <?php get_header(); ?>
 
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<?php 
+// Check if this is a WooCommerce account page - if so, use wider layout
+$is_account_page = (function_exists('is_account_page') && is_account_page()) || 
+                   (function_exists('is_wc_endpoint_url') && is_wc_endpoint_url()) ||
+                   (strpos(get_the_content(), 'woocommerce') !== false);
+
+$container_class = $is_account_page ? 'max-w-7xl xl:max-w-[95rem] 2xl:max-w-[110rem]' : 'max-w-4xl';
+?>
+
+<div class="<?php echo $container_class; ?> mx-auto px-4 sm:px-6 lg:px-8 py-8">
     
     <?php if (have_posts()) : ?>
         <?php while (have_posts()) : the_post(); ?>
         
-        <article class="prose prose-lg max-w-none">
+        <article class="<?php echo $is_account_page ? '' : 'prose prose-lg'; ?> max-w-none">
             
             <!-- Page Header -->
+            <?php if (!$is_account_page) : ?>
             <header class="mb-8 text-center">
                 <h1 class="text-4xl font-bold text-gray-900 mb-4"><?php the_title(); ?></h1>
                 
@@ -17,25 +27,28 @@
                     </div>
                 <?php endif; ?>
             </header>
+            <?php endif; ?>
             
             <!-- Featured Image -->
-            <?php if (has_post_thumbnail()) : ?>
+            <?php if (has_post_thumbnail() && !$is_account_page) : ?>
                 <div class="mb-8 rounded-lg overflow-hidden">
                     <?php the_post_thumbnail('large', array('class' => 'w-full h-auto')); ?>
                 </div>
             <?php endif; ?>
             
             <!-- Page Content -->
-            <div class="text-gray-700 leading-relaxed">
+            <div class="<?php echo $is_account_page ? '' : 'text-gray-700 leading-relaxed'; ?>">
                 <?php 
                 the_content();
                 
-                wp_link_pages(array(
-                    'before' => '<div class="page-links flex items-center justify-center space-x-2 mt-8">',
-                    'after' => '</div>',
-                    'link_before' => '<span class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded transition-colors duration-200">',
-                    'link_after' => '</span>',
-                ));
+                if (!$is_account_page) {
+                    wp_link_pages(array(
+                        'before' => '<div class="page-links flex items-center justify-center space-x-2 mt-8">',
+                        'after' => '</div>',
+                        'link_before' => '<span class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded transition-colors duration-200">',
+                        'link_after' => '</span>',
+                    ));
+                }
                 ?>
             </div>
             
