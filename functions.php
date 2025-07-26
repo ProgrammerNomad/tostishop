@@ -1,7 +1,7 @@
 <?php
 /**
  * TostiShop Theme Functions
- * Mobile-first WooCommerce theme
+ * Mobile-first WooCommerce theme with Firebase Authentication
  */
 
 // Prevent direct access
@@ -45,8 +45,73 @@ function tostishop_setup() {
     add_image_size('tostishop-hero', 1200, 600, true);
     add_image_size('tostishop-product-thumb', 300, 300, true);
     add_image_size('tostishop-category-thumb', 150, 150, true);
+    
+    // Set custom logo on theme activation
+    if (!get_theme_mod('custom_logo')) {
+        $logo_path = get_template_directory() . '/assets/images/logo.png';
+        if (file_exists($logo_path)) {
+            $logo_attachment_id = tostishop_upload_logo();
+            if ($logo_attachment_id) {
+                set_theme_mod('custom_logo', $logo_attachment_id);
+            }
+        }
+    }
 }
 add_action('after_setup_theme', 'tostishop_setup');
+
+/**
+ * Upload and set custom logo
+ */
+function tostishop_upload_logo() {
+    $logo_url = get_template_directory_uri() . '/assets/images/logo.png';
+    $logo_path = get_template_directory() . '/assets/images/logo.png';
+    
+    if (!file_exists($logo_path)) {
+        return false;
+    }
+    
+    // Check if logo already exists in media library
+    $existing_logo = get_posts(array(
+        'post_type' => 'attachment',
+        'meta_query' => array(
+            array(
+                'key' => '_wp_attached_file',
+                'value' => 'tostishop-logo.png',
+                'compare' => 'LIKE'
+            )
+        ),
+        'posts_per_page' => 1
+    ));
+    
+    if (!empty($existing_logo)) {
+        return $existing_logo[0]->ID;
+    }
+    
+    // Upload logo to media library
+    require_once(ABSPATH . 'wp-admin/includes/file.php');
+    require_once(ABSPATH . 'wp-admin/includes/media.php');
+    require_once(ABSPATH . 'wp-admin/includes/image.php');
+    
+    $tmp = download_url($logo_url);
+    if (is_wp_error($tmp)) {
+        return false;
+    }
+    
+    $file_array = array(
+        'name' => 'tostishop-logo.png',
+        'tmp_name' => $tmp
+    );
+    
+    $attachment_id = media_handle_sideload($file_array, 0);
+    
+    if (is_wp_error($attachment_id)) {
+        @unlink($tmp);
+        return false;
+    }
+    
+    @unlink($tmp);
+    return $attachment_id;
+}
 
 /**
  * Checkout Customizations
@@ -134,13 +199,72 @@ function tostishop_scripts() {
         wp_enqueue_script('tostishop-order-confirmation', get_template_directory_uri() . '/assets/js/order-confirmation.js', array(), '1.0.0', true);
     }
     
-    // Localize script for AJAX
-    wp_localize_script('tostishop-theme', 'tostishop_ajax', array(
-        'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('tostishop_nonce'),
-    ));
+    // Firebase Authentication (India-specific)
+    if (is_account_page() || is_checkout()) {
+        tostishop_enqueue_firebase_auth();
+    }
 }
 add_action('wp_enqueue_scripts', 'tostishop_scripts');
+
+/**
+ * Enqueue Firebase Authentication Scripts for India - Updated v3.0
+ */
+function tostishop_enqueue_firebase_auth() {
+    $firebase_settings = get_option('tostishop_firebase_settings', array());
+    $general_settings = get_option('tostishop_general_settings', array());
+    
+    // Only load if Firebase is enabled and configured
+    if (empty($general_settings['enable_firebase_auth']) || empty($firebase_settings['api_key'])) {
+        return;
+    }
+    
+    // Firebase SDK
+    wp_enqueue_script('firebase-app', 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js', array(), '10.7.0', true);
+    wp_enqueue_script('firebase-auth', 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js', array('firebase-app'), '10.7.0', true);
+    
+    // Updated Firebase authentication for comprehensive login/register UI
+    wp_enqueue_script('tostishop-firebase-auth', get_template_directory_uri() . '/assets/js/firebase-auth-updated.js', array('firebase-app', 'firebase-auth'), '3.0.0', true);
+    
+    // Enhanced Firebase CSS
+    wp_enqueue_style('tostishop-firebase-auth', get_template_directory_uri() . '/assets/css/firebase-auth-enhanced.css', array(), '3.0.0');
+    
+    // Localize Firebase configuration
+    wp_localize_script('tostishop-firebase-auth', 'tostiShopFirebaseConfig', array(
+        'apiKey' => $firebase_settings['api_key'],
+        'authDomain' => $firebase_settings['auth_domain'],
+        'projectId' => $firebase_settings['project_id'],
+        'storageBucket' => $firebase_settings['project_id'] . '.appspot.com',
+        'messagingSenderId' => $firebase_settings['sender_id'],
+        'appId' => $firebase_settings['app_id'],
+        'measurementId' => !empty($firebase_settings['measurement_id']) ? $firebase_settings['measurement_id'] : null
+    ));
+    
+    // Localize AJAX settings
+    wp_localize_script('tostishop-firebase-auth', 'tostiShopAjax', array(
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('tostishop_firebase_nonce'),
+        'redirectUrl' => is_checkout() ? wc_get_checkout_url() : wc_get_account_endpoint_url('dashboard'),
+        'strings' => array(
+            'loginSuccess' => __('Login successful! Redirecting...', 'tostishop'),
+            'loginError' => __('Login failed. Please try again.', 'tostishop'),
+            'otpSent' => __('OTP sent to your phone. Please check your messages.', 'tostishop'),
+            'otpError' => __('Failed to send OTP. Please try again.', 'tostishop'),
+            'invalidOtp' => __('Invalid OTP. Please try again.', 'tostishop'),
+            'phoneRequired' => __('Please enter a valid phone number.', 'tostishop'),
+        )
+    ));
+}
+
+/**
+ * Include Theme Components
+ */
+// Theme Options Panel
+require_once get_template_directory() . '/inc/theme-options.php';
+
+// Firebase Authentication (backward compatibility)
+if (file_exists(get_template_directory() . '/inc/firebase/init.php')) {
+    require_once get_template_directory() . '/inc/firebase/init.php';
+}
 
 /**
  * Register widget areas
@@ -808,3 +932,8 @@ function tostishop_setup_logo() {
     }
 }
 add_action('after_switch_theme', 'tostishop_setup_logo');
+
+/**
+ * Include Firebase Authentication Module
+ */
+require_once get_template_directory() . '/inc/firebase/init.php';

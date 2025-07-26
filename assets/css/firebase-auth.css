@@ -1,0 +1,280 @@
+/* Firebase Authentication CSS */
+/* TostiShop Theme - Mobile-First Firebase Auth Styles */
+
+/* Base Firebase Auth Container */
+.firebase-auth-container {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* Auth Tabs Navigation */
+.firebase-auth-tabs {
+    width: 100%;
+}
+
+.firebase-auth-tabs .flex button {
+    transition: all 0.2s ease-in-out;
+    white-space: nowrap;
+    position: relative;
+}
+
+.firebase-auth-tabs .flex button:hover {
+    background-color: rgba(228, 32, 41, 0.05);
+}
+
+.firebase-auth-tabs .flex button svg {
+    transition: transform 0.2s ease-in-out;
+}
+
+.firebase-auth-tabs .flex button:hover svg {
+    transform: scale(1.1);
+}
+
+/* Phone Number Input with Country Code */
+.firebase-phone-login select {
+    min-width: 80px;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+    background-position: right 8px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    appearance: none;
+    padding-right: 32px;
+}
+
+/* OTP Input Special Styling */
+#otp-code {
+    letter-spacing: 0.5em;
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+#otp-code:focus {
+    box-shadow: 0 0 0 3px rgba(228, 32, 41, 0.1);
+}
+
+/* Google Login Button */
+#google-login-btn {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    position: relative;
+    overflow: hidden;
+}
+
+#google-login-btn:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.5s;
+}
+
+#google-login-btn:hover:before {
+    left: 100%;
+}
+
+/* Button States */
+.firebase-auth-container button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.firebase-auth-container button:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.firebase-auth-container button:not(:disabled):active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading Animation */
+.firebase-auth-container .animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Success and Error Messages */
+.firebase-auth-container #firebase-success,
+.firebase-auth-container #firebase-error {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* reCAPTCHA Container */
+#recaptcha-container {
+    min-height: 78px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#recaptcha-container .g-recaptcha {
+    transform: scale(0.9);
+    transform-origin: center;
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 640px) {
+    .firebase-auth-container {
+        margin: 0 -1rem;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+    
+    .firebase-auth-tabs .flex {
+        border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .firebase-auth-tabs .flex button {
+        font-size: 0.875rem;
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .firebase-phone-login select {
+        min-width: 70px;
+        font-size: 0.875rem;
+    }
+    
+    #recaptcha-container .g-recaptcha {
+        transform: scale(0.8);
+    }
+}
+
+/* Focus States */
+.firebase-auth-container input:focus,
+.firebase-auth-container select:focus {
+    outline: none;
+    border-color: #e42029;
+    box-shadow: 0 0 0 3px rgba(228, 32, 41, 0.1);
+}
+
+/* Checkout Page Integration */
+.firebase-checkout-login {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.firebase-checkout-login .firebase-auth-container {
+    background: white;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Account Page Integration */
+.firebase-account-login {
+    margin-bottom: 2rem;
+}
+
+/* Tablet Styles */
+@media (min-width: 641px) and (max-width: 1024px) {
+    .firebase-auth-container {
+        max-width: 450px;
+    }
+    
+    .firebase-auth-tabs .flex button {
+        padding: 0.75rem 1rem;
+    }
+}
+
+/* Desktop Styles */
+@media (min-width: 1025px) {
+    .firebase-auth-container {
+        max-width: 500px;
+    }
+    
+    .firebase-checkout-login {
+        padding: 2rem;
+    }
+    
+    .firebase-auth-tabs .flex button {
+        font-size: 1rem;
+        padding: 1rem 1.5rem;
+    }
+}
+
+/* Dark Mode Support (if needed) */
+@media (prefers-color-scheme: dark) {
+    .firebase-auth-container {
+        background-color: #1f2937;
+        border-color: #374151;
+        color: #f9fafb;
+    }
+    
+    .firebase-auth-container input,
+    .firebase-auth-container select {
+        background-color: #374151;
+        border-color: #4b5563;
+        color: #f9fafb;
+    }
+    
+    .firebase-auth-container input::placeholder {
+        color: #9ca3af;
+    }
+}
+
+/* Animation for Tab Switching */
+.firebase-auth-tabs > div[x-show] {
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Country Code Flags Emoji Support */
+.firebase-phone-login select option {
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+}
+
+/* Utility Classes for Firebase Integration */
+.firebase-hidden {
+    display: none !important;
+}
+
+.firebase-loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.firebase-error-shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
