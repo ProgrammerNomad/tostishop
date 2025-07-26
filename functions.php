@@ -107,6 +107,12 @@ function tostishop_scripts() {
     wp_enqueue_script('tostishop-ui', get_template_directory_uri() . '/assets/js/ui.js', array('jquery'), '1.0.0', true);
     wp_enqueue_script('tostishop-theme', get_template_directory_uri() . '/assets/js/theme.js', array('jquery', 'tostishop-ui'), '1.0.0', true);
     
+    // Homepage specific styles and scripts
+    if (is_page_template('page-home.php') || is_front_page()) {
+        wp_enqueue_style('tostishop-homepage', get_template_directory_uri() . '/assets/css/homepage.css', array('tostishop-style'), '1.0.0');
+        wp_enqueue_script('tostishop-homepage', get_template_directory_uri() . '/assets/js/homepage.js', array('jquery'), '1.0.0', true);
+    }
+    
     // Checkout specific JS
     if (is_checkout()) {
         wp_enqueue_script('tostishop-checkout', get_template_directory_uri() . '/assets/js/checkout.js', array('jquery', 'wc-checkout'), '1.0.0', true);
@@ -649,4 +655,156 @@ function tostishop_remove_add_to_cart_buttons() {
 }
 add_action('init', 'tostishop_remove_add_to_cart_buttons');
 
-add_filter('woocommerce_cart_needs_shipping_address', '__return_false');
+/**
+ * Homepage Newsletter AJAX Handler
+ */
+function tostishop_newsletter_signup() {
+    // Verify nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'tostishop_nonce')) {
+        wp_die(__('Security check failed', 'tostishop'));
+    }
+    
+    $email = sanitize_email($_POST['email']);
+    
+    if (!is_email($email)) {
+        wp_send_json_error(__('Please enter a valid email address', 'tostishop'));
+        return;
+    }
+    
+    // Check if email already exists
+    $existing_subscriber = get_user_by('email', $email);
+    if ($existing_subscriber) {
+        wp_send_json_error(__('This email is already subscribed', 'tostishop'));
+        return;
+    }
+    
+    // Store newsletter subscription (you can integrate with Mailchimp, ConvertKit, etc.)
+    $newsletter_data = array(
+        'email' => $email,
+        'date_subscribed' => current_time('mysql'),
+        'source' => 'homepage_newsletter',
+        'ip_address' => $_SERVER['REMOTE_ADDR'],
+        'user_agent' => $_SERVER['HTTP_USER_AGENT']
+    );
+    
+    // Save to WordPress options (basic storage) or your preferred newsletter service
+    $newsletters = get_option('tostishop_newsletter_subscribers', array());
+    $newsletters[] = $newsletter_data;
+    update_option('tostishop_newsletter_subscribers', $newsletters);
+    
+    // Send welcome email (optional)
+    $subject = __('Welcome to TostiShop Newsletter!', 'tostishop');
+    $message = sprintf(
+        __('Thank you for subscribing to our newsletter! You will receive updates about new products, offers, and exclusive deals at %s.', 'tostishop'),
+        get_bloginfo('name')
+    );
+    
+    wp_mail($email, $subject, $message);
+    
+    // Track newsletter signup event
+    do_action('tostishop_newsletter_signup', $email, $newsletter_data);
+    
+    wp_send_json_success(__('Thank you for subscribing to our newsletter!', 'tostishop'));
+}
+add_action('wp_ajax_newsletter_signup', 'tostishop_newsletter_signup');
+add_action('wp_ajax_nopriv_newsletter_signup', 'tostishop_newsletter_signup');
+
+/**
+ * Get Featured Products for Homepage
+ */
+function tostishop_get_featured_products($limit = 8) {
+    $args = array(
+        'post_type' => 'product',
+        'posts_per_page' => $limit,
+        'meta_query' => array(
+            array(
+                'key' => '_featured',
+                'value' => 'yes'
+            )
+        ),
+        'post_status' => 'publish'
+    );
+    
+    $featured_products = new WP_Query($args);
+    
+    // If no featured products, get latest products
+    if (!$featured_products->have_posts()) {
+        $args = array(
+            'post_type' => 'product',
+            'posts_per_page' => $limit,
+            'orderby' => 'date',
+            'order' => 'DESC',
+            'post_status' => 'publish'
+        );
+        $featured_products = new WP_Query($args);
+    }
+    
+    return $featured_products;
+}
+
+/**
+ * Get Products on Sale for Homepage
+ */
+function tostishop_get_sale_products($limit = 8) {
+    $args = array(
+        'post_type' => 'product',
+        'posts_per_page' => $limit,
+        'meta_query' => array(
+            'relation' => 'OR',
+            array(
+                'key' => '_sale_price',
+                'value' => 0,
+                'compare' => '>',
+                'type' => 'NUMERIC'
+            ),
+            array(
+                'key' => '_min_variation_sale_price',
+                'value' => 0,
+                'compare' => '>',
+                'type' => 'NUMERIC'
+            )
+        ),
+        'post_status' => 'publish'
+    );
+    
+    return new WP_Query($args);
+}
+
+/**
+ * Auto-setup theme logo on activation
+ */
+function tostishop_setup_logo() {
+    $logo_path = get_template_directory() . '/assets/images/logo.png';
+    
+    if (file_exists($logo_path) && !get_theme_mod('custom_logo')) {
+        // Upload logo to media library
+        $upload_dir = wp_upload_dir();
+        $image_data = file_get_contents($logo_path);
+        $filename = basename($logo_path);
+        
+        if (wp_mkdir_p($upload_dir['path'])) {
+            $file = $upload_dir['path'] . '/' . $filename;
+        } else {
+            $file = $upload_dir['basedir'] . '/' . $filename;
+        }
+        
+        file_put_contents($file, $image_data);
+        
+        $wp_filetype = wp_check_filetype($filename, null);
+        $attachment = array(
+            'post_mime_type' => $wp_filetype['type'],
+            'post_title' => sanitize_file_name($filename),
+            'post_content' => '',
+            'post_status' => 'inherit'
+        );
+        
+        $attach_id = wp_insert_attachment($attachment, $file);
+        require_once(ABSPATH . 'wp-admin/includes/image.php');
+        $attach_data = wp_generate_attachment_metadata($attach_id, $file);
+        wp_update_attachment_metadata($attach_id, $attach_data);
+        
+        // Set as custom logo
+        set_theme_mod('custom_logo', $attach_id);
+    }
+}
+add_action('after_switch_theme', 'tostishop_setup_logo');
