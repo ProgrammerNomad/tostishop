@@ -87,18 +87,18 @@ global $woocommerce;
     </section>
 
     <!-- 2. Main Categories Section -->
-    <section id="categories" class="py-16 bg-white">
+    <section id="categories" class="py-20 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold text-navy-900 mb-4">
+            <div class="text-center mb-16">
+                <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold text-navy-900 mb-6">
                     Shop by Category
                 </h2>
-                <p class="text-gray-600 max-w-2xl mx-auto">
+                <p class="text-gray-600 max-w-2xl mx-auto text-lg">
                     Discover our wide range of products across different categories
                 </p>
             </div>
             
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-6">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 lg:gap-8">
                 <?php
                 $categories = get_terms( array(
                     'taxonomy' => 'product_cat',
@@ -114,7 +114,7 @@ global $woocommerce;
                         $thumbnail_id = get_term_meta( $category->term_id, 'thumbnail_id', true );
                         $image_url = $thumbnail_id ? wp_get_attachment_url( $thumbnail_id ) : wc_placeholder_img_src();
                 ?>
-                    <div class="category-card group">
+                    <div class="category-card group" data-category-id="<?php echo esc_attr( $category->term_id ); ?>">
                         <a href="<?php echo esc_url( get_term_link( $category ) ); ?>" 
                            class="block bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-100 group-hover:border-accent">
                             
@@ -122,15 +122,15 @@ global $woocommerce;
                             <div class="aspect-square bg-gray-100 overflow-hidden">
                                 <img src="<?php echo esc_url( $image_url ); ?>" 
                                      alt="<?php echo esc_attr( $category->name ); ?>"
-                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                     class="w-full h-full object-cover">
                             </div>
                             
                             <!-- Category Info -->
                             <div class="p-4 text-center">
-                                <h3 class="font-semibold text-navy-900 group-hover:text-accent transition-colors duration-200">
+                                <h3 class="font-semibold text-navy-900 group-hover:text-accent transition-colors duration-200 mb-1">
                                     <?php echo esc_html( $category->name ); ?>
                                 </h3>
-                                <p class="text-sm text-gray-500 mt-1">
+                                <p class="text-sm text-gray-500">
                                     <?php echo esc_html( $category->count ); ?> products
                                 </p>
                             </div>
@@ -145,20 +145,23 @@ global $woocommerce;
     </section>
 
     <!-- 3. Featured Products -->
-    <section class="py-16 bg-gray-50">
+    <section class="py-20 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold text-navy-900 mb-4">
+            <div class="text-center mb-16">
+                <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold text-navy-900 mb-6">
                     Featured Products
                 </h2>
-                <p class="text-gray-600 max-w-2xl mx-auto">
+                <p class="text-gray-600 max-w-2xl mx-auto text-lg">
                     Hand-picked products that our customers love the most
                 </p>
             </div>
             
             <!-- Featured Products Grid -->
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
                 <?php
+                global $woocommerce_loop;
+                
+                // Get featured products first
                 $featured_products = wc_get_products( array(
                     'status' => 'publish',
                     'visibility' => 'catalog',
@@ -166,8 +169,8 @@ global $woocommerce;
                     'limit' => 8,
                 ) );
                 
+                // If no featured products, get recent products
                 if ( empty( $featured_products ) ) {
-                    // Fallback to recent products if no featured products
                     $featured_products = wc_get_products( array(
                         'status' => 'publish',
                         'visibility' => 'catalog',
@@ -177,16 +180,32 @@ global $woocommerce;
                     ) );
                 }
                 
-                foreach ( $featured_products as $product ) :
-                    wc_get_template_part( 'content', 'product' );
-                endforeach;
+                // Display products with proper WooCommerce loop setup
+                if ( ! empty( $featured_products ) ) :
+                    $woocommerce_loop['columns'] = 4;
+                    $woocommerce_loop['is_homepage'] = true;
+                    
+                    foreach ( $featured_products as $featured_product ) :
+                        $post_object = get_post( $featured_product->get_id() );
+                        
+                        setup_postdata( $GLOBALS['post'] =& $post_object );
+                        
+                        // Set global product
+                        global $product;
+                        $product = $featured_product;
+                        
+                        wc_get_template_part( 'content', 'product' );
+                    endforeach;
+                    
+                    wp_reset_postdata();
+                endif;
                 ?>
             </div>
             
             <!-- View All Button -->
-            <div class="text-center mt-12">
+            <div class="text-center mt-16">
                 <a href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>" 
-                   class="inline-flex items-center px-8 py-3 bg-navy-900 text-white font-semibold rounded-lg hover:bg-navy-800 transition-colors duration-200">
+                   class="inline-flex items-center px-8 py-4 bg-navy-900 text-white font-semibold rounded-lg hover:bg-navy-800 transition-colors duration-200 shadow-lg hover:shadow-xl">
                     View All Products
                     <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
@@ -197,26 +216,28 @@ global $woocommerce;
     </section>
 
     <!-- 4. Top Offers / Today's Deals -->
-    <section class="py-16 bg-white">
+    <section class="py-20 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <div class="inline-flex items-center px-4 py-2 bg-accent text-white rounded-full text-sm font-semibold mb-4">
+            <div class="text-center mb-16">
+                <div class="inline-flex items-center px-4 py-2 bg-accent text-white rounded-full text-sm font-semibold mb-6">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     Limited Time Offers
                 </div>
-                <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold text-navy-900 mb-4">
+                <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold text-navy-900 mb-6">
                     Today's Deals
                 </h2>
-                <p class="text-gray-600 max-w-2xl mx-auto">
+                <p class="text-gray-600 max-w-2xl mx-auto text-lg">
                     Don't miss out on these amazing deals - available for a limited time only!
                 </p>
             </div>
             
             <!-- Deals Grid -->
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
                 <?php
+                global $woocommerce_loop;
+                
                 $sale_products = wc_get_products( array(
                     'status' => 'publish',
                     'visibility' => 'catalog',
@@ -226,87 +247,103 @@ global $woocommerce;
                     'order' => 'DESC',
                 ) );
                 
-                foreach ( $sale_products as $product ) :
-                    // Calculate discount percentage
-                    $regular_price = (float) $product->get_regular_price();
-                    $sale_price = (float) $product->get_sale_price();
-                    $discount_percentage = 0;
+                if ( ! empty( $sale_products ) ) :
+                    $woocommerce_loop['columns'] = 4;
+                    $woocommerce_loop['is_homepage'] = true;
                     
-                    if ( $regular_price > 0 && $sale_price > 0 ) {
-                        $discount_percentage = round( ( ( $regular_price - $sale_price ) / $regular_price ) * 100 );
-                    }
-                ?>
-                    <div class="deal-card relative">
-                        <?php if ( $discount_percentage > 0 ) : ?>
-                            <div class="absolute top-2 left-2 z-10 bg-accent text-white text-xs font-bold px-2 py-1 rounded-full">
-                                <?php echo esc_html( $discount_percentage ); ?>% OFF
-                            </div>
-                        <?php endif; ?>
+                    foreach ( $sale_products as $sale_product ) :
+                        // Calculate discount percentage
+                        $regular_price = (float) $sale_product->get_regular_price();
+                        $sale_price = (float) $sale_product->get_sale_price();
+                        $discount_percentage = 0;
                         
-                        <?php wc_get_template_part( 'content', 'product' ); ?>
-                    </div>
-                <?php endforeach; ?>
+                        if ( $regular_price > 0 && $sale_price > 0 ) {
+                            $discount_percentage = round( ( ( $regular_price - $sale_price ) / $regular_price ) * 100 );
+                        }
+                        
+                        // Setup WooCommerce product context
+                        $post_object = get_post( $sale_product->get_id() );
+                        setup_postdata( $GLOBALS['post'] =& $post_object );
+                        
+                        // Set global product
+                        global $product;
+                        $product = $sale_product;
+                ?>
+                        <div class="deal-card relative">
+                            <?php if ( $discount_percentage > 0 ) : ?>
+                                <div class="absolute top-2 left-2 z-10 bg-accent text-white text-xs font-bold px-2 py-1 rounded-full">
+                                    <?php echo esc_html( $discount_percentage ); ?>% OFF
+                                </div>
+                            <?php endif; ?>
+                            
+                            <?php wc_get_template_part( 'content', 'product' ); ?>
+                        </div>
+                <?php 
+                    endforeach;
+                    wp_reset_postdata();
+                endif;
+                ?>
             </div>
         </div>
     </section>
 
     <!-- 5. Why Shop With Us -->
-    <section class="py-16 bg-navy-900 text-white">
+    <section class="py-20 bg-navy-900 text-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
+            <div class="text-center mb-16">
+                <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold mb-6">
                     Why Shop With Us?
                 </h2>
-                <p class="text-silver-50 max-w-2xl mx-auto">
+                <p class="text-silver-50 max-w-2xl mx-auto text-lg">
                     We're committed to providing you with the best shopping experience
                 </p>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16">
                 <!-- Fast Delivery -->
                 <div class="text-center">
-                    <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-20 h-20 bg-accent rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-semibold mb-2">Fast Delivery</h3>
-                    <p class="text-silver-50">Quick and reliable delivery across India with real-time tracking</p>
+                    <h3 class="text-xl font-semibold mb-4">Fast Delivery</h3>
+                    <p class="text-silver-50 text-lg">Quick and reliable delivery across India with real-time tracking</p>
                 </div>
                 
                 <!-- Secure Payments -->
                 <div class="text-center">
-                    <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-20 h-20 bg-accent rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-semibold mb-2">Secure Payments</h3>
-                    <p class="text-silver-50">Multiple payment options with bank-level security and COD available</p>
+                    <h3 class="text-xl font-semibold mb-4">Secure Payments</h3>
+                    <p class="text-silver-50 text-lg">Multiple payment options with bank-level security and COD available</p>
                 </div>
                 
                 <!-- Easy Returns -->
                 <div class="text-center">
-                    <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-20 h-20 bg-accent rounded-full flex items-center justify-center mx-auto mb-6">
+                        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-semibold mb-2">Easy Returns</h3>
-                    <p class="text-silver-50">Hassle-free returns and exchanges within 30 days of purchase</p>
+                    <h3 class="text-xl font-semibold mb-4">Easy Returns</h3>
+                    <p class="text-silver-50 text-lg">Hassle-free returns and exchanges within 30 days of purchase</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- 6. Customer Testimonials -->
-    <section class="py-16 bg-gray-50">
+    <section class="py-20 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold text-navy-900 mb-4">
+            <div class="text-center mb-16">
+                <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold text-navy-900 mb-6">
                     What Our Customers Say
                 </h2>
-                <p class="text-gray-600 max-w-2xl mx-auto">
+                <p class="text-gray-600 max-w-2xl mx-auto text-lg">
                     Real reviews from real customers who love shopping with us
                 </p>
             </div>

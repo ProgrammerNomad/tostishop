@@ -43,32 +43,32 @@ if (empty($product) || !$product->is_visible()) {
         
         <!-- Sale Badge -->
         <?php if ($product->is_on_sale()) : ?>
-            <div class="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+            <div class="absolute top-2 left-2 bg-accent text-white text-xs font-bold px-2 py-1 rounded">
                 <?php _e('Sale', 'tostishop'); ?>
             </div>
         <?php endif; ?>
     </div>
     
     <!-- Product Info -->
-    <div class="product-info px-4 pb-4 space-y-2">
+    <div class="product-info px-4 pb-4 space-y-3">
         <!-- Category Name -->
         <?php
         $categories = get_the_terms($product->get_id(), 'product_cat');
         if ($categories && !is_wp_error($categories)) :
             $category = $categories[0];
         ?>
-            <p class="text-xs text-blue-600 font-medium uppercase tracking-wide">
-                <a href="<?php echo esc_url(get_term_link($category)); ?>"><?php echo esc_html($category->name); ?></a>
+            <p class="text-xs text-primary font-medium uppercase tracking-wide">
+                <a href="<?php echo esc_url(get_term_link($category)); ?>" class="hover:text-navy-900 transition-colors duration-200"><?php echo esc_html($category->name); ?></a>
             </p>
         <?php endif; ?>
         
         <!-- Product Title - Clickable -->
-        <h3 class="product-title text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">
-            <a href="<?php echo esc_url(get_permalink()); ?>" class="line-clamp-2"><?php the_title(); ?></a>
+        <h3 class="product-title text-sm font-medium text-gray-900 leading-tight">
+            <a href="<?php echo esc_url(get_permalink()); ?>" class="line-clamp-2 hover:text-navy-900 transition-colors duration-200"><?php the_title(); ?></a>
         </h3>
         
         <!-- Rating Area - Always Show (even if empty) -->
-        <div class="rating-area h-6">
+        <div class="rating-area min-h-[20px]">
             <?php if ($product->get_average_rating()) : ?>
                 <div class="flex items-center">
                     <div class="flex text-yellow-400">
@@ -76,11 +76,11 @@ if (empty($product) || !$product->is_visible()) {
                         $rating = $product->get_average_rating();
                         for ($i = 1; $i <= 5; $i++) :
                             if ($i <= $rating) : ?>
-                                <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                                <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20">
                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                 </svg>
                             <?php else : ?>
-                                <svg class="w-4 h-4 text-gray-300 fill-current" viewBox="0 0 20 20">
+                                <svg class="w-3 h-3 text-gray-300 fill-current" viewBox="0 0 20 20">
                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                 </svg>
                             <?php endif;
@@ -92,14 +92,14 @@ if (empty($product) || !$product->is_visible()) {
         </div>
         
         <!-- Price and Stock -->
-        <div class="flex items-center justify-between">
-            <div class="text-lg font-bold text-gray-900">
+        <div class="flex items-center justify-between pt-2">
+            <div class="text-base font-bold text-navy-900">
                 <?php echo $product->get_price_html(); ?>
             </div>
             
             <!-- Stock Status Badge - Only show if out of stock -->
             <?php if (!$product->is_in_stock()) : ?>
-                <span class="text-xs text-red-600 font-medium px-2 py-0.5 bg-red-50 rounded-full">
+                <span class="text-xs text-red-600 font-medium px-2 py-1 bg-red-50 rounded-full border border-red-200">
                     <?php _e('Out of Stock', 'tostishop'); ?>
                 </span>
             <?php endif; ?>
