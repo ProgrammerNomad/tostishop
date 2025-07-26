@@ -194,12 +194,11 @@ get_header(); ?>
                             ?>
                             
                             <!-- Mobile Cart Item -->
-                                                        <!-- Mobile Cart Item -->
-                            <div class="md:hidden p-6 cart-item" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>">
-                                <div class="flex space-x-4">
+                            <div class="md:hidden p-3 cart-item" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>">
+                                <div class="flex space-x-3">
                                     <!-- Product Image -->
                                     <div class="flex-shrink-0">
-                                        <div class="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
+                                        <div class="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
                                             <?php
                                             $thumbnail = apply_filters('woocommerce_cart_item_thumbnail', $_product->get_image(), $cart_item, $cart_item_key);
                                             if (!$product_permalink) {
@@ -247,17 +246,17 @@ get_header(); ?>
                                         <div class="flex items-center justify-between mt-4">
                                             <!-- Quantity Controls -->
                                             <div class="quantity-controls flex items-center border border-gray-300 rounded-lg overflow-hidden">
-                                                <button type="button" class="minus flex items-center justify-center w-10 h-10 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-800">
+                                                <button type="button" class="minus flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-800">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
                                                     </svg>
                                                 </button>
                                                 <?php
                                                 if ( $_product->is_sold_individually() ) {
-                                                    $product_quantity = sprintf( '<input type="number" class="qty text-center w-16 h-10 border-0 focus:ring-0 focus:outline-none" name="cart[%s][qty]" value="1" readonly />', $cart_item_key );
+                                                    $product_quantity = sprintf( '<input type="number" class="qty text-center w-12 h-8 border-0 focus:ring-0 focus:outline-none text-sm" name="cart[%s][qty]" value="1" readonly />', $cart_item_key );
                                                 } else {
                                                     $product_quantity = sprintf(
-                                                        '<input type="number" class="qty text-center w-16 h-10 border-0 focus:ring-0 focus:outline-none" name="cart[%s][qty]" value="%s" min="0" max="%s" step="1" data-cart-item-key="%s" />',
+                                                        '<input type="number" class="qty text-center w-12 h-8 border-0 focus:ring-0 focus:outline-none text-sm" name="cart[%s][qty]" value="%s" min="0" max="%s" step="1" data-cart-item-key="%s" />',
                                                         $cart_item_key,
                                                         esc_attr( $cart_item['quantity'] ),
                                                         esc_attr( $_product->get_max_purchase_quantity() ),
@@ -266,7 +265,7 @@ get_header(); ?>
                                                 }
                                                 echo $product_quantity;
                                                 ?>
-                                                <button type="button" class="plus flex items-center justify-center w-10 h-10 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-800">
+                                                <button type="button" class="plus flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-800">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                                     </svg>
@@ -490,7 +489,6 @@ get_header(); ?>
     </form>
     
     <?php do_action('woocommerce_after_cart'); ?>
-</div>
 
 <!-- Sticky Checkout Button (Mobile) -->
 <?php if (!WC()->cart->is_empty()) : ?>
@@ -508,9 +506,28 @@ get_header(); ?>
 </div>
 <?php endif; ?>
 
+</div>
+
 <?php get_footer(); ?>
 
 <style>
+/* Mobile-optimized cart layout */
+@media (max-width: 768px) {
+    .woocommerce-cart .max-w-7xl {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    
+    .cart-item.md\\:hidden {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+    
+    .cart-item .flex.space-x-3 {
+        gap: 0.75rem;
+    }
+}
+
 /* Custom styling for WooCommerce quantity inputs */
 .woocommerce .quantity {
     display: flex;
@@ -587,22 +604,37 @@ get_header(); ?>
 
 /* Mobile responsive adjustments */
 @media (max-width: 768px) {
+    /* Remove extra padding on mobile */
+    .woocommerce-cart-form .cart-item {
+        padding: 1rem !important;
+    }
+    
     .woocommerce .quantity {
         justify-content: center;
         margin: 0 auto;
     }
     
     .woocommerce .quantity .qty {
-        width: 50px;
-        height: 36px;
+        width: 48px;
+        height: 32px;
         font-size: 0.8rem;
     }
     
     .woocommerce .quantity .plus,
     .woocommerce .quantity .minus {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
         font-size: 1rem;
+    }
+    
+    /* Optimize mobile cart layout */
+    .cart-item .flex {
+        gap: 0.75rem;
+    }
+    
+    .cart-item h3 {
+        font-size: 0.9rem;
+        line-height: 1.3;
     }
 }
 

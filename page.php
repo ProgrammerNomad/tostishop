@@ -9,7 +9,7 @@ $is_account_page = (function_exists('is_account_page') && is_account_page()) ||
 $container_class = $is_account_page ? 'max-w-7xl xl:max-w-[95rem] 2xl:max-w-[110rem]' : 'max-w-4xl';
 ?>
 
-<div class="<?php echo $container_class; ?> mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="<?php echo $container_class; ?> mx-auto px-2 sm:px-4 lg:px-8 py-8">
     
     <?php if (have_posts()) : ?>
         <?php while (have_posts()) : the_post(); ?>

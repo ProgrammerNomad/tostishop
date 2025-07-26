@@ -136,7 +136,7 @@
                 <?php endif; ?>
                 
                 <!-- Cart -->
-                <?php if (function_exists('WC')) : ?>
+                <?php if (function_exists('WC') && !is_cart() && !is_checkout()) : ?>
                 <a href="<?php echo esc_url(wc_get_cart_url()); ?>" 
                    class="relative p-2 text-gray-600 hover:text-navy-600 transition-colors duration-200">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

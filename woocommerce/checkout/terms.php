@@ -25,7 +25,7 @@ if ( apply_filters( 'woocommerce_checkout_show_terms', true ) && function_exists
 		?>
 
 		<?php if ( wc_terms_and_conditions_checkbox_enabled() ) : ?>
-			<div class="form-row validate-required bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 mt-3">
+			<div class="form-row validate-required bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 mt-4">
 				<label class="flex items-start space-x-3 cursor-pointer group">
 					<div class="flex-shrink-0 mt-0.5">
 						<input type="checkbox" 

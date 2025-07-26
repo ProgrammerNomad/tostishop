@@ -19,58 +19,58 @@ defined( 'ABSPATH' ) || exit;
 ?>
 
 <!-- Modern Order Review -->
-<div class="woocommerce-checkout-review-order-table">
+<div class="woocommerce-checkout-review-order-table px-1 sm:px-0">
 	
 	<?php do_action( 'woocommerce_review_order_before_cart_contents' ); ?>
 	
 	<!-- Products List -->
-	<div class="space-y-4 mb-6">
+	<div class="space-y-3 mb-6 px-1 sm:px-0">
 		<?php
 		foreach ( WC()->cart->get_cart() as $cart_item_key => $cart_item ) {
 			$_product = apply_filters( 'woocommerce_cart_item_product', $cart_item['data'], $cart_item, $cart_item_key );
 
 			if ( $_product && $_product->exists() && $cart_item['quantity'] > 0 && apply_filters( 'woocommerce_checkout_cart_item_visible', true, $cart_item, $cart_item_key ) ) {
 				?>
-				<div class="<?php echo esc_attr( apply_filters( 'woocommerce_cart_item_class', 'flex items-start space-x-4 p-4 bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-colors', $cart_item, $cart_item_key ) ); ?>">
+				<div class="<?php echo esc_attr( apply_filters( 'woocommerce_cart_item_class', 'flex items-start space-x-2 sm:space-x-3 p-2 sm:p-4 bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-colors', $cart_item, $cart_item_key ) ); ?>">
 					
 					<!-- Product Image -->
 					<div class="flex-shrink-0">
 						<?php
-						$thumbnail = apply_filters( 'woocommerce_cart_item_thumbnail', $_product->get_image( array( 72, 72 ) ), $cart_item, $cart_item_key );
+						$thumbnail = apply_filters( 'woocommerce_cart_item_thumbnail', $_product->get_image( array( 50, 50 ) ), $cart_item, $cart_item_key );
 						if ( ! $_product->is_visible() ) {
-							echo '<div class="w-18 h-18 bg-gray-100 rounded-lg overflow-hidden">' . $thumbnail . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+							echo '<div class="w-12 h-12 sm:w-14 sm:h-14 bg-gray-100 rounded-lg overflow-hidden">' . $thumbnail . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 						} else {
-							printf( '<a href="%s" class="block w-18 h-18 bg-gray-100 rounded-lg overflow-hidden hover:opacity-75 transition-opacity">%s</a>', esc_url( $_product->get_permalink( $cart_item ) ), $thumbnail ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+							printf( '<a href="%s" class="block w-12 h-12 sm:w-14 sm:h-14 bg-gray-100 rounded-lg overflow-hidden hover:opacity-75 transition-opacity">%s</a>', esc_url( $_product->get_permalink( $cart_item ) ), $thumbnail ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 						}
 						?>
 					</div>
 
 					<!-- Product Details -->
 					<div class="flex-1 min-w-0">
-						<div class="flex justify-between items-start">
-							<div class="flex-1 min-w-0 pr-4">
-								<h4 class="text-sm font-semibold text-gray-900 line-clamp-2 mb-1">
+						<div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-2">
+							<div class="flex-1 min-w-0">
+								<h4 class="text-xs sm:text-sm font-semibold text-gray-900 line-clamp-2 mb-1">
 									<?php echo wp_kses_post( apply_filters( 'woocommerce_cart_item_name', $_product->get_name(), $cart_item, $cart_item_key ) . '&nbsp;' ); ?>
 								</h4>
 								
 								<!-- Product Meta -->
 								<?php if ( wc_get_formatted_cart_item_data( $cart_item ) ) : ?>
-								<div class="text-xs text-gray-500 mb-2">
+								<div class="text-xs text-gray-500 mb-1">
 									<?php echo wc_get_formatted_cart_item_data( $cart_item ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 								</div>
 								<?php endif; ?>
 								
 								<!-- Quantity Badge -->
-								<div class="inline-flex items-center">
-									<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+								<div class="inline-flex items-center mb-1 sm:mb-0">
+									<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
 										<?php echo sprintf( __( 'Qty: %s', 'tostishop' ), '<span class="font-semibold">' . $cart_item['quantity'] . '</span>' ); ?>
 									</span>
 								</div>
 							</div>
 							
 							<!-- Price -->
-							<div class="text-right flex-shrink-0">
-								<span class="text-base font-bold text-gray-900">
+							<div class="text-left sm:text-right flex-shrink-0">
+								<span class="text-sm sm:text-base font-bold text-gray-900">
 									<?php echo apply_filters( 'woocommerce_cart_item_subtotal', WC()->cart->get_product_subtotal( $_product, $cart_item['quantity'] ), $cart_item, $cart_item_key ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 								</span>
 								<?php if ( $cart_item['quantity'] > 1 ) : ?>
@@ -291,33 +291,62 @@ document.addEventListener('DOMContentLoaded', function() {
 	box-shadow: 0 4px 6px -1px rgba(20, 23, 91, 0.3);
 }
 
-/* Mobile Responsive Product Cards */
+/* Mobile Responsive Optimizations */
 @media (max-width: 640px) {
+	/* Product Cards Mobile Optimization */
+	.lg\\:col-span-1 {
+		padding-left: 0.5rem !important;
+		padding-right: 0.5rem !important;
+	}
+	
+	/* Container spacing fix */
+	.woocommerce-checkout-review-order-table {
+		margin-left: 0 !important;
+		margin-right: 0 !important;
+		padding-left: 0.5rem !important;
+		padding-right: 0.5rem !important;
+	}
+	
+	/* Product item spacing */
 	.woocommerce-checkout-review-order-table .flex.items-start {
-		flex-direction: column;
-		space-x: 0;
+		padding: 0.75rem !important;
+		margin-bottom: 0.75rem !important;
 	}
 	
-	.woocommerce-checkout-review-order-table .flex-shrink-0 {
-		align-self: center;
-		margin-bottom: 0.75rem;
+	/* Smaller images on mobile */
+	.woocommerce-checkout-review-order-table .w-12,
+	.woocommerce-checkout-review-order-table .h-12 {
+		width: 2.5rem !important;
+		height: 2.5rem !important;
 	}
 	
-	.woocommerce-checkout-review-order-table .flex.justify-between {
-		text-align: center;
+	/* Reduce horizontal spacing */
+	.woocommerce-checkout-review-order-table .space-x-2 > * + * {
+		margin-left: 0.375rem !important;
 	}
 	
+	/* Coupon form mobile optimization */
 	.coupon-form .flex {
 		flex-direction: column;
-		space-x: 0;
-	}
-	
-	.coupon-form .flex-1 {
-		margin-bottom: 0.5rem;
+		gap: 0.5rem;
 	}
 	
 	.coupon-form button[type="submit"] {
 		width: 100%;
+	}
+	
+	/* Order totals mobile optimization */
+	.border-t-2.pt-6 {
+		padding-top: 1rem !important;
+	}
+	
+	/* Better text sizing on mobile */
+	.text-xs {
+		font-size: 0.7rem !important;
+	}
+	
+	.text-sm {
+		font-size: 0.8rem !important;
 	}
 }
 </style>

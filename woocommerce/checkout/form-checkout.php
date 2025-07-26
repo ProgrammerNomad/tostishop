@@ -33,7 +33,7 @@ if ( ! $checkout->is_registration_enabled() && $checkout->is_registration_requir
 
 <!-- Modern Checkout Container -->
 <div class="min-h-screen bg-gray-50">
-	<div class="max-w-7xl xl:max-w-[95rem] 2xl:max-w-[110rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+	<div class="max-w-7xl xl:max-w-[95rem] 2xl:max-w-[110rem] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
 		
 		<!-- Checkout Header -->
 		<div class="text-center mb-8">
@@ -116,7 +116,7 @@ if ( ! $checkout->is_registration_enabled() && $checkout->is_registration_requir
 						
 						<?php do_action( 'woocommerce_checkout_before_order_review' ); ?>
 
-						<div id="order_review" class="woocommerce-checkout-review-order bg-white rounded-lg p-4 border border-gray-100">
+						<div id="order_review" class="woocommerce-checkout-review-order bg-white rounded-lg border border-gray-100">
 							<?php do_action( 'woocommerce_checkout_order_review' ); ?>
 						</div>
 
