@@ -17,7 +17,247 @@
 
 defined( 'ABSPATH' ) || exit;
 
-get_header(); ?>
+get_header(); 
+
+// Generate comprehensive structured data for SEO
+global $product;
+if ($product) {
+    $structured_data = array(
+        '@context' => 'https://schema.org/',
+        '@type' => 'Product',
+        'name' => $product->get_name(),
+        'description' => wp_strip_all_tags($product->get_short_description() ? $product->get_short_description() : $product->get_description()),
+        'sku' => $product->get_sku(),
+        'gtin' => $product->get_sku(),
+        'brand' => array(
+            '@type' => 'Brand',
+            'name' => get_bloginfo('name')
+        ),
+        'manufacturer' => array(
+            '@type' => 'Organization',
+            'name' => get_bloginfo('name'),
+            'url' => home_url()
+        ),
+        'url' => get_permalink(),
+        'image' => array()
+    );
+
+    // Add product images
+    $image_ids = $product->get_gallery_image_ids();
+    if ($product->get_image_id()) {
+        array_unshift($image_ids, $product->get_image_id());
+    }
+
+    foreach ($image_ids as $image_id) {
+        $image_url = wp_get_attachment_image_url($image_id, 'full');
+        if ($image_url) {
+            $structured_data['image'][] = $image_url;
+        }
+    }
+
+    // Add pricing information
+    if ($product->is_in_stock()) {
+        $structured_data['offers'] = array(
+            '@type' => 'Offer',
+            'url' => get_permalink(),
+            'priceCurrency' => get_woocommerce_currency(),
+            'price' => $product->get_regular_price(),
+            'priceValidUntil' => date('Y-m-d', strtotime('+1 year')),
+            'availability' => 'https://schema.org/InStock',
+            'itemCondition' => 'https://schema.org/NewCondition',
+            'seller' => array(
+                '@type' => 'Organization',
+                'name' => get_bloginfo('name'),
+                'url' => home_url()
+            )
+        );
+        
+        // Add sale price if on sale
+        if ($product->is_on_sale() && $product->get_sale_price()) {
+            $structured_data['offers']['price'] = $product->get_sale_price();
+        }
+    } else {
+        $structured_data['offers'] = array(
+            '@type' => 'Offer',
+            'url' => get_permalink(),
+            'priceCurrency' => get_woocommerce_currency(),
+            'price' => $product->get_regular_price(),
+            'availability' => 'https://schema.org/OutOfStock',
+            'itemCondition' => 'https://schema.org/NewCondition'
+        );
+    }
+
+    // Add rating and review data
+    if ($product->get_review_count() > 0) {
+        $structured_data['aggregateRating'] = array(
+            '@type' => 'AggregateRating',
+            'ratingValue' => $product->get_average_rating(),
+            'reviewCount' => $product->get_review_count(),
+            'bestRating' => '5',
+            'worstRating' => '1'
+        );
+    }
+
+    // Add category information
+    $categories = get_the_terms($product->get_id(), 'product_cat');
+    if ($categories && !is_wp_error($categories)) {
+        $category_names = array();
+        foreach ($categories as $category) {
+            $category_names[] = $category->name;
+        }
+        $structured_data['category'] = implode(', ', $category_names);
+    }
+
+    // Add dimensions and weight if available
+    if ($product->has_dimensions()) {
+        $structured_data['weight'] = array(
+            '@type' => 'QuantitativeValue',
+            'value' => $product->get_weight(),
+            'unitCode' => get_option('woocommerce_weight_unit', 'kg')
+        );
+    }
+
+    // Add product attributes
+    $attributes = $product->get_attributes();
+    if (!empty($attributes)) {
+        $additional_property = array();
+        foreach ($attributes as $attribute) {
+            if ($attribute->get_visible()) {
+                $additional_property[] = array(
+                    '@type' => 'PropertyValue',
+                    'name' => wc_attribute_label($attribute->get_name()),
+                    'value' => $product->get_attribute($attribute->get_name())
+                );
+            }
+        }
+        if (!empty($additional_property)) {
+            $structured_data['additionalProperty'] = $additional_property;
+        }
+    }
+
+    // Output product structured data
+    echo '<script type="application/ld+json">' . wp_json_encode($structured_data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>' . "\n";
+
+    // Add breadcrumb structured data
+    $breadcrumb_data = array(
+        '@context' => 'https://schema.org',
+        '@type' => 'BreadcrumbList',
+        'itemListElement' => array(
+            array(
+                '@type' => 'ListItem',
+                'position' => 1,
+                'name' => 'Home',
+                'item' => home_url()
+            ),
+            array(
+                '@type' => 'ListItem',
+                'position' => 2,
+                'name' => 'Shop',
+                'item' => get_permalink(wc_get_page_id('shop'))
+            )
+        )
+    );
+
+    // Add category breadcrumbs
+    if ($categories && !is_wp_error($categories)) {
+        $position = 3;
+        foreach ($categories as $category) {
+            $breadcrumb_data['itemListElement'][] = array(
+                '@type' => 'ListItem',
+                'position' => $position,
+                'name' => $category->name,
+                'item' => get_term_link($category)
+            );
+            $position++;
+        }
+    }
+
+    // Add current product
+    $breadcrumb_data['itemListElement'][] = array(
+        '@type' => 'ListItem',
+        'position' => count($breadcrumb_data['itemListElement']) + 1,
+        'name' => $product->get_name(),
+        'item' => get_permalink()
+    );
+
+    echo '<script type="application/ld+json">' . wp_json_encode($breadcrumb_data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>' . "\n";
+
+    // Add Organization/Website structured data
+    $organization_data = array(
+        '@context' => 'https://schema.org',
+        '@type' => 'Organization',
+        'name' => get_bloginfo('name'),
+        'url' => home_url(),
+        'logo' => array(
+            '@type' => 'ImageObject',
+            'url' => get_theme_file_uri('/assets/images/logo.png')
+        ),
+        'sameAs' => array(
+            // Add your social media profiles here
+            'https://www.facebook.com/tostishop',
+            'https://www.instagram.com/tostishop',
+            'https://www.twitter.com/tostishop'
+        )
+    );
+    
+    echo '<script type="application/ld+json">' . wp_json_encode($organization_data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>' . "\n";
+
+    // Add WebSite structured data for search functionality
+    $website_data = array(
+        '@context' => 'https://schema.org',
+        '@type' => 'WebSite',
+        'name' => get_bloginfo('name'),
+        'url' => home_url(),
+        'potentialAction' => array(
+            '@type' => 'SearchAction',
+            'target' => array(
+                '@type' => 'EntryPoint',
+                'urlTemplate' => home_url('/?s={search_term_string}&post_type=product')
+            ),
+            'query-input' => 'required name=search_term_string'
+        )
+    );
+    
+    echo '<script type="application/ld+json">' . wp_json_encode($website_data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>' . "\n";
+
+    // Add Open Graph and Twitter Card meta tags
+    echo '<meta property="og:type" content="product">' . "\n";
+    echo '<meta property="og:title" content="' . esc_attr($product->get_name()) . '">' . "\n";
+    echo '<meta property="og:description" content="' . esc_attr(wp_strip_all_tags($product->get_short_description() ? $product->get_short_description() : $product->get_description())) . '">' . "\n";
+    echo '<meta property="og:url" content="' . esc_url(get_permalink()) . '">' . "\n";
+    echo '<meta property="og:site_name" content="' . esc_attr(get_bloginfo('name')) . '">' . "\n";
+    
+    if ($product->get_image_id()) {
+        $og_image = wp_get_attachment_image_url($product->get_image_id(), 'large');
+        if ($og_image) {
+            echo '<meta property="og:image" content="' . esc_url($og_image) . '">' . "\n";
+            echo '<meta property="og:image:width" content="1200">' . "\n";
+            echo '<meta property="og:image:height" content="630">' . "\n";
+        }
+    }
+    
+    // Twitter Card
+    echo '<meta name="twitter:card" content="summary_large_image">' . "\n";
+    echo '<meta name="twitter:title" content="' . esc_attr($product->get_name()) . '">' . "\n";
+    echo '<meta name="twitter:description" content="' . esc_attr(wp_strip_all_tags($product->get_short_description() ? $product->get_short_description() : $product->get_description())) . '">' . "\n";
+    
+    if ($product->get_image_id()) {
+        $twitter_image = wp_get_attachment_image_url($product->get_image_id(), 'large');
+        if ($twitter_image) {
+            echo '<meta name="twitter:image" content="' . esc_url($twitter_image) . '">' . "\n";
+        }
+    }
+
+    // Product-specific meta tags
+    echo '<meta name="product:price:amount" content="' . esc_attr($product->get_price()) . '">' . "\n";
+    echo '<meta name="product:price:currency" content="' . esc_attr(get_woocommerce_currency()) . '">' . "\n";
+    echo '<meta name="product:availability" content="' . ($product->is_in_stock() ? 'in stock' : 'out of stock') . '">' . "\n";
+    
+    if ($product->get_sku()) {
+        echo '<meta name="product:retailer_item_id" content="' . esc_attr($product->get_sku()) . '">' . "\n";
+    }
+}
+?>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     
