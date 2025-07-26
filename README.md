@@ -1,10 +1,16 @@
-# TostiShop Theme (Mobile-First WooCommerce Theme)
+# TostiShop WordPress Theme
 
-A blazing-fast, fully responsive WooCommerce theme designed for mobile-first eCommerce experiences with modern features and optimal performance.
+A blazing-fast, mobile-first WooCommerce theme built with modern web technologies.
+
+## 📞 Contact & Support
+
+- **Email**: contact@tostishop.com
+- **WhatsApp**: +91 79829 99145 (Chat only, no calls)
+- **Support**: Email and WhatsApp chat for all inquiries
 
 ---
 
-## ✅ Core Features
+## 🚀 Features
 
 * ⚡ **Ultra-lightweight** - Optimized Tailwind CSS build
 * 📱 **Mobile-first design** - Perfect on all devices  

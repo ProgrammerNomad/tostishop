@@ -1,6 +1,14 @@
 # TostiShop Theme - API Reference
 
-## 🔌 Custom Functions & Hooks
+## � Contact Information
+
+- **Email**: contact@tostishop.com
+- **WhatsApp**: +91 79829 99145 (Chat only, no calls)
+- **Support**: Email and WhatsApp chat for all inquiries
+
+---
+
+## �🔌 Custom Functions & Hooks
 
 Complete reference for TostiShop theme's custom functions, hooks, and development APIs.
 
