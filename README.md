@@ -1,18 +1,21 @@
 # TostiShop Theme (Mobile-First WooCommerce Theme)
 
-A blazing-fast, fully responsive WooCommerce theme designed for mobile-first eCommerce experiences.
+A blazing-fast, fully responsive WooCommerce theme designed for mobile-first eCommerce experiences with modern features and optimal performance.
 
 ---
 
-## ✅ Features
+## ✅ Core Features
 
-* ⚡ Ultra-lightweight and fast (Tailwind CSS-based)
-* 📱 Mobile-first design
-* 🛒 Fully WooCommerce-compatible
-* 🗭 Off-canvas navigation & filters
-* 🧷 Sticky add-to-cart CTA on product pages
-* 🌙 Dark mode-ready (optional)
-* 🔍 Minimal JS (Alpine.js or Vanilla JS)
+* ⚡ **Ultra-lightweight** - Optimized Tailwind CSS build
+* 📱 **Mobile-first design** - Perfect on all devices  
+* 🛒 **Full WooCommerce integration** - Cart, checkout, account pages
+* 🏠 **Custom homepage template** - 9 sections with dynamic content
+* 🎨 **Product variations** - Color swatches & smart selection
+* 🗭 **Off-canvas navigation** - Smooth mobile menu
+* 🧷 **Sticky add-to-cart** - Enhanced mobile experience
+* 🔔 **Smart notifications** - AJAX cart updates
+* 📊 **SEO optimized** - Structured data & performance
+* 🎯 **Conversion optimized** - Streamlined checkout flow
 
 ---
 
@@ -30,43 +33,126 @@ Use these in your Tailwind config and throughout your UI for consistent branding
 
 ---
 
-## 📁 Folder Structure
+## 📁 Project Structure
 
 ```
 tostishop-theme/
-├── style.css                  # Theme meta + imports
-├── functions.php              # Enqueues, Woo support, theme setup
-├── tailwind.config.js         # Tailwind config
-├── woocommerce/               # Custom Woo templates
-│   ├── archive-product.php
-│   ├── single-product.php
-│   └── checkout/, cart/, etc.
-├── templates/
-│   ├── header.php
-│   ├── footer.php
-│   ├── page.php
-│   └── index.php
+├── style.css                  # Compiled Tailwind CSS + theme info
+├── functions.php              # Theme setup, WooCommerce integration
+├── header.php                 # Responsive header with navigation
+├── footer.php                 # Brand footer with widgets
+├── index.php                  # Blog template
+├── page.php                   # Default page template
+├── page-home.php              # Custom homepage template (9 sections)
+├── tailwind.config.js         # Tailwind configuration with brand colors
+├── package.json               # Build tools and dependencies
+├── .github/                   # Documentation and guides
+│   ├── HOMEPAGE-IMPLEMENTATION.md
+│   ├── DEVELOPMENT.md
+│   ├── COPILOT-INSTRUCTIONS.md
+│   └── [feature-specific guides]
 ├── assets/
 │   ├── css/
-│   │   └── main.css           # Tailwind compiled CSS
-│   └── js/
-│       └── ui.js              # Minimal JS (optional Alpine.js)
-└── screenshot.png             # Theme preview
+│   │   ├── main.css           # Tailwind source
+│   │   ├── custom.css         # Custom styles and fixes
+│   │   └── homepage.css       # Homepage-specific styles
+│   ├── js/
+│   │   ├── ui.js              # Core interactions
+│   │   ├── theme.js           # Product variations & cart
+│   │   ├── homepage.js        # Homepage functionality
+│   │   └── notifications.js   # Toast notifications
+│   └── images/
+│       ├── logo.png           # Auto-setup brand logo
+│       └── logo-big.png       # High-res version
+└── woocommerce/               # WooCommerce template overrides
+    ├── archive-product.php    # Shop pages with grid/list view
+    ├── single-product.php     # Product pages with variations
+    ├── content-product.php    # Product cards
+    ├── cart/cart.php          # Optimized cart page
+    ├── checkout/              # Streamlined checkout flow
+    ├── myaccount/             # Enhanced account pages
+    └── order/                 # Order details with images
 ```
 
 ---
 
-## 🧰 Tools & Stack
+## 🚀 Latest Features & Improvements
 
-* [Tailwind CSS](https://tailwindcss.com/)
-* WooCommerce Core
-* [Alpine.js](https://alpinejs.dev/) (optional JS)
-* No jQuery dependencies
-* Optional CDN: Cloudflare or BunnyCDN
+### ✅ Custom Homepage Template
+- **9 comprehensive sections**: Hero, Categories, Featured Products, Deals, Services, Testimonials, Blog, Newsletter, CTA
+- **Real product integration**: Featured products, categories, and deals
+- **Mobile-optimized layouts**: Responsive grids and touch-friendly interactions
+- **SEO structured data**: JSON-LD for better search visibility
+
+### ✅ Enhanced Product Experience  
+- **Smart product variations**: Color swatches for colors, dropdowns for other attributes
+- **Image switching**: Product images change with variation selection
+- **Related products slider**: Amazon-style with 3.2 products visible on mobile
+- **AJAX notifications**: Instant feedback for cart actions
+
+### ✅ Streamlined Cart & Checkout
+- **Conversion optimized**: Minimal header/footer on cart/checkout pages
+- **Wide desktop layouts**: Better space utilization on large screens
+- **Mobile-first forms**: Touch-friendly inputs and validation
+- **Trust signals**: SSL badges and security indicators
+
+### ✅ Enhanced Account Pages
+- **Desktop improvements**: Better navigation, hover effects, wider layouts
+- **Order management**: Product images in order history, enhanced details
+- **Address management**: Visual status indicators and clear forms
+- **Dashboard enhancements**: Quick stats and action cards
 
 ---
 
-## 🧭 Homepage Blocks (Block Editor)
+## 🧰 Technology Stack
+
+## 🧰 Technology Stack
+
+* **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework
+* **[Alpine.js](https://alpinejs.dev/)** - Lightweight JavaScript framework  
+* **WooCommerce Core** - Full eCommerce integration
+* **WordPress Hooks** - Proper theme integration
+* **Custom CSS Grid** - Advanced layouts
+* **AJAX Integration** - Smooth user interactions
+* **JSON-LD Schema** - SEO structured data
+* **Mobile-First Approach** - Progressive enhancement
+
+---
+
+## 🚀 Quick Start Guide
+
+### 1. **Setup Theme**
+```bash
+# Navigate to theme directory
+cd wp-content/themes/tostishop
+
+# Install dependencies  
+npm install
+
+# Build CSS for development
+npm run dev
+```
+
+### 2. **Activate Theme**
+1. Go to **WordPress Admin → Appearance → Themes**
+2. Activate **"TostiShop"** theme
+3. Install **WooCommerce** plugin if not installed
+
+### 3. **Setup Homepage**
+1. **WordPress Admin → Pages → Add New**
+2. Title: **"Home"** 
+3. Template: **"TostiShop Homepage"**
+4. **Settings → Reading → Static Page → Homepage**
+
+### 4. **Configure WooCommerce**
+1. **WooCommerce → Settings → Products**
+2. Set featured products for homepage
+3. **Categories**: Add images to product categories
+4. **Checkout**: Configure payment methods
+
+---
+
+## 📱 Mobile-First Features
 
 Use native WordPress **Block Editor** only (no page builders):
 
