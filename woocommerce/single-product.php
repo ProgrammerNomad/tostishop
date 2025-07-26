@@ -24,6 +24,11 @@ get_header(); ?>
     <!-- Breadcrumbs -->
     <?php tostishop_breadcrumbs(); ?>
     
+    <!-- WooCommerce Notices -->
+    <div class="woocommerce-notices-wrapper mb-6">
+        <?php wc_print_notices(); ?>
+    </div>
+    
     <?php while (have_posts()) : the_post(); ?>
         <?php global $product; ?>
         
