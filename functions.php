@@ -261,10 +261,11 @@ function tostishop_enqueue_firebase_auth() {
 // Theme Options Panel
 require_once get_template_directory() . '/inc/theme-options.php';
 
+// Include the TostiShop admin menu system
+require_once get_template_directory() . '/inc/tosti-admin-menu.php';
+
 // Firebase Authentication (backward compatibility)
-if (file_exists(get_template_directory() . '/inc/firebase/init.php')) {
-    require_once get_template_directory() . '/inc/firebase/init.php';
-}
+require_once get_template_directory() . '/inc/firebase/init.php';
 
 /**
  * Register widget areas

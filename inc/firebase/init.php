@@ -19,9 +19,6 @@ require_once __DIR__ . '/ajax-handlers.php';
  * Initialize Firebase Authentication System
  */
 function tostishop_firebase_init() {
-    // Add admin menu for Firebase settings
-    add_action('admin_menu', 'tostishop_firebase_admin_menu');
-    
     // Initialize Firebase only if API key is set
     $api_key = get_option('tostishop_firebase_api_key');
     if (!empty($api_key)) {
@@ -37,22 +34,9 @@ function tostishop_firebase_init() {
 add_action('init', 'tostishop_firebase_init');
 
 /**
- * Add Firebase settings to WordPress admin
- */
-function tostishop_firebase_admin_menu() {
-    add_theme_page(
-        'Firebase Settings',
-        'Firebase Auth',
-        'manage_options',
-        'tostishop-firebase',
-        'tostishop_firebase_settings_page'
-    );
-}
-
-/**
  * Firebase Settings Page
  */
-function tostishop_firebase_settings_page() {
+function tostishop_firebase_admin_page() {
     if (isset($_POST['submit'])) {
         // Save Firebase settings
         update_option('tostishop_firebase_api_key', sanitize_text_field($_POST['firebase_api_key']));
