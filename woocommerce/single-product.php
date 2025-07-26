@@ -21,7 +21,13 @@ get_header();
 
 // Generate comprehensive structured data for SEO
 global $product;
-if ($product) {
+
+// Ensure we have the product object
+if (!$product) {
+    $product = wc_get_product(get_the_ID());
+}
+
+if ($product && is_a($product, 'WC_Product')) {
     $structured_data = array(
         '@context' => 'https://schema.org/',
         '@type' => 'Product',
