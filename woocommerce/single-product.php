@@ -379,7 +379,7 @@ get_header(); ?>
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900 mb-4"><?php _e('Shipping Information', 'tostishop'); ?></h3>
                         <div class="space-y-3 text-gray-600">
-                            <p><?php _e('• Free shipping on orders over $50', 'tostishop'); ?></p>
+                            <p><?php _e('• Free shipping on orders over ₹500', 'tostishop'); ?></p>
                             <p><?php _e('• Standard delivery: 3-5 business days', 'tostishop'); ?></p>
                             <p><?php _e('• Express delivery: 1-2 business days', 'tostishop'); ?></p>
                         </div>
