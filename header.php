@@ -139,10 +139,17 @@
                 <?php if (!is_cart()) : ?>
                 <div class="relative" x-data="{ userMenuOpen: false }">
                     <?php if (is_user_logged_in()) : ?>
-                        <!-- Logged In User - Amazon Style -->
+                        <!-- Logged In User - Responsive Design -->
                         <button @click="userMenuOpen = !userMenuOpen" 
                                 class="flex items-center text-left hover:bg-gray-50 rounded-lg p-2 transition-colors duration-200">
-                            <div class="flex flex-col items-start">
+                            <!-- Mobile: Icon Only -->
+                            <div class="md:hidden">
+                                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                            </div>
+                            <!-- Desktop: Amazon Style Text -->
+                            <div class="hidden md:flex flex-col items-start">
                                 <div class="text-xs text-gray-600">
                                     <?php printf(__('Hello, %s', 'tostishop'), wp_get_current_user()->display_name); ?>
                                 </div>
@@ -224,10 +231,17 @@
                         </div>
                         
                     <?php else : ?>
-                        <!-- Not Logged In - Amazon Style -->
+                        <!-- Not Logged In - Responsive Design -->
                         <button @click="userMenuOpen = !userMenuOpen" 
                                 class="flex items-center text-left hover:bg-gray-50 rounded-lg p-2 transition-colors duration-200">
-                            <div class="flex flex-col items-start">
+                            <!-- Mobile: Icon Only -->
+                            <div class="md:hidden">
+                                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                            </div>
+                            <!-- Desktop: Amazon Style Text -->
+                            <div class="hidden md:flex flex-col items-start">
                                 <div class="text-xs text-gray-600">
                                     <?php _e('Hello, Sign in', 'tostishop'); ?>
                                 </div>
