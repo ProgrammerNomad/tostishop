@@ -83,9 +83,9 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
                                         <label for="mobile-number" class="block text-sm font-medium text-gray-700 mb-2">
                                             Mobile Number
                                         </label>
-                                        <div class="flex rounded-lg overflow-hidden">
+                                        <div class="flex rounded-lg overflow-visible">
                                             <!-- Country Code Prefix -->
-                                            <div class="flex items-center justify-center bg-gray-100 border border-gray-300 border-r-0 rounded-l-lg px-3 flex-shrink-0">
+                                            <div class="flex items-center justify-center bg-gray-100 border border-gray-300 border-r-0 rounded-l-lg px-3 flex-shrink-0 min-w-[50px]">
                                                 <span class="text-navy-900 text-sm font-medium whitespace-nowrap">+91</span>
                                             </div>
                                             <!-- Phone Input -->
