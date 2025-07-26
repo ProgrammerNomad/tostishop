@@ -23,11 +23,12 @@ get_header();
 global $product;
 
 // Ensure we have the product object
-if (!$product) {
+if (!$product || !is_a($product, 'WC_Product')) {
     $product = wc_get_product(get_the_ID());
 }
 
-if ($product && is_a($product, 'WC_Product')) {
+// Verify we have a valid product before proceeding
+if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_name')) {
     $structured_data = array(
         '@context' => 'https://schema.org/',
         '@type' => 'Product',
