@@ -333,64 +333,265 @@ get_header(); ?>
             </div>
         </div>
         
-        <!-- Product Tabs (Mobile-Optimized) -->
-        <div class="mt-16" x-data="{ activeTab: 'description' }">
+        <!-- Product Tabs - Desktop / Accordions - Mobile -->
+        <div class="mt-16" x-data="{ 
+            activeTab: 'description',
+            openAccordions: {
+                description: false,
+                reviews: false,
+                shipping: false
+            },
+            toggleAccordion(section) {
+                this.openAccordions[section] = !this.openAccordions[section];
+            }
+        }" x-init="console.log('Alpine initialized with activeTab:', activeTab)">
             
-            <!-- Tab Navigation -->
-            <div class="flex border-b border-gray-200 overflow-x-auto">
-                <button @click="activeTab = 'description'" 
+            <!-- Desktop Tab Navigation (Hidden on Mobile) -->
+            <div class="hidden md:flex border-b border-gray-200 overflow-x-auto">
+                <button @click="activeTab = 'description'; console.log('Description tab clicked');" 
                         :class="{ 'border-blue-500 text-blue-600': activeTab === 'description', 'border-transparent text-gray-500': activeTab !== 'description' }"
-                        class="flex-none px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap">
+                        class="flex-none px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap hover:text-blue-600 transition-colors">
                     <?php _e('Description', 'tostishop'); ?>
                 </button>
                 
                 <?php if ($product->get_review_count() > 0) : ?>
-                <button @click="activeTab = 'reviews'" 
+                <button @click="activeTab = 'reviews'; console.log('Reviews tab clicked');" 
                         :class="{ 'border-blue-500 text-blue-600': activeTab === 'reviews', 'border-transparent text-gray-500': activeTab !== 'reviews' }"
-                        class="flex-none px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap">
+                        class="flex-none px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap hover:text-blue-600 transition-colors">
                     <?php printf(__('Reviews (%d)', 'tostishop'), $product->get_review_count()); ?>
                 </button>
                 <?php endif; ?>
                 
-                <button @click="activeTab = 'shipping'" 
+                <button @click="activeTab = 'shipping'; console.log('Shipping tab clicked');" 
                         :class="{ 'border-blue-500 text-blue-600': activeTab === 'shipping', 'border-transparent text-gray-500': activeTab !== 'shipping' }"
-                        class="flex-none px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap">
+                        class="flex-none px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap hover:text-blue-600 transition-colors">
                     <?php _e('Shipping & Returns', 'tostishop'); ?>
                 </button>
             </div>
             
-            <!-- Tab Content -->
-            <div class="py-8">
+            <!-- Desktop Tab Content (Hidden on Mobile) -->
+            <div class="hidden md:block py-8 min-h-[200px]">
                 
                 <!-- Description Tab -->
-                <div x-show="activeTab === 'description'" class="prose max-w-none">
-                    <?php the_content(); ?>
+                <div x-show="activeTab === 'description'" 
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 transform translate-y-4"
+                     x-transition:enter-end="opacity-100 transform translate-y-0"
+                     style="display: none;"
+                     class="prose max-w-none">
+                    <div class="text-gray-700 leading-relaxed">
+                        <?php 
+                        global $product;
+                        $description = '';
+                        if ($product->get_description()) {
+                            $description = apply_filters('the_content', $product->get_description());
+                        } elseif (get_the_content()) {
+                            $description = apply_filters('the_content', get_the_content());
+                        }
+                        
+                        if (!empty($description)) {
+                            echo $description;
+                        } else {
+                            echo '<p>' . __('This product has no detailed description available.', 'tostishop') . '</p>';
+                        }
+                        ?>
+                    </div>
                 </div>
                 
                 <!-- Reviews Tab -->
                 <?php if ($product->get_review_count() > 0) : ?>
-                <div x-show="activeTab === 'reviews'">
-                    <?php comments_template(); ?>
+                <div x-show="activeTab === 'reviews'" 
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 transform translate-y-4"
+                     x-transition:enter-end="opacity-100 transform translate-y-0"
+                     style="display: none;">
+                    <div id="reviews" class="woocommerce-Reviews">
+                        <div id="comments">
+                            <h2 class="woocommerce-Reviews-title text-xl font-semibold mb-4">
+                                <?php
+                                $count = $product->get_review_count();
+                                if ($count && wc_review_ratings_enabled()) {
+                                    $reviews_title = sprintf(esc_html(_n('%1$s review for %2$s', '%1$s reviews for %2$s', $count, 'woocommerce')), esc_html($count), '<span>' . get_the_title() . '</span>');
+                                    echo $reviews_title;
+                                } else {
+                                    _e('Reviews', 'woocommerce');
+                                }
+                                ?>
+                            </h2>
+                            <?php if (have_comments()) : ?>
+                                <ol class="commentlist space-y-4">
+                                    <?php wp_list_comments(array('callback' => 'woocommerce_comments')); ?>
+                                </ol>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                 </div>
                 <?php endif; ?>
                 
                 <!-- Shipping Tab -->
-                <div x-show="activeTab === 'shipping'" class="space-y-6">
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4"><?php _e('Shipping Information', 'tostishop'); ?></h3>
-                        <div class="space-y-3 text-gray-600">
-                            <p><?php _e('• Free shipping on orders over $50', 'tostishop'); ?></p>
-                            <p><?php _e('• Standard delivery: 3-5 business days', 'tostishop'); ?></p>
-                            <p><?php _e('• Express delivery: 1-2 business days', 'tostishop'); ?></p>
+                <div x-show="activeTab === 'shipping'" 
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 transform translate-y-4"
+                     x-transition:enter-end="opacity-100 transform translate-y-0"
+                     style="display: none;"
+                     class="space-y-6">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-blue-900 mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                            </svg>
+                            <?php _e('Shipping Information', 'tostishop'); ?>
+                        </h3>
+                        <div class="space-y-3 text-blue-800">
+                            <p class="flex items-center">
+                                <span class="w-2 h-2 bg-blue-600 rounded-full mr-3"></span>
+                                <?php _e('Free shipping on orders over ₹500', 'tostishop'); ?>
+                            </p>
+                            <p class="flex items-center">
+                                <span class="w-2 h-2 bg-blue-600 rounded-full mr-3"></span>
+                                <?php _e('Standard delivery: 3-5 business days', 'tostishop'); ?>
+                            </p>
+                            <p class="flex items-center">
+                                <span class="w-2 h-2 bg-blue-600 rounded-full mr-3"></span>
+                                <?php _e('Express delivery: 1-2 business days', 'tostishop'); ?>
+                            </p>
+                            <p class="flex items-center">
+                                <span class="w-2 h-2 bg-blue-600 rounded-full mr-3"></span>
+                                <?php _e('Same-day delivery available in select areas', 'tostishop'); ?>
+                            </p>
                         </div>
                     </div>
                     
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4"><?php _e('Returns & Exchanges', 'tostishop'); ?></h3>
-                        <div class="space-y-3 text-gray-600">
-                            <p><?php _e('• 30-day return policy', 'tostishop'); ?></p>
-                            <p><?php _e('• Items must be in original condition', 'tostishop'); ?></p>
-                            <p><?php _e('• Free returns on defective items', 'tostishop'); ?></p>
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-green-900 mb-4 flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            <?php _e('Returns & Exchanges', 'tostishop'); ?>
+                        </h3>
+                        <div class="space-y-3 text-green-800">
+                            <p class="flex items-center">
+                                <span class="w-2 h-2 bg-green-600 rounded-full mr-3"></span>
+                                <?php _e('7-day return policy', 'tostishop'); ?>
+                            </p>
+                            <p class="flex items-center">
+                                <span class="w-2 h-2 bg-green-600 rounded-full mr-3"></span>
+                                <?php _e('Items must be in original condition', 'tostishop'); ?>
+                            </p>
+                            <p class="flex items-center">
+                                <span class="w-2 h-2 bg-green-600 rounded-full mr-3"></span>
+                                <?php _e('Free returns on defective items', 'tostishop'); ?>
+                            </p>
+                            <p class="flex items-center">
+                                <span class="w-2 h-2 bg-green-600 rounded-full mr-3"></span>
+                                <?php _e('Easy online return process', 'tostishop'); ?>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Accordion (Hidden on Desktop) -->
+            <div class="md:hidden space-y-4">
+                
+                <!-- Description Accordion -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <button @click="toggleAccordion('description')" 
+                            class="w-full px-4 py-4 bg-gray-50 hover:bg-gray-100 flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200">
+                        <span class="font-medium text-gray-900"><?php _e('Description', 'tostishop'); ?></span>
+                        <svg :class="{ 'rotate-180': openAccordions.description }" 
+                             class="w-5 h-5 text-gray-500 transition-transform duration-200" 
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div x-show="openAccordions.description" 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 max-h-0"
+                         x-transition:enter-end="opacity-100 max-h-screen"
+                         x-transition:leave="transition ease-in duration-200"
+                         x-transition:leave-start="opacity-100 max-h-screen"
+                         x-transition:leave-end="opacity-0 max-h-0"
+                         class="px-4 py-4 bg-white border-t border-gray-200">
+                        <div class="prose prose-sm max-w-none text-gray-700">
+                            <?php 
+                            global $product;
+                            if ($product->get_description()) {
+                                echo apply_filters('the_content', $product->get_description());
+                            } else {
+                                the_content();
+                            }
+                            ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reviews Accordion -->
+                <?php if ($product->get_review_count() > 0) : ?>
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <button @click="toggleAccordion('reviews')" 
+                            class="w-full px-4 py-4 bg-gray-50 hover:bg-gray-100 flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200">
+                        <span class="font-medium text-gray-900">
+                            <?php printf(__('Reviews (%d)', 'tostishop'), $product->get_review_count()); ?>
+                        </span>
+                        <svg :class="{ 'rotate-180': openAccordions.reviews }" 
+                             class="w-5 h-5 text-gray-500 transition-transform duration-200" 
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div x-show="openAccordions.reviews" 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 max-h-0"
+                         x-transition:enter-end="opacity-100 max-h-screen"
+                         x-transition:leave="transition ease-in duration-200"
+                         x-transition:leave-start="opacity-100 max-h-screen"
+                         x-transition:leave-end="opacity-0 max-h-0"
+                         class="px-4 py-4 bg-white border-t border-gray-200">
+                        <?php comments_template(); ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- Shipping & Returns Accordion -->
+                <div class="border border-gray-200 rounded-lg overflow-hidden">
+                    <button @click="toggleAccordion('shipping')" 
+                            class="w-full px-4 py-4 bg-gray-50 hover:bg-gray-100 flex items-center justify-between text-left focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200">
+                        <span class="font-medium text-gray-900"><?php _e('Shipping & Returns', 'tostishop'); ?></span>
+                        <svg :class="{ 'rotate-180': openAccordions.shipping }" 
+                             class="w-5 h-5 text-gray-500 transition-transform duration-200" 
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div x-show="openAccordions.shipping" 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 max-h-0"
+                         x-transition:enter-end="opacity-100 max-h-screen"
+                         x-transition:leave="transition ease-in duration-200"
+                         x-transition:leave-start="opacity-100 max-h-screen"
+                         x-transition:leave-end="opacity-0 max-h-0"
+                         class="px-4 py-4 bg-white border-t border-gray-200">
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-4"><?php _e('Shipping Information', 'tostishop'); ?></h3>
+                                <div class="space-y-3 text-gray-600">
+                                    <p><?php _e('• Free shipping on orders over ₹500', 'tostishop'); ?></p>
+                                    <p><?php _e('• Standard delivery: 3-5 business days', 'tostishop'); ?></p>
+                                    <p><?php _e('• Express delivery: 1-2 business days', 'tostishop'); ?></p>
+                                    <p><?php _e('• Same-day delivery available in select areas', 'tostishop'); ?></p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-4"><?php _e('Returns & Exchanges', 'tostishop'); ?></h3>
+                                <div class="space-y-3 text-gray-600">
+                                    <p><?php _e('• 7-day return policy', 'tostishop'); ?></p>
+                                    <p><?php _e('• Items must be in original condition', 'tostishop'); ?></p>
+                                    <p><?php _e('• Free returns on defective items', 'tostishop'); ?></p>
+                                    <p><?php _e('• Easy online return process', 'tostishop'); ?></p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
