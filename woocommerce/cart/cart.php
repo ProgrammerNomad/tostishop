@@ -19,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
 
 get_header(); ?>
 
-<div class="max-w-7xl xl:max-w-[95rem] 2xl:max-w-[110rem] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-7xl xl:max-w-[95rem] 2xl:max-w-[110rem] mx-auto px-2 sm:px-6 lg:px-8 py-8">
     
     <!-- Simplified Page Header -->
     <div class="mb-8">
@@ -191,16 +191,17 @@ get_header(); ?>
                                 
                                 if ($_product && $_product->exists() && $cart_item['quantity'] > 0 && apply_filters('woocommerce_cart_item_visible', true, $cart_item, $cart_item_key)) {
                                     $product_permalink = apply_filters('woocommerce_cart_item_permalink', $_product->is_visible() ? $_product->get_permalink($cart_item) : '', $cart_item, $cart_item_key);
+                                    $thumbnail = apply_filters('woocommerce_cart_item_thumbnail', $_product->get_image(), $cart_item, $cart_item_key);
                             ?>
                             
                             <!-- Mobile Cart Item -->
-                            <div class="md:hidden p-3 cart-item" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>">
+                                        <!-- Mobile Cart Item -->
+            <div class="md:hidden p-2 cart-item" data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>">\
                                 <div class="flex space-x-3">
                                     <!-- Product Image -->
                                     <div class="flex-shrink-0">
                                         <div class="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
                                             <?php
-                                            $thumbnail = apply_filters('woocommerce_cart_item_thumbnail', $_product->get_image(), $cart_item, $cart_item_key);
                                             if (!$product_permalink) {
                                                 echo $thumbnail;
                                             } else {
@@ -287,7 +288,13 @@ get_header(); ?>
                                 <!-- Product -->
                                 <div class="col-span-6 flex items-center space-x-4">
                                     <div class="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
-                                        <?php echo $thumbnail; ?>
+                                        <?php
+                                        if (!$product_permalink) {
+                                            echo $thumbnail;
+                                        } else {
+                                            printf('<a href="%s">%s</a>', esc_url($product_permalink), $thumbnail);
+                                        }
+                                        ?>
                                     </div>
                                     <div>
                                         <h3 class="text-sm font-medium text-gray-900">

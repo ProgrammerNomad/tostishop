@@ -295,22 +295,22 @@ document.addEventListener('DOMContentLoaded', function() {
 @media (max-width: 640px) {
 	/* Product Cards Mobile Optimization */
 	.lg\\:col-span-1 {
-		padding-left: 0.5rem !important;
-		padding-right: 0.5rem !important;
+		padding-left: 0.25rem !important;
+		padding-right: 0.25rem !important;
 	}
 	
 	/* Container spacing fix */
 	.woocommerce-checkout-review-order-table {
 		margin-left: 0 !important;
 		margin-right: 0 !important;
-		padding-left: 0.5rem !important;
-		padding-right: 0.5rem !important;
+		padding-left: 0.25rem !important;
+		padding-right: 0.25rem !important;
 	}
 	
 	/* Product item spacing */
 	.woocommerce-checkout-review-order-table .flex.items-start {
-		padding: 0.75rem !important;
-		margin-bottom: 0.75rem !important;
+		padding: 0.5rem !important;
+		margin-bottom: 0.5rem !important;
 	}
 	
 	/* Smaller images on mobile */
@@ -322,7 +322,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	
 	/* Reduce horizontal spacing */
 	.woocommerce-checkout-review-order-table .space-x-2 > * + * {
-		margin-left: 0.375rem !important;
+		margin-left: 0.25rem !important;
 	}
 	
 	/* Coupon form mobile optimization */
