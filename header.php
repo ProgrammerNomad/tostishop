@@ -139,15 +139,20 @@
                 <?php if (!is_cart()) : ?>
                 <div class="relative" x-data="{ userMenuOpen: false }">
                     <?php if (is_user_logged_in()) : ?>
-                        <!-- Logged In User -->
+                        <!-- Logged In User - Amazon Style -->
                         <button @click="userMenuOpen = !userMenuOpen" 
-                                class="flex items-center p-2 text-gray-600 hover:text-navy-600 transition-colors duration-200">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
-                            <svg class="w-4 h-4 ml-1 transition-transform duration-200" :class="{ 'rotate-180': userMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
+                                class="flex items-center text-left hover:bg-gray-50 rounded-lg p-2 transition-colors duration-200">
+                            <div class="flex flex-col items-start">
+                                <div class="text-xs text-gray-600">
+                                    <?php printf(__('Hello, %s', 'tostishop'), wp_get_current_user()->display_name); ?>
+                                </div>
+                                <div class="text-sm font-medium text-gray-900 flex items-center">
+                                    <?php _e('Account & Lists', 'tostishop'); ?>
+                                    <svg class="w-3 h-3 ml-1 transition-transform duration-200" :class="{ 'rotate-180': userMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                            </div>
                         </button>
                         
                         <!-- Dropdown Menu -->
@@ -219,17 +224,88 @@
                         </div>
                         
                     <?php else : ?>
-                        <!-- Not Logged In -->
-                        <div class="flex items-center space-x-2">
-                            <a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>" 
-                               class="text-sm font-medium text-gray-600 hover:text-navy-600 transition-colors duration-200">
-                                <?php _e('Login', 'tostishop'); ?>
-                            </a>
-                            <span class="text-gray-400">|</span>
-                            <a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>" 
-                               class="text-sm font-medium text-gray-600 hover:text-navy-600 transition-colors duration-200">
-                                <?php _e('Register', 'tostishop'); ?>
-                            </a>
+                        <!-- Not Logged In - Amazon Style -->
+                        <button @click="userMenuOpen = !userMenuOpen" 
+                                class="flex items-center text-left hover:bg-gray-50 rounded-lg p-2 transition-colors duration-200">
+                            <div class="flex flex-col items-start">
+                                <div class="text-xs text-gray-600">
+                                    <?php _e('Hello, Sign in', 'tostishop'); ?>
+                                </div>
+                                <div class="text-sm font-medium text-gray-900 flex items-center">
+                                    <?php _e('Account & Lists', 'tostishop'); ?>
+                                    <svg class="w-3 h-3 ml-1 transition-transform duration-200" :class="{ 'rotate-180': userMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </button>
+                        
+                        <!-- Not Logged In Dropdown Menu -->
+                        <div x-show="userMenuOpen" 
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-150"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             @click.away="userMenuOpen = false"
+                             class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-4 z-50">
+                            
+                            <!-- Login Section -->
+                            <div class="px-4 pb-4 border-b border-gray-100">
+                                <div class="text-center">
+                                    <a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>" 
+                                       class="block w-full bg-accent text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-red-600 transition-colors duration-200 mb-3">
+                                        <?php _e('Sign In', 'tostishop'); ?>
+                                    </a>
+                                    <p class="text-xs text-gray-600">
+                                        <?php _e('New customer?', 'tostishop'); ?>
+                                        <a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>" 
+                                           class="text-accent hover:text-red-600 font-medium">
+                                            <?php _e('Start here.', 'tostishop'); ?>
+                                        </a>
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- Quick Links -->
+                            <div class="py-2">
+                                <h4 class="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                    <?php _e('Your Account', 'tostishop'); ?>
+                                </h4>
+                                
+                                <a href="<?php echo esc_url(wc_get_page_permalink('myaccount')); ?>" 
+                                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-navy-600 transition-colors duration-200">
+                                    <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                    </svg>
+                                    <?php _e('Your Account', 'tostishop'); ?>
+                                </a>
+                                
+                                <a href="<?php echo esc_url(wc_get_page_permalink('shop')); ?>" 
+                                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-navy-600 transition-colors duration-200">
+                                    <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                                    </svg>
+                                    <?php _e('Your Orders', 'tostishop'); ?>
+                                </a>
+                                
+                                <a href="<?php echo esc_url(wc_get_page_permalink('shop')); ?>" 
+                                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-navy-600 transition-colors duration-200">
+                                    <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                    </svg>
+                                    <?php _e('Your Wishlist', 'tostishop'); ?>
+                                </a>
+                                
+                                <a href="<?php echo esc_url(home_url('/contact')); ?>" 
+                                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-navy-600 transition-colors duration-200">
+                                    <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <?php _e('Customer Service', 'tostishop'); ?>
+                                </a>
+                            </div>
                         </div>
                     <?php endif; ?>
                 </div>
