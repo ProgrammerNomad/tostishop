@@ -637,4 +637,16 @@ function tostishop_woocommerce_pagination_args($args) {
     return $args;
 }
 
+// Remove add to cart buttons from all pages except single product
+function tostishop_remove_add_to_cart_buttons() {
+    // Remove ALL add to cart buttons from archive/shop pages
+    remove_action('woocommerce_after_shop_loop_item', 'woocommerce_template_loop_add_to_cart', 10);
+    
+    // Keep the add to cart functionality only on single product pages
+    if (!is_product()) {
+        remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart', 30);
+    }
+}
+add_action('init', 'tostishop_remove_add_to_cart_buttons');
+
 add_filter('woocommerce_cart_needs_shipping_address', '__return_false');

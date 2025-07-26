@@ -122,17 +122,10 @@
                         <a href="<?php echo esc_url(get_permalink()); ?>"><?php the_title(); ?></a>
                     </h3>
                     
-                    <div class="flex items-center justify-between">
-                        <span class="text-lg font-bold text-gray-900">
-                            <?php echo $product->get_price_html(); ?>
-                        </span>
-                        
-                        <?php if ($product->is_in_stock()) : ?>
-                        <button class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-blue-700 transition-colors duration-200"
-                                onclick="addToCart(<?php echo $product->get_id(); ?>)">
-                            <?php _e('Add to Cart', 'tostishop'); ?>
-                        </button>
-                        <?php endif; ?>
+                    <!-- Optional: Add rating stars if needed -->
+                    
+                    <div class="text-lg font-bold text-gray-900">
+                        <?php echo $product->get_price_html(); ?>
                     </div>
                 </div>
             </div>

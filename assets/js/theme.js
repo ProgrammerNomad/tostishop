@@ -76,78 +76,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Disable the add to cart event listener
+
     // AJAX add to cart enhancement for simple products
     document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('add-to-cart-btn') && !e.target.classList.contains('loading')) {
+        // Prevent default functionality and redirect to product page
+        if (e.target.classList.contains('add-to-cart-btn')) {
             e.preventDefault();
-            
-            const button = e.target;
-            const productId = button.getAttribute('data-product-id');
-            const quantity = button.getAttribute('data-quantity') || 1;
-            
-            // Add loading state
-            button.classList.add('loading');
-            const originalText = button.innerHTML;
-            button.innerHTML = '<svg class="animate-spin h-4 w-4 mx-auto" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
-            
-            // Use WooCommerce AJAX add to cart
-            const formData = new FormData();
-            formData.append('action', 'woocommerce_add_to_cart');
-            formData.append('product_id', productId);
-            formData.append('quantity', quantity);
-            
-            fetch(tostishop_ajax.ajax_url, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.text())
-            .then(data => {
-                // Show success message
-                button.classList.remove('loading');
-                button.classList.add('added');
-                button.innerHTML = 'Added to Cart';
-                
-                // Update cart count if possible
-                const cartCount = document.querySelector('.cart-count');
-                if (cartCount) {
-                    const currentCount = parseInt(cartCount.textContent) || 0;
-                    cartCount.textContent = currentCount + parseInt(quantity);
-                }
-                
-                // Show notification with actions
-                const productName = button.closest('.product-item')?.querySelector('h3')?.textContent || 
-                                  button.closest('[data-product-id]')?.querySelector('.product-title')?.textContent || 
-                                  'Product';
-                
-                // Trigger custom event for notifications
-                $(document).trigger('tostishop_product_added_to_cart', [productName]);
-                
-                // Also trigger WooCommerce event if available
-                $(document.body).trigger('added_to_cart', [null, null, button]);
-                
-                // Reset button after 2 seconds
-                setTimeout(() => {
-                    button.innerHTML = originalText;
-                    button.classList.remove('added');
-                }, 2000);
-                
-                // Trigger cart update event
-                document.body.dispatchEvent(new Event('wc_fragment_refresh'));
-            })
-            .catch(error => {
-                console.error('Error adding to cart:', error);
-                button.classList.remove('loading');
-                button.innerHTML = 'Error - Try Again';
-                
-                // Show error notification
-                if (window.tostishopNotifications) {
-                    window.tostishopNotifications.error('Error adding product to cart. Please try again.');
-                }
-                
-                setTimeout(() => {
-                    button.innerHTML = originalText;
-                }, 2000);
-            });
+            const productUrl = e.target.closest('.product').querySelector('a').href;
+            if (productUrl) {
+                window.location.href = productUrl;
+            }
         }
     });
     

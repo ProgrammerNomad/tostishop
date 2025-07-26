@@ -61,84 +61,12 @@ function initializeWooCommerce() {
 }
 
 /**
- * AJAX Add to Cart functionality
+ * AJAX Add to Cart functionality 
+ * (Disabled - only allowing add to cart from single product page)
  */
 function initializeAjaxAddToCart() {
-    
-    // Add to cart buttons in product grid
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('add-to-cart-btn')) {
-            e.preventDefault();
-            
-            const button = e.target;
-            const productId = button.dataset.productId;
-            const quantity = button.dataset.quantity || 1;
-            
-            addToCartAjax(productId, quantity, button);
-        }
-    });
-}
-
-/**
- * Add product to cart via AJAX
- */
-function addToCartAjax(productId, quantity, button) {
-    
-    // Show loading state
-    const originalText = button.textContent;
-    button.textContent = 'Adding...';
-    button.disabled = true;
-    button.classList.add('loading');
-    
-    // Create form data
-    const formData = new FormData();
-    formData.append('action', 'tostishop_add_to_cart');
-    formData.append('product_id', productId);
-    formData.append('quantity', quantity);
-    formData.append('nonce', tostishop_ajax.nonce);
-    
-    // Send AJAX request
-    fetch(tostishop_ajax.ajax_url, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Update cart count in header
-            updateCartCount(data.data.cart_count);
-            
-            // Show success message
-            showNotification('Product added to cart!', 'success');
-            
-            // Reset button
-            button.textContent = 'Added!';
-            setTimeout(() => {
-                button.textContent = originalText;
-                button.disabled = false;
-                button.classList.remove('loading');
-            }, 2000);
-        } else {
-            // Show error message
-            showNotification('Error adding product to cart.', 'error');
-            
-            // Reset button
-            button.textContent = originalText;
-            button.disabled = false;
-            button.classList.remove('loading');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        
-        // Show error message
-        showNotification('Error adding product to cart.', 'error');
-        
-        // Reset button
-        button.textContent = originalText;
-        button.disabled = false;
-        button.classList.remove('loading');
-    });
+    // Functionality removed - only allowing add to cart from single product page
+    return;
 }
 
 /**

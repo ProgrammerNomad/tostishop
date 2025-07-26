@@ -411,8 +411,11 @@ get_header(); ?>
         <div class="flex-1">
             <div class="text-lg font-bold text-gray-900"><?php echo $product->get_price_html(); ?></div>
         </div>
-        <button class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200">
-            <?php _e('Add to Cart', 'tostishop'); ?>
+        <button type="button" onclick="document.querySelector('form.cart').submit()" 
+                class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200"
+                <?php echo (!$product->is_in_stock() ? 'disabled' : ''); ?>
+                <?php echo (!$product->is_in_stock() ? 'class="bg-gray-300 text-gray-500 cursor-not-allowed"' : ''); ?>>
+            <?php echo $product->is_in_stock() ? esc_html($product->single_add_to_cart_text()) : esc_html__('Out of Stock', 'tostishop'); ?>
         </button>
     </div>
 </div>
