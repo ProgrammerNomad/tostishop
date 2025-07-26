@@ -70,6 +70,14 @@ function initializeAjaxAddToCart() {
 }
 
 /**
+ * Placeholder for addToCartAjax function
+ */
+function addToCartAjax() {
+    // This function is disabled - redirect to single product page for add to cart
+    return false;
+}
+
+/**
  * Update cart count in header
  */
 function updateCartCount(count) {
@@ -170,20 +178,7 @@ function hideSearchResults() {
  */
 function initializeProductGallery() {
     
-    // Image zoom on hover (desktop only)
-    const productImages = document.querySelectorAll('.product-image');
-    
-    productImages.forEach(image => {
-        if (window.innerWidth > 1024) {
-            image.addEventListener('mouseenter', function() {
-                this.style.transform = 'scale(1.1)';
-            });
-            
-            image.addEventListener('mouseleave', function() {
-                this.style.transform = 'scale(1)';
-            });
-        }
-    });
+    // Removed image zoom on hover effects
     
     // Touch/swipe support for mobile gallery
     initializeTouchGallery();
