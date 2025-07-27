@@ -302,6 +302,35 @@
             handleEmailAuth();
         });
 
+        // User Registration Modal Events
+        $('#complete-registration-form').on('submit', function(e) {
+            e.preventDefault();
+            completeUserRegistration();
+        });
+
+        $('#complete-registration-btn').on('click', function(e) {
+            e.preventDefault();
+            completeUserRegistration();
+        });
+
+        $('#cancel-registration').on('click', function(e) {
+            e.preventDefault();
+            $('#user-registration-modal').addClass('hidden');
+            
+            // Clean up
+            window.pendingFirebaseUser = null;
+            window.pendingAuthMethod = null;
+            
+            showError('Registration cancelled. Please try again when ready.');
+        });
+
+        // Close modal on backdrop click
+        $('#user-registration-modal').on('click', function(e) {
+            if (e.target === this) {
+                $('#cancel-registration').click();
+            }
+        });
+
         // Mobile number input validation
         $('#mobile-number').on('input', function() {
             const value = $(this).val().replace(/[^0-9]/g, '');
@@ -735,7 +764,7 @@
     }
 
     /**
-     * Login to WordPress - ENHANCED VERSION
+     * Login to WordPress - ENHANCED WITH REGISTRATION FLOW
      */
     function loginToWordPress(firebaseUser, authMethod) {
         if (!firebaseUser) {
@@ -752,7 +781,6 @@
                 const userData = {
                     action: 'tostishop_firebase_login',
                     firebase_token: idToken,
-                    // SIMPLIFIED - Just use the nonce directly
                     nonce: tostiShopAjax.nonce,
                     auth_method: authMethod,
                     from_checkout: window.location.href.includes('checkout') ? 'true' : 'false'
@@ -777,19 +805,19 @@
                                 window.location.href = response.data.redirect_url || tostiShopAjax.redirectUrl;
                             }, 1500);
                             
+                        } else if (response.data.code === 'user_not_registered') {
+                            // 🆕 NEW USER - Show registration form
+                            console.log('👤 New user detected, showing registration form');
+                            showUserRegistrationModal(firebaseUser, authMethod);
+                            
                         } else {
                             const errorCode = response.data.code || '';
                             let errorMessage = response.data.message || 'Login failed. Please try again.';
                             
-                            // Add better error messages with debugging info
                             if (errorCode === 'nonce_failed') {
                                 errorMessage = 'Security verification failed. Please refresh the page and try again.';
-                                console.error('Nonce verification failed. Sent:', userData.nonce);
                             } else if (errorCode === 'firebase_auth_failed') {
                                 errorMessage = 'Authentication token verification failed. Please try again or use a different login method.';
-                                console.error('Firebase auth failed. Token length:', idToken ? idToken.length : 0);
-                            } else if (errorCode === 'token_invalid') {
-                                errorMessage = 'Authentication token invalid. Please try a different login method.';
                             }
                             
                             showError(errorMessage);
@@ -806,6 +834,117 @@
                 hideLoading();
                 console.error('❌ Token retrieval error:', error);
                 showError('Authentication token error. Please try again.');
+            });
+    }
+
+    /**
+     * Show User Registration Modal - NEW FUNCTION
+     */
+    function showUserRegistrationModal(firebaseUser, authMethod) {
+        // Pre-fill email if available
+        const userEmail = firebaseUser.email || '';
+        const userName = firebaseUser.displayName || '';
+        
+        $('#user-email').val(userEmail);
+        $('#user-full-name').val(userName);
+        
+        // Show modal
+        $('#user-registration-modal').removeClass('hidden');
+        
+        // Focus first empty field
+        if (!userName) {
+            $('#user-full-name').focus();
+        } else if (!userEmail) {
+            $('#user-email').focus();
+        }
+        
+        // Store Firebase user data for later use
+        window.pendingFirebaseUser = firebaseUser;
+        window.pendingAuthMethod = authMethod;
+    }
+
+    /**
+     * Complete User Registration - NEW FUNCTION
+     */
+    function completeUserRegistration() {
+        const fullName = $('#user-full-name').val().trim();
+        const email = $('#user-email').val().trim();
+        
+        // Validation
+        if (!fullName || fullName.length < 2) {
+            showError('Please enter your full name (at least 2 characters).');
+            $('#user-full-name').focus();
+            return;
+        }
+        
+        if (!email || !isValidEmail(email)) {
+            showError('Please enter a valid email address.');
+            $('#user-email').focus();
+            return;
+        }
+        
+        const firebaseUser = window.pendingFirebaseUser;
+        const authMethod = window.pendingAuthMethod;
+        
+        if (!firebaseUser) {
+            showError('Session expired. Please try logging in again.');
+            $('#user-registration-modal').addClass('hidden');
+            return;
+        }
+        
+        showLoading('Creating your account...');
+        
+        // Get Firebase token and create WordPress user
+        firebaseUser.getIdToken()
+            .then(function(idToken) {
+                
+                const registrationData = {
+                    action: 'tostishop_firebase_register',
+                    firebase_token: idToken,
+                    nonce: tostiShopAjax.nonce,
+                    auth_method: authMethod,
+                    user_name: fullName,
+                    user_email: email,
+                    from_checkout: window.location.href.includes('checkout') ? 'true' : 'false'
+                };
+
+                console.log('📤 Sending registration request to WordPress');
+
+                $.ajax({
+                    url: tostiShopAjax.ajaxurl,
+                    type: 'POST',
+                    data: registrationData,
+                    timeout: 30000,
+                    success: function(response) {
+                        hideLoading();
+                        
+                        if (response.success) {
+                            $('#user-registration-modal').addClass('hidden');
+                            showSuccess('Account created successfully! Redirecting...');
+                            
+                            // Clean up
+                            window.pendingFirebaseUser = null;
+                            window.pendingAuthMethod = null;
+                            
+                            setTimeout(function() {
+                                window.location.href = response.data.redirect_url || tostiShopAjax.redirectUrl;
+                            }, 1500);
+                            
+                        } else {
+                            showError(response.data.message || 'Registration failed. Please try again.');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        hideLoading();
+                        console.error('❌ Registration error:', xhr.responseText, status, error);
+                        showError('Registration failed. Please try again.');
+                    }
+                });
+            })
+            .catch(function(error) {
+                hideLoading();
+                console.error('❌ Token retrieval error:', error);
+                showError('Authentication error. Please try again.');
             });
     }
 

@@ -488,4 +488,45 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
     </div>
 </div>
 
+<!-- User Registration Modal (for new Firebase users) -->
+<div id="user-registration-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div class="text-center mb-6">
+            <h3 class="text-xl font-bold text-navy-900 mb-2">Complete Your Registration</h3>
+            <p class="text-gray-600">We need a few more details to create your account</p>
+        </div>
+        
+        <form id="complete-registration-form" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                <input type="text" id="user-full-name" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                       placeholder="Enter your full name" required>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                <input type="email" id="user-email" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                       placeholder="Enter your email address" required>
+            </div>
+            
+            <div class="text-xs text-gray-500">
+                <p>* Required fields. This information will be used to create your TostiShop account.</p>
+            </div>
+            
+            <div class="flex gap-3 pt-4">
+                <button type="button" id="cancel-registration" 
+                        class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit" id="complete-registration-btn"
+                        class="flex-1 px-4 py-2 bg-accent text-white rounded-md hover:bg-red-600">
+                    Complete Registration
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <?php do_action( 'woocommerce_after_customer_login_form' ); ?>
