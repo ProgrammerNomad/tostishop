@@ -50,7 +50,7 @@ add_theme_support('custom-logo', array(
 ```
 tostishop-theme/
 ├── style.css                  # Theme meta + compiled Tailwind CSS
-├── functions.php              # Theme functions, enqueues, WooCommerce setup
+├── functions.php              # Main functions file (modular includes)
 ├── header.php                 # Site header with navigation
 ├── footer.php                 # Site footer
 ├── index.php                  # Homepage template
@@ -59,15 +59,47 @@ tostishop-theme/
 ├── package.json               # NPM dependencies
 ├── assets/
 │   ├── css/
-│   │   └── main.css           # Tailwind source CSS
-│   └── js/
-│       └── ui.js              # Alpine.js interactions
+│   │   ├── main.css           # Tailwind source CSS
+│   │   ├── custom.css         # Custom styles
+│   │   ├── homepage.css       # Homepage specific styles
+│   │   └── firebase-auth.css  # Firebase auth UI styles
+│   ├── js/
+│   │   ├── ui.js              # Alpine.js interactions
+│   │   ├── theme.js           # General theme functionality
+│   │   ├── cart.js            # Cart specific interactions
+│   │   └── firebase-auth.js   # Firebase authentication
+│   └── images/
+│       ├── logo.png           # Main logo (200x60px)
+│       └── logo-big.png       # Large logo variant
+├── inc/                       # Modular theme functions
+│   ├── theme-setup.php        # Core theme initialization
+│   ├── assets-enqueue.php     # Scripts and styles loading
+│   ├── woocommerce-customizations.php # WooCommerce modifications
+│   ├── ajax-handlers.php      # AJAX endpoints and handlers
+│   ├── theme-customizer.php   # WordPress Customizer settings
+│   ├── helper-functions.php   # Utility functions and helpers
+│   ├── theme-options.php      # Theme options panel
+│   ├── tosti-admin-menu.php   # Admin menu customizations
+│   └── firebase/              # Firebase authentication module
+│       ├── init.php           # Firebase initialization
+│       ├── config.php         # Firebase configuration
+│       ├── auth-ui.php        # Authentication UI components
+│       ├── ajax-handlers.php  # Firebase AJAX handlers
+│       └── token-verification.php # Token verification
 └── woocommerce/               # WooCommerce template overrides
     ├── archive-product.php    # Shop/category pages
     ├── single-product.php     # Product detail page
     ├── content-product.php    # Product card component
-    └── cart/
-        └── cart.php           # Cart page template
+    ├── cart/
+    │   └── cart.php           # Cart page template
+    ├── checkout/              # Checkout templates
+    │   ├── form-checkout.php  # Main checkout form
+    │   ├── review-order.php   # Order review section
+    │   └── thankyou.php       # Order confirmation
+    └── myaccount/             # My account templates
+        ├── dashboard.php      # Account dashboard
+        ├── orders.php         # Order history
+        └── form-login.php     # Login/register form
 ```
 
 ## 🔧 Development Setup
@@ -166,34 +198,149 @@ x-data="{ activeTab: 'description' }"
 
 ## 📝 Common Development Tasks
 
+## 📝 Common Development Tasks
+
 ### Adding New Product Card Features
 1. Edit `woocommerce/content-product.php`
 2. Add styling in `assets/css/main.css`
 3. Add interactions in `assets/js/ui.js`
+4. Add utility functions to `inc/helper-functions.php`
 
 ### Customizing Header/Footer
 1. Edit `header.php` or `footer.php`
 2. Update navigation menus in WordPress admin
-3. Rebuild CSS: `npm run dev`
+3. Add any new scripts to `inc/assets-enqueue.php`
+4. Rebuild CSS: `npm run dev`
 
 ### Adding Custom Pages
 1. Create new PHP template file
 2. Follow WordPress template hierarchy
 3. Use existing components and styling
+4. Add page-specific assets in `inc/assets-enqueue.php`
 
 ### Modifying WooCommerce Templates
 1. Copy template from WooCommerce plugin
 2. Place in `woocommerce/` directory
 3. Customize with Tailwind classes
+4. Add related functionality to `inc/woocommerce-customizations.php`
+
+### Adding New AJAX Functionality
+1. Add AJAX handler to `inc/ajax-handlers.php`
+2. Add frontend JavaScript to appropriate file in `assets/js/`
+3. Ensure proper nonce verification
+4. Test functionality thoroughly
+
+### Adding Theme Options
+1. Add customizer controls to `inc/theme-customizer.php`
+2. Implement settings usage in templates
+3. Add any related CSS/JS to appropriate asset files
+4. Test in WordPress Customizer
+
+## 📁 Modular Code Organization
+
+TostiShop uses a modular approach for better code maintainability and organization:
+
+### Core Module Files (`/inc/` directory)
+
+#### **theme-setup.php**
+- Theme initialization and WordPress setup
+- Custom logo handling and automatic upload
+- Navigation menus registration
+- Image sizes and theme supports
+- Widget areas configuration
+
+#### **assets-enqueue.php**
+- Centralized script and style loading
+- Page-specific asset management
+- Firebase authentication scripts
+- Development/production mode handling
+- CDN resources (Alpine.js, fonts)
+
+#### **woocommerce-customizations.php**
+- WooCommerce checkout modifications
+- Product display customizations
+- Cart functionality enhancements
+- Order process customizations
+- Mobile-optimized checkout flow
+
+#### **ajax-handlers.php**
+- AJAX endpoint management
+- Cart operations (add, remove, update)
+- Newsletter signup handling
+- Security nonce verification
+- JSON response formatting
+
+#### **theme-customizer.php**
+- WordPress Customizer integration
+- Hero section settings
+- Brand color controls
+- Typography options
+- Theme-specific customization panels
+
+#### **helper-functions.php**
+- Utility functions library
+- Product query helpers
+- Formatting functions
+- WooCommerce integration helpers
+- Development and debugging utilities
+
+### Firebase Authentication Module (`/inc/firebase/`)
+- Complete Firebase Phone Auth integration
+- OTP verification system
+- User registration and profile management
+- Token verification and security
+- Mobile-optimized auth UI
+
+### Usage Guidelines
+
+#### Adding New Functionality
+1. **Theme Setup**: Add to `theme-setup.php`
+2. **Scripts/Styles**: Add to `assets-enqueue.php`
+3. **WooCommerce**: Add to `woocommerce-customizations.php`
+4. **AJAX/API**: Add to `ajax-handlers.php`
+5. **Settings**: Add to `theme-customizer.php`
+6. **Utilities**: Add to `helper-functions.php`
+
+#### Module Dependencies
+- All modules are included in `functions.php`
+- Each module is self-contained but can use WordPress/WooCommerce functions
+- Firebase module is conditionally loaded if present
+- Admin modules are conditionally loaded if present
+
+#### Best Practices
+- Keep related functions together in appropriate modules
+- Use descriptive function names with `tostishop_` prefix
+- Document complex functions with DocBlocks
+- Add appropriate hooks and filters for extensibility
+- Test functionality after adding to modules
+
 
 ## 🎯 Key Files to Know
 
 ### `functions.php`
-- Theme setup and support
-- Script/style enqueuing
-- WooCommerce customization
-- AJAX handlers
-- Custom functions
+- **Purpose**: Main entry point that includes all modules
+- **Structure**: Clean, organized includes of modular files
+- **Best Practice**: Add new functionality to appropriate module files, not directly here
+
+### `inc/theme-setup.php`
+- **Purpose**: Core theme initialization and WordPress setup
+- **Key Functions**: `tostishop_setup()`, `tostishop_upload_logo()`, `tostishop_widgets_init()`
+- **Modifications**: Theme supports, menus, image sizes, logo handling
+
+### `inc/assets-enqueue.php`
+- **Purpose**: Centralized asset management
+- **Key Functions**: `tostishop_scripts()`, page-specific loading logic
+- **Modifications**: Add new CSS/JS files, modify loading conditions
+
+### `inc/woocommerce-customizations.php`
+- **Purpose**: All WooCommerce-related customizations
+- **Key Functions**: Checkout modifications, product display, cart enhancements
+- **Modifications**: WooCommerce hooks, filters, and custom functionality
+
+### `inc/ajax-handlers.php`
+- **Purpose**: AJAX endpoint management
+- **Key Functions**: Cart operations, newsletter signup, security verification
+- **Modifications**: Add new AJAX endpoints, modify existing handlers
 
 ### `header.php`
 - Site navigation
