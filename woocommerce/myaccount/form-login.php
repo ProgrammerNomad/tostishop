@@ -115,26 +115,24 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
                                         </div>
                                     </div>
                                     
-                                    <!-- reCAPTCHA Container - MOVED HERE FROM OTP VIEW -->
-                                    <div class="mb-4">
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                                            Security Verification
-                                        </label>
-                                        <div id="recaptcha-container" class="flex justify-center"></div>
-                                        <p id="recaptcha-instruction" class="text-center text-sm text-gray-500 mt-2">
-                                            Please complete the security verification above
-                                        </p>
-                                    </div>
+                                    <!-- ✅ NO MORE VISIBLE reCAPTCHA - IT'S NOW INVISIBLE! -->
                                     
                                     <!-- Get OTP Button -->
                                     <button id="send-otp-btn"
                                             disabled
                                             class="w-full bg-gray-400 cursor-not-allowed text-white py-3 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center text-base">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M21 21H3a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v14a2 2 0 01-2 2z"></path>
                                         </svg>
-                                        Complete Security Verification
+                                        Enter Valid Phone Number
                                     </button>
+                                    
+                                    <!-- Security Info (Optional) -->
+                                    <div class="text-center">
+                                        <p class="text-xs text-gray-500">
+                                            🛡️ Your number is protected by advanced security measures
+                                        </p>
+                                    </div>
                                 </div>
 
                                 <!-- Divider -->

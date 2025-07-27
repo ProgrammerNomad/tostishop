@@ -1,8 +1,8 @@
 /**
  * Firebase Authentication for TostiShop Custom Login Form
- * Production-ready version with comprehensive error handling
+ * Production-ready with Invisible reCAPTCHA
  * 
- * @version 5.0.0 - Production Ready
+ * @version 5.1.0 - Invisible reCAPTCHA
  */
 
 (function($) {
@@ -34,21 +34,18 @@
      */
     function initializeFirebase() {
         try {
-            // Check if Firebase config is available
             if (typeof tostiShopFirebaseConfig === 'undefined') {
-                console.warn('Firebase configuration not found. Please configure Firebase in admin settings.');
+                console.warn('Firebase configuration not found.');
                 showError('Authentication service not configured. Please contact support.');
                 return;
             }
 
-            // Check if Firebase SDK is loaded
             if (typeof firebase === 'undefined') {
                 console.error('Firebase SDK not loaded');
                 showError('Authentication service unavailable. Please refresh the page.');
                 return;
             }
 
-            // Initialize Firebase
             if (!firebase.apps.length) {
                 firebase.initializeApp(tostiShopFirebaseConfig);
             }
@@ -56,8 +53,8 @@
 
             console.log('Firebase initialized successfully');
 
-            // Set up reCAPTCHA after Firebase is initialized
-            setupRecaptcha();
+            // Set up INVISIBLE reCAPTCHA
+            setupInvisibleRecaptcha();
 
         } catch (error) {
             console.error('Firebase initialization error:', error);
@@ -66,9 +63,9 @@
     }
 
     /**
-     * Setup reCAPTCHA for phone authentication
+     * Setup INVISIBLE reCAPTCHA - Much Better User Experience
      */
-    function setupRecaptcha() {
+    function setupInvisibleRecaptcha() {
         try {
             // Clear any existing reCAPTCHA
             if (recaptchaVerifier) {
@@ -76,96 +73,48 @@
                 recaptchaVerifier = null;
             }
 
-            // Reset solved status
-            recaptchaSolved = false;
-            console.log('reCAPTCHA setup: recaptchaSolved reset to false');
-
-            // Clear the container
-            const recaptchaContainer = document.getElementById('recaptcha-container');
-            if (recaptchaContainer) {
-                recaptchaContainer.innerHTML = '';
-                console.log('reCAPTCHA container cleared');
-            } else {
-                console.error('reCAPTCHA container not found');
-                return;
-            }
-
-            // Create new reCAPTCHA verifier
-            recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-                'size': 'normal',
+            // Create invisible reCAPTCHA verifier
+            recaptchaVerifier = new firebase.auth.RecaptchaVerifier('send-otp-btn', {
+                'size': 'invisible',
                 'callback': function(response) {
-                    console.log('✅ reCAPTCHA SOLVED!');
+                    console.log('✅ Invisible reCAPTCHA solved automatically');
                     recaptchaSolved = true;
-                    
-                    // Show success message
-                    showSuccess('Security verification completed!');
-                    
-                    // Validate button state
-                    validateSendOTPButton();
+                    // Automatically proceed with OTP sending
+                    sendOTPWithVerifiedRecaptcha();
                 },
                 'expired-callback': function() {
                     console.log('❌ reCAPTCHA EXPIRED');
                     recaptchaSolved = false;
-                    showError('Security verification expired. Please solve the reCAPTCHA again.');
-                    $('#send-otp-btn').prop('disabled', true);
+                    showError('Security verification expired. Please try again.');
                 },
                 'error-callback': function(error) {
                     console.error('❌ reCAPTCHA ERROR:', error);
                     recaptchaSolved = false;
                     showError('Security verification failed. Please try again.');
-                    $('#send-otp-btn').prop('disabled', true);
-                },
-                'theme': 'light'
+                }
             });
 
-            // Render the reCAPTCHA
-            recaptchaVerifier.render().then(function(widgetId) {
-                console.log('✅ reCAPTCHA rendered successfully. Widget ID:', widgetId);
-                window.recaptchaWidgetId = widgetId;
-                
-                // Add visual styling
-                if (recaptchaContainer) {
-                    recaptchaContainer.style.border = '2px solid #10b981';
-                    recaptchaContainer.style.borderRadius = '8px';
-                    recaptchaContainer.style.padding = '4px';
-                }
-                
-                // Update instruction text
-                const instructionText = document.getElementById('recaptcha-instruction');
-                if (instructionText) {
-                    instructionText.textContent = '👆 Please complete the security verification above';
-                    instructionText.style.color = '#f59e0b';
-                    instructionText.style.fontWeight = 'bold';
-                }
-                
-            }).catch(function(error) {
-                console.error('❌ reCAPTCHA render error:', error);
-                showError('Security verification failed to load. Please refresh the page.');
-            });
-
+            console.log('✅ Invisible reCAPTCHA setup complete');
+            
+            // Enable the send button immediately since reCAPTCHA is invisible
+            updateSendButtonState();
+            
         } catch (error) {
-            console.error('❌ reCAPTCHA setup error:', error);
-            showError('Security verification setup failed. Please refresh the page and try again.');
+            console.error('❌ Invisible reCAPTCHA setup error:', error);
+            showError('Security verification setup failed. Please refresh the page.');
         }
     }
 
     /**
-     * Validate and enable/disable Send OTP button
+     * Update Send OTP Button State - Simplified for Invisible reCAPTCHA
      */
-    function validateSendOTPButton() {
+    function updateSendButtonState() {
         const phoneValue = $('#mobile-number').val().replace(/[^0-9]/g, '');
         const isValidPhone = phoneValue.length === 10 && /^[6-9][0-9]{9}$/.test(phoneValue);
         
-        console.log('🔍 Validating Send OTP button:', {
-            phoneValue: phoneValue,
-            phoneLength: phoneValue.length,
-            isValidPhone: isValidPhone,
-            recaptchaSolved: recaptchaSolved
-        });
-        
-        // Update button state
         const sendButton = $('#send-otp-btn');
-        if (isValidPhone && recaptchaSolved) {
+        
+        if (isValidPhone) {
             sendButton.prop('disabled', false);
             sendButton.removeClass('bg-gray-400 cursor-not-allowed')
                      .addClass('bg-accent hover:bg-red-600 cursor-pointer');
@@ -175,16 +124,7 @@
             sendButton.prop('disabled', true);
             sendButton.removeClass('bg-accent hover:bg-red-600 cursor-pointer')
                      .addClass('bg-gray-400 cursor-not-allowed');
-            
-            // Update button text based on what's missing
-            if (!isValidPhone && !recaptchaSolved) {
-                sendButton.text('Enter Phone & Complete reCAPTCHA');
-            } else if (!isValidPhone) {
-                sendButton.text('Enter Valid Phone Number');
-            } else if (!recaptchaSolved) {
-                sendButton.text('Complete Security Verification');
-            }
-            
+            sendButton.text('Enter Valid Phone Number');
             console.log('❌ Send OTP button DISABLED');
         }
     }
@@ -193,11 +133,41 @@
      * Bind all event listeners
      */
     function bindEvents() {
-        // Mobile OTP Events
+        // Mobile OTP Events - Modified for invisible reCAPTCHA
         $('#send-otp-btn').on('click', function(e) {
             e.preventDefault();
             console.log('🔥 Send OTP button clicked');
-            sendOTP();
+            
+            const phoneValue = $('#mobile-number').val().replace(/[^0-9]/g, '');
+            const isValidPhone = phoneValue.length === 10 && /^[6-9][0-9]{9}$/.test(phoneValue);
+            
+            if (!isValidPhone) {
+                showError('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.');
+                $('#mobile-number').focus();
+                return;
+            }
+            
+            // Format phone number
+            currentPhoneNumber = '+91' + phoneValue;
+            
+            // Check for test numbers (development only)
+            if (window.tostiShopDevMode && TEST_PHONE_NUMBERS[currentPhoneNumber]) {
+                console.log('🧪 Using test phone number');
+                simulateTestOTP(currentPhoneNumber);
+                return;
+            }
+            
+            // Trigger invisible reCAPTCHA (will call sendOTPWithVerifiedRecaptcha automatically)
+            showLoading('Verifying security...');
+            
+            try {
+                // Execute invisible reCAPTCHA
+                recaptchaVerifier.verify();
+            } catch (error) {
+                hideLoading();
+                console.error('reCAPTCHA verification error:', error);
+                showError('Security verification failed. Please try again.');
+            }
         });
         
         $('#verify-otp-btn').on('click', function(e) {
@@ -244,73 +214,22 @@
                 phoneInput.removeClass('border-red-300 border-green-300');
             }
             
-            validateSendOTPButton();
+            updateSendButtonState();
         });
 
         $('#mobile-number').on('keyup', function() {
-            validateSendOTPButton();
+            updateSendButtonState();
         });
     }
 
     /**
-     * Setup OTP input field behavior
+     * Send OTP after reCAPTCHA is verified (called automatically by invisible reCAPTCHA)
      */
-    function setupOTPInputs() {
-        $('#otp-code').on('input', function() {
-            const value = $(this).val().replace(/[^0-9]/g, '');
-            $(this).val(value);
-            
-            // Visual feedback
-            const otpInput = $(this);
-            if (value.length === 6) {
-                otpInput.removeClass('border-red-300').addClass('border-green-300');
-                setTimeout(() => {
-                    verifyOTP();
-                }, 500);
-            } else if (value.length > 0) {
-                otpInput.removeClass('border-green-300 border-red-300');
-            }
-        });
-    }
-
-    /**
-     * Send OTP to mobile number - PRODUCTION VERSION
-     */
-    function sendOTP() {
-        console.log('🚀 sendOTP function called');
+    function sendOTPWithVerifiedRecaptcha() {
+        console.log('🚀 Sending OTP with verified reCAPTCHA');
         
-        const phoneInput = $('#mobile-number');
-        const phoneNumber = phoneInput.val().trim();
-
-        console.log('📱 Phone number from input:', phoneNumber);
-
-        // Validation
-        if (!phoneNumber || phoneNumber.length !== 10 || !/^[6-9][0-9]{9}$/.test(phoneNumber)) {
-            showError('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.');
-            phoneInput.focus();
-            return;
-        }
-
-        if (!recaptchaSolved || !recaptchaVerifier) {
-            showError('Please complete the security verification (reCAPTCHA) first.');
-            return;
-        }
-
-        // Format phone number
-        currentPhoneNumber = '+91' + phoneNumber;
-        console.log('🌍 Formatted phone number:', currentPhoneNumber);
-
-        // Check for test numbers (development only)
-        if (window.tostiShopDevMode && TEST_PHONE_NUMBERS[currentPhoneNumber]) {
-            console.log('🧪 Using test phone number');
-            simulateTestOTP(currentPhoneNumber);
-            return;
-        }
-
         showLoading('Sending OTP...');
         $('#send-otp-btn').prop('disabled', true);
-
-        console.log('🔥 About to call Firebase signInWithPhoneNumber');
 
         // Send SMS verification
         auth.signInWithPhoneNumber(currentPhoneNumber, recaptchaVerifier)
@@ -351,13 +270,34 @@
                     errorMessage = 'Invalid phone number format.';
                 } else if (error.code === 'auth/captcha-check-failed') {
                     errorMessage = 'Security verification failed. Please try again.';
-                    setupRecaptcha();
+                    setupInvisibleRecaptcha(); // Reset invisible reCAPTCHA
                 } else {
                     errorMessage += 'Please try again or use alternative login method.';
                 }
                 
                 showError(errorMessage);
             });
+    }
+
+    /**
+     * Setup OTP input field behavior
+     */
+    function setupOTPInputs() {
+        $('#otp-code').on('input', function() {
+            const value = $(this).val().replace(/[^0-9]/g, '');
+            $(this).val(value);
+            
+            // Visual feedback
+            const otpInput = $(this);
+            if (value.length === 6) {
+                otpInput.removeClass('border-red-300').addClass('border-green-300');
+                setTimeout(() => {
+                    verifyOTP();
+                }, 500);
+            } else if (value.length > 0) {
+                otpInput.removeClass('border-green-300 border-red-300');
+            }
+        });
     }
 
     /**
@@ -474,7 +414,7 @@
         resendBtn.prop('disabled', true).text('Sending...');
 
         confirmationResult = null;
-        setupRecaptcha();
+        setupInvisibleRecaptcha(); // Reset invisible reCAPTCHA
         
         setTimeout(() => {
             if (recaptchaVerifier) {
