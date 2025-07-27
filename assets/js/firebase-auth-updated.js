@@ -17,13 +17,8 @@
     let retryAttempts = 0;
     const MAX_RETRY_ATTEMPTS = 2;
 
-    // Test phone numbers (for development only)
-    const TEST_PHONE_NUMBERS = (window.tostiShopDevMode && window.tostiShopDevMode.enabled) ? {
-        '+919999999999': '123456',
-        '+919876543210': '654321',
-        //'+919450987150': '111111',
-        //'+917982377273': '123456'
-    } : {};
+    // Test phone numbers (DISABLED IN PRODUCTION)
+    const TEST_PHONE_NUMBERS = {}; // Empty object for production
 
     // Initialize Firebase when DOM is ready
     $(document).ready(function() {
