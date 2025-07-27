@@ -315,19 +315,15 @@
 
         $('#cancel-registration').on('click', function(e) {
             e.preventDefault();
-            $('#user-registration-modal').addClass('hidden');
-            
-            // Clean up
-            window.pendingFirebaseUser = null;
-            window.pendingAuthMethod = null;
-            
+            closeRegistrationModal();
             showError('Registration cancelled. Please try again when ready.');
         });
 
         // Close modal on backdrop click
         $('#user-registration-modal').on('click', function(e) {
             if (e.target === this) {
-                $('#cancel-registration').click();
+                closeRegistrationModal();
+                showError('Registration cancelled.');
             }
         });
 
@@ -838,42 +834,93 @@
     }
 
     /**
-     * Show User Registration Modal - NEW FUNCTION
+     * Show User Registration Modal - ENHANCED FOR DESKTOP LAYOUT
      */
     function showUserRegistrationModal(firebaseUser, authMethod) {
-        // Pre-fill email if available
+        console.log('🔄 Showing registration modal for new user');
+        
+        // Pre-fill available data
         const userEmail = firebaseUser.email || '';
         const userName = firebaseUser.displayName || '';
+        const userPhone = firebaseUser.phoneNumber || currentPhoneNumber || '';
+        
+        // Split name into first and last if available
+        if (userName) {
+            const nameParts = userName.split(' ');
+            $('#user-first-name').val(nameParts[0] || '');
+            $('#user-last-name').val(nameParts.slice(1).join(' ') || '');
+        }
         
         $('#user-email').val(userEmail);
-        $('#user-full-name').val(userName);
         
-        // Show modal
+        // Show authentication method with TostiShop colors
+        let authMethodText = '';
+        if (authMethod === 'phone') {
+            authMethodText = `📱 Authenticated via Phone: ${userPhone}`;
+            $('#user-phone-display').val(userPhone);
+            $('#phone-auth-display').removeClass('hidden');
+            
+            // Adjust email field width when phone is shown
+            $('#user-email').parent().removeClass('md:col-span-2').addClass('md:col-span-1');
+        } else if (authMethod === 'google') {
+            authMethodText = `🔍 Authenticated via Google`;
+            $('#phone-auth-display').addClass('hidden');
+            
+            // Email takes full width when no phone
+            $('#user-email').parent().removeClass('md:col-span-1').addClass('md:col-span-2');
+        } else if (authMethod === 'email') {
+            authMethodText = `📧 Authenticated via Email`;
+            $('#phone-auth-display').addClass('hidden');
+            
+            // Email takes full width when no phone
+            $('#user-email').parent().removeClass('md:col-span-1').addClass('md:col-span-2');
+        }
+        
+        $('#auth-method-display').text(authMethodText);
+        
+        // Show modal with enhanced desktop styling
         $('#user-registration-modal').removeClass('hidden');
         
-        // Focus first empty field
-        if (!userName) {
-            $('#user-full-name').focus();
-        } else if (!userEmail) {
-            $('#user-email').focus();
-        }
+        // Add backdrop blur effect
+        $('body').addClass('modal-open');
+        
+        // Focus strategy based on what's missing
+        setTimeout(() => {
+            if (!$('#user-first-name').val()) {
+                $('#user-first-name').focus();
+            } else if (!$('#user-last-name').val()) {
+                $('#user-last-name').focus();
+            } else if (!userEmail && authMethod === 'phone') {
+                $('#user-email').focus();
+            } else {
+                $('#user-first-name').focus();
+            }
+        }, 300);
         
         // Store Firebase user data for later use
         window.pendingFirebaseUser = firebaseUser;
         window.pendingAuthMethod = authMethod;
+        window.pendingPhoneNumber = userPhone;
     }
 
     /**
      * Complete User Registration - NEW FUNCTION
      */
     function completeUserRegistration() {
-        const fullName = $('#user-full-name').val().trim();
+        const firstName = $('#user-first-name').val().trim();
+        const lastName = $('#user-last-name').val().trim();
         const email = $('#user-email').val().trim();
         
         // Validation
-        if (!fullName || fullName.length < 2) {
-            showError('Please enter your full name (at least 2 characters).');
-            $('#user-full-name').focus();
+        if (!firstName || firstName.length < 2) {
+            showError('Please enter your first name (at least 2 characters).');
+            $('#user-first-name').focus();
+            return;
+        }
+        
+        if (!lastName || lastName.length < 2) {
+            showError('Please enter your last name (at least 2 characters).');
+            $('#user-last-name').focus();
             return;
         }
         
@@ -885,6 +932,7 @@
         
         const firebaseUser = window.pendingFirebaseUser;
         const authMethod = window.pendingAuthMethod;
+        const phoneNumber = window.pendingPhoneNumber || '';
         
         if (!firebaseUser) {
             showError('Session expired. Please try logging in again.');
@@ -892,7 +940,7 @@
             return;
         }
         
-        showLoading('Creating your account...');
+        showLoading('Creating your TostiShop account...');
         
         // Get Firebase token and create WordPress user
         firebaseUser.getIdToken()
@@ -903,12 +951,20 @@
                     firebase_token: idToken,
                     nonce: tostiShopAjax.nonce,
                     auth_method: authMethod,
-                    user_name: fullName,
+                    first_name: firstName,
+                    last_name: lastName,
                     user_email: email,
+                    user_phone: phoneNumber,
                     from_checkout: window.location.href.includes('checkout') ? 'true' : 'false'
                 };
 
-                console.log('📤 Sending registration request to WordPress');
+                console.log('📤 Sending registration request to WordPress', {
+                    firstName: firstName,
+                    lastName: lastName,
+                    email: email,
+                    phone: phoneNumber,
+                    method: authMethod
+                });
 
                 $.ajax({
                     url: tostiShopAjax.ajaxurl,
@@ -918,26 +974,30 @@
                     success: function(response) {
                         hideLoading();
                         
+                        console.log('📥 Registration response:', response);
+                        
                         if (response.success) {
                             $('#user-registration-modal').addClass('hidden');
-                            showSuccess('Account created successfully! Redirecting...');
+                            showSuccess('🎉 Welcome to TostiShop! Account created successfully. Redirecting...');
                             
                             // Clean up
                             window.pendingFirebaseUser = null;
                             window.pendingAuthMethod = null;
+                            window.pendingPhoneNumber = null;
                             
                             setTimeout(function() {
-                                window.location.href = response.data.redirect_url || tostiShopAjax.redirectUrl;
-                            }, 1500);
+                                window.location.href = response.data.redirect_url || tostiShopAjax.redirectUrl || '/my-account/';
+                            }, 2000);
                             
                         } else {
-                            showError(response.data.message || 'Registration failed. Please try again.');
+                            const errorMessage = response.data ? response.data.message : 'Registration failed. Please try again.';
+                            showError(errorMessage);
                         }
                     },
                     error: function(xhr, status, error) {
                         hideLoading();
                         console.error('❌ Registration error:', xhr.responseText, status, error);
-                        showError('Registration failed. Please try again.');
+                        showError('Registration failed. Please check your connection and try again.');
                     }
                 });
             })
@@ -992,6 +1052,44 @@
     function isValidEmail(email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
+    }
+
+    /**
+     * Close registration modal and clean up
+     */
+    function closeRegistrationModal() {
+        $('#user-registration-modal').addClass('hidden');
+        $('body').removeClass('modal-open');
+        
+        // Clean up stored data
+        window.pendingFirebaseUser = null;
+        window.pendingAuthMethod = null;
+        window.pendingPhoneNumber = null;
+        
+        // Reset form
+        resetRegistrationForm();
+    }
+
+    /**
+     * Reset registration form to default state
+     */
+    function resetRegistrationForm() {
+        // Clear form fields (but preserve pre-filled data)
+        // $('#user-first-name, #user-last-name, #user-email').val('');
+        
+        // Re-enable form elements
+        $('#complete-registration-btn').prop('disabled', false).html(`
+            <span class="flex items-center justify-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                <span>Create TostiShop Account</span>
+            </span>
+        `);
+        $('#cancel-registration').prop('disabled', false);
+        
+        // Remove error styling
+        $('#user-first-name, #user-last-name, #user-email').removeClass('border-red-300');
     }
 
     // Global error handler

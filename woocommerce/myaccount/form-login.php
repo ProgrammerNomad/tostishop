@@ -115,7 +115,8 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
                                         </div>
                                     </div>
                                     
-                                    <!-- ✅ NO MORE VISIBLE reCAPTCHA - IT'S NOW INVISIBLE! -->
+                                    <!-- Invisible reCAPTCHA container -->
+                                    <div id="recaptcha-container"></div>
                                     
                                     <!-- Get OTP Button - FIXED HOVER COLORS -->
                                     <button id="send-otp-btn"
@@ -488,41 +489,107 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
     </div>
 </div>
 
-<!-- User Registration Modal (for new Firebase users) -->
+<!-- User Registration Modal (Enhanced for TostiShop - Wider Desktop Layout) -->
 <div id="user-registration-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+    <div class="bg-white rounded-lg shadow-xl max-w-md md:max-w-lg lg:max-w-xl w-full p-6 md:p-8">
+        <!-- Header Section -->
         <div class="text-center mb-6">
-            <h3 class="text-xl font-bold text-navy-900 mb-2">Complete Your Registration</h3>
-            <p class="text-gray-600">We need a few more details to create your account</p>
+            <div class="w-16 h-16 bg-gradient-to-r from-navy-900 to-accent rounded-full mx-auto mb-4 flex items-center justify-center">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+            </div>
+            <h3 class="text-2xl font-bold text-navy-900 mb-2">Complete Your Registration</h3>
+            <p class="text-gray-600">We need a few more details to create your TostiShop account</p>
+            <div id="auth-method-display" class="mt-3 text-sm text-accent font-medium bg-accent/10 px-3 py-1 rounded-full inline-block"></div>
         </div>
         
-        <form id="complete-registration-form" class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                <input type="text" id="user-full-name" 
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-                       placeholder="Enter your full name" required>
+        <form id="complete-registration-form" class="space-y-5">
+            <!-- Name Fields Row (Side by Side on Desktop) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- First Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
+                    <input type="text" id="user-first-name" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                           placeholder="Enter your first name" required>
+                </div>
+                
+                <!-- Last Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
+                    <input type="text" id="user-last-name" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                           placeholder="Enter your last name" required>
+                </div>
             </div>
             
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
-                <input type="email" id="user-email" 
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-                       placeholder="Enter your email address" required>
+            <!-- Contact Information Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Email Address -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
+                    <input type="email" id="user-email" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                           placeholder="Enter your email address" required>
+                    <p class="text-xs text-gray-500 mt-1">For order updates and account recovery</p>
+                </div>
+                
+                <!-- Phone display (for phone auth) -->
+                <div id="phone-auth-display" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                    <div class="relative">
+                        <input type="text" id="user-phone-display" 
+                               class="w-full px-4 py-3 pr-12 border border-gray-200 rounded-lg bg-gray-50 text-gray-700" 
+                               readonly>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                            <div class="flex items-center space-x-1 text-green-600">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
+                                </svg>
+                                <span class="text-xs font-medium">Verified</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-green-600 mt-1">✅ Verified via SMS authentication</p>
+                </div>
+                
+                <!-- Email takes full width when phone is hidden -->
+                <div id="email-full-width" class="md:hidden">
+                    <!-- This div will be shown when phone auth is not used -->
+                </div>
             </div>
             
-            <div class="text-xs text-gray-500">
-                <p>* Required fields. This information will be used to create your TostiShop account.</p>
+            <!-- Terms and Privacy Notice -->
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 mt-0.5">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <p>* Required fields. By creating an account, you agree to our 
+                        <a href="#" class="text-accent hover:text-red-600 font-medium">Terms of Service</a> and 
+                        <a href="#" class="text-accent hover:text-red-600 font-medium">Privacy Policy</a>.</p>
+                    </div>
+                </div>
             </div>
             
-            <div class="flex gap-3 pt-4">
+            <!-- Action Buttons - Enhanced Spacing for Desktop -->
+            <div class="flex flex-col sm:flex-row gap-3 pt-6">
                 <button type="button" id="cancel-registration" 
-                        class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+                        class="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium">
                     Cancel
                 </button>
                 <button type="submit" id="complete-registration-btn"
-                        class="flex-1 px-4 py-2 bg-accent text-white rounded-md hover:bg-red-600">
-                    Complete Registration
+                        class="flex-1 px-6 py-3 bg-accent text-white rounded-lg hover:bg-red-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl">
+                    <span class="flex items-center justify-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        <span>Create TostiShop Account</span>
+                    </span>
                 </button>
             </div>
         </form>
@@ -530,3 +597,86 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
 </div>
 
 <?php do_action( 'woocommerce_after_customer_login_form' ); ?>
+
+<!-- Enhanced Modal Styling for Desktop -->
+<style>
+/* Modal backdrop blur and improved animations */
+#user-registration-modal {
+    backdrop-filter: blur(4px);
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+#user-registration-modal > div {
+    animation: modalSlideIn 0.3s ease-out;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes modalSlideIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(-20px) scale(0.95); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+    }
+}
+
+/* Prevent body scroll when modal is open */
+body.modal-open {
+    overflow: hidden;
+}
+
+/* Enhanced focus states for form fields */
+#user-first-name:focus,
+#user-last-name:focus,
+#user-email:focus {
+    box-shadow: 0 0 0 3px rgba(228, 32, 41, 0.1);
+    border-color: #e42029;
+}
+
+/* Better button spacing on mobile */
+@media (max-width: 640px) {
+    #user-registration-modal .flex.flex-col.sm\\:flex-row {
+        flex-direction: column;
+    }
+    
+    #user-registration-modal .flex.flex-col.sm\\:flex-row > button {
+        width: 100%;
+        margin-bottom: 0.75rem;
+    }
+    
+    #user-registration-modal .flex.flex-col.sm\\:flex-row > button:last-child {
+        margin-bottom: 0;
+    }
+}
+
+/* Better visual hierarchy */
+#auth-method-display {
+    background: linear-gradient(135deg, rgba(228, 32, 41, 0.1) 0%, rgba(20, 23, 91, 0.1) 100%);
+}
+
+/* Enhanced verified phone styling */
+#phone-auth-display .text-green-600 {
+    background: rgba(16, 185, 129, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+}
+
+/* Loading state for registration button */
+#complete-registration-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
+}
+
+#complete-registration-btn:disabled:hover {
+    background-color: #e42029;
+    transform: none;
+}
+</style>
