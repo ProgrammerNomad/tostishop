@@ -12,7 +12,6 @@ if (!defined('ABSPATH')) {
 // Load Firebase modules
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/enqueue.php';
-require_once __DIR__ . '/auth-ui.php';
 require_once __DIR__ . '/ajax-handlers.php';
 
 /**
@@ -24,11 +23,10 @@ function tostishop_firebase_init() {
     if (!empty($api_key)) {
         // Firebase is configured, enable authentication
         add_action('wp_enqueue_scripts', 'tostishop_enqueue_firebase_scripts');
-        add_action('init', 'tostishop_firebase_hooks');
         
-        // Add Firebase login to checkout and my account
-        add_action('woocommerce_before_checkout_form', 'tostishop_add_firebase_to_checkout', 5);
-        add_action('woocommerce_before_customer_login_form', 'tostishop_add_firebase_to_account', 5);
+        // NO UI HOOKS - Firebase will only work with custom form-login.php
+        // Removed: add_action('woocommerce_before_checkout_form', 'tostishop_add_firebase_to_checkout', 5);
+        // Removed: add_action('woocommerce_before_customer_login_form', 'tostishop_add_firebase_to_account', 5);
     }
 }
 add_action('init', 'tostishop_firebase_init');
@@ -148,22 +146,6 @@ function tostishop_firebase_admin_page() {
 }
 
 /**
- * Initialize Firebase hooks
+ * Firebase authentication is now integrated with custom form-login.php only
+ * No separate UI hooks needed - Firebase works with existing custom forms
  */
-function tostishop_firebase_hooks() {
-    // Add Firebase login UI to checkout if not logged in
-    add_action('woocommerce_before_checkout_form', function() {
-        if (!is_user_logged_in()) {
-            echo '<div class="firebase-auth-checkout mb-6">';
-            tostishop_render_firebase_login_ui();
-            echo '</div>';
-        }
-    }, 5);
-    
-    // Add Firebase login to My Account page
-    add_action('woocommerce_before_customer_login_form', function() {
-        echo '<div class="firebase-auth-account mb-6">';
-        tostishop_render_firebase_login_ui();
-        echo '</div>';
-    });
-}

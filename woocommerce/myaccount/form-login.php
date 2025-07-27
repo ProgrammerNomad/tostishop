@@ -42,7 +42,22 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
                     <div class="rounded-2xl overflow-hidden">
                         
                         <!-- Card Body -->
-                        <div class="p-8" x-data="{ currentView: 'initial', isRegistering: false }">
+                        <div class="p-8" x-data="{ 
+                            currentView: 'initial', 
+                            isRegistering: false,
+                            init() {
+                                // Listen for Firebase events
+                                document.addEventListener('switch-to-otp', (e) => {
+                                    this.currentView = 'otp';
+                                    // Update phone display
+                                    this.$nextTick(() => {
+                                        if (e.detail.phone) {
+                                            document.getElementById('otp-phone-display').textContent = e.detail.phone;
+                                        }
+                                    });
+                                });
+                            }
+                        }">
                             
                             <!-- Loading Overlay -->
                             <div id="loading-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
@@ -101,8 +116,7 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
                                     </div>
                                     
                                     <!-- Get OTP Button -->
-                                    <button id="send-otp-btn" 
-                                            @click="currentView = 'otp'"
+                                    <button id="send-otp-btn"
                                             class="w-full bg-navy-900 text-white py-3 rounded-lg font-semibold hover:bg-navy-800 focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center text-base">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>

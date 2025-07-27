@@ -38,12 +38,12 @@ function tostishop_enqueue_firebase_scripts() {
         true
     );
     
-    // Custom Firebase authentication script (India-specific)
+    // Custom Firebase authentication script (UPDATED VERSION FOR CUSTOM FORM)
     wp_enqueue_script(
         'tostishop-firebase-auth', 
-        get_template_directory_uri() . '/assets/js/firebase-auth-india.js', 
+        get_template_directory_uri() . '/assets/js/firebase-auth-updated.js', 
         array('firebase-app', 'firebase-auth', 'jquery'), 
-        '1.0.0', 
+        '1.0.1', 
         true
     );
     
