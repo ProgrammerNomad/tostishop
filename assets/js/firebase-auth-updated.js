@@ -21,8 +21,8 @@
     const TEST_PHONE_NUMBERS = (window.tostiShopDevMode && window.tostiShopDevMode.enabled) ? {
         '+919999999999': '123456',
         '+919876543210': '654321',
-        '+919450987150': '111111',
-        '+917982377273': '123456'
+        //'+919450987150': '111111',
+        //'+917982377273': '123456'
     } : {};
 
     // Initialize Firebase when DOM is ready
