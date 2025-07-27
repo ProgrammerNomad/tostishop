@@ -9,6 +9,11 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Development mode flag for testing
+if (!defined('TOSTISHOP_DEV_MODE')) {
+    define('TOSTISHOP_DEV_MODE', WP_DEBUG || (isset($_GET['dev']) && $_GET['dev'] === '1'));
+}
+
 /**
  * Theme Setup
  */

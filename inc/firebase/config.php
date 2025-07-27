@@ -176,3 +176,66 @@ function tostishop_firebase_measurement_id_callback() {
     echo '<input type="text" name="tostishop_firebase_measurement_id" value="' . esc_attr($value) . '" class="regular-text" placeholder="G-XXXXXXXXXX" />';
     echo '<p class="description">Your Firebase Measurement ID (Optional - for Analytics)</p>';
 }
+
+/**
+ * Firebase Configuration Output
+ * Production-ready configuration management
+ * 
+ * @version 2.0.0 - Production Ready
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+/**
+ * Output Firebase configuration for frontend
+ */
+function tostishop_output_firebase_config() {
+    $api_key = get_option('tostishop_firebase_api_key');
+    $project_id = get_option('tostishop_firebase_project_id');
+    $auth_domain = get_option('tostishop_firebase_auth_domain');
+    $sender_id = get_option('tostishop_firebase_sender_id');
+    $app_id = get_option('tostishop_firebase_app_id');
+    $measurement_id = get_option('tostishop_firebase_measurement_id');
+
+    // Don't output if essential config is missing
+    if (empty($api_key) || empty($project_id) || empty($auth_domain)) {
+        error_log('TostiShop Firebase: Essential configuration missing');
+        return;
+    }
+
+    ?>
+    <script>
+    // Firebase Configuration
+    window.tostiShopFirebaseConfig = {
+        apiKey: "<?php echo esc_js($api_key); ?>",
+        authDomain: "<?php echo esc_js($auth_domain); ?>",
+        projectId: "<?php echo esc_js($project_id); ?>",
+        storageBucket: "<?php echo esc_js($project_id); ?>.appspot.com",
+        messagingSenderId: "<?php echo esc_js($sender_id); ?>",
+        appId: "<?php echo esc_js($app_id); ?>"<?php if ($measurement_id): ?>,
+        measurementId: "<?php echo esc_js($measurement_id); ?>"<?php endif; ?>
+    };
+
+    // AJAX Configuration
+    window.tostiShopAjax = {
+        ajaxurl: "<?php echo admin_url('admin-ajax.php'); ?>",
+        nonce: "<?php echo wp_create_nonce('tostishop_ajax'); ?>",
+        redirectUrl: "<?php echo esc_url(wc_get_account_endpoint_url('dashboard')); ?>"
+    };
+
+    // Development Mode Flag
+    window.tostiShopDevMode = <?php echo (WP_DEBUG || (defined('TOSTISHOP_DEV_MODE') && TOSTISHOP_DEV_MODE)) ? 'true' : 'false'; ?>;
+    
+    console.log('TostiShop Firebase config loaded:', {
+        projectId: window.tostiShopFirebaseConfig.projectId,
+        authDomain: window.tostiShopFirebaseConfig.authDomain,
+        devMode: window.tostiShopDevMode
+    });
+    </script>
+    <?php
+}
+
+// Hook to output config in head
+add_action('wp_head', 'tostishop_output_firebase_config', 5);

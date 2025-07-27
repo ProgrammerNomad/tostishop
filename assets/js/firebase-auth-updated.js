@@ -1,8 +1,8 @@
 /**
  * Firebase Authentication for TostiShop Custom Login Form
- * Fixed reCAPTCHA and phone authentication issues
+ * Production-ready version with comprehensive error handling
  * 
- * @version 4.3.0 - reCAPTCHA Debug Fix
+ * @version 5.0.0 - Production Ready
  */
 
 (function($) {
@@ -14,6 +14,13 @@
     let confirmationResult = null;
     let currentPhoneNumber = '';
     let recaptchaSolved = false;
+
+    // Test phone numbers (for development only)
+    const TEST_PHONE_NUMBERS = window.tostiShopDevMode ? {
+        '+919999999999': '123456',
+        '+919876543210': '654321',
+        '+919450987150': '111111'
+    } : {};
 
     // Initialize Firebase when DOM is ready
     $(document).ready(function() {
@@ -30,11 +37,21 @@
             // Check if Firebase config is available
             if (typeof tostiShopFirebaseConfig === 'undefined') {
                 console.warn('Firebase configuration not found. Please configure Firebase in admin settings.');
+                showError('Authentication service not configured. Please contact support.');
+                return;
+            }
+
+            // Check if Firebase SDK is loaded
+            if (typeof firebase === 'undefined') {
+                console.error('Firebase SDK not loaded');
+                showError('Authentication service unavailable. Please refresh the page.');
                 return;
             }
 
             // Initialize Firebase
-            firebase.initializeApp(tostiShopFirebaseConfig);
+            if (!firebase.apps.length) {
+                firebase.initializeApp(tostiShopFirebaseConfig);
+            }
             auth = firebase.auth();
 
             console.log('Firebase initialized successfully');
@@ -44,12 +61,12 @@
 
         } catch (error) {
             console.error('Firebase initialization error:', error);
-            showError('Firebase initialization failed. Please contact support.');
+            showError('Authentication service initialization failed. Please refresh the page.');
         }
     }
 
     /**
-     * Setup reCAPTCHA for phone authentication - IMPROVED WITH BETTER DEBUGGING
+     * Setup reCAPTCHA for phone authentication
      */
     function setupRecaptcha() {
         try {
@@ -73,17 +90,17 @@
                 return;
             }
 
-            // Create new reCAPTCHA verifier with proper configuration
+            // Create new reCAPTCHA verifier
             recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
                 'size': 'normal',
                 'callback': function(response) {
-                    console.log('✅ reCAPTCHA SOLVED! Response:', response);
+                    console.log('✅ reCAPTCHA SOLVED!');
                     recaptchaSolved = true;
                     
                     // Show success message
                     showSuccess('Security verification completed!');
                     
-                    // Check if phone number is also valid to enable button
+                    // Validate button state
                     validateSendOTPButton();
                 },
                 'expired-callback': function() {
@@ -106,14 +123,14 @@
                 console.log('✅ reCAPTCHA rendered successfully. Widget ID:', widgetId);
                 window.recaptchaWidgetId = widgetId;
                 
-                // Add visual indicator that reCAPTCHA is ready
+                // Add visual styling
                 if (recaptchaContainer) {
                     recaptchaContainer.style.border = '2px solid #10b981';
                     recaptchaContainer.style.borderRadius = '8px';
                     recaptchaContainer.style.padding = '4px';
                 }
                 
-                // Add instruction text
+                // Update instruction text
                 const instructionText = document.getElementById('recaptcha-instruction');
                 if (instructionText) {
                     instructionText.textContent = '👆 Please complete the security verification above';
@@ -133,7 +150,7 @@
     }
 
     /**
-     * Validate and enable/disable Send OTP button - IMPROVED DEBUGGING
+     * Validate and enable/disable Send OTP button
      */
     function validateSendOTPButton() {
         const phoneValue = $('#mobile-number').val().replace(/[^0-9]/g, '');
@@ -143,8 +160,7 @@
             phoneValue: phoneValue,
             phoneLength: phoneValue.length,
             isValidPhone: isValidPhone,
-            recaptchaSolved: recaptchaSolved,
-            recaptchaVerifier: recaptchaVerifier ? 'exists' : 'null'
+            recaptchaSolved: recaptchaSolved
         });
         
         // Update button state
@@ -211,14 +227,14 @@
             handleEmailAuth();
         });
 
-        // Mobile number input validation with better feedback
+        // Mobile number input validation
         $('#mobile-number').on('input', function() {
             const value = $(this).val().replace(/[^0-9]/g, '');
             $(this).val(value);
             
             console.log('📱 Phone number input changed:', value);
             
-            // Visual feedback for phone number
+            // Visual feedback
             const phoneInput = $(this);
             if (value.length === 10 && /^[6-9][0-9]{9}$/.test(value)) {
                 phoneInput.removeClass('border-red-300').addClass('border-green-300');
@@ -228,11 +244,9 @@
                 phoneInput.removeClass('border-red-300 border-green-300');
             }
             
-            // Validate and enable/disable send OTP button
             validateSendOTPButton();
         });
 
-        // Also validate on keyup for immediate feedback
         $('#mobile-number').on('keyup', function() {
             validateSendOTPButton();
         });
@@ -246,7 +260,7 @@
             const value = $(this).val().replace(/[^0-9]/g, '');
             $(this).val(value);
             
-            // Visual feedback for OTP
+            // Visual feedback
             const otpInput = $(this);
             if (value.length === 6) {
                 otpInput.removeClass('border-red-300').addClass('border-green-300');
@@ -260,7 +274,7 @@
     }
 
     /**
-     * Send OTP to mobile number - IMPROVED VERSION WITH BETTER DEBUGGING
+     * Send OTP to mobile number - PRODUCTION VERSION
      */
     function sendOTP() {
         console.log('🚀 sendOTP function called');
@@ -270,27 +284,30 @@
 
         console.log('📱 Phone number from input:', phoneNumber);
 
-        // Final validation before sending
+        // Validation
         if (!phoneNumber || phoneNumber.length !== 10 || !/^[6-9][0-9]{9}$/.test(phoneNumber)) {
             showError('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.');
             phoneInput.focus();
             return;
         }
 
-        // Check if reCAPTCHA is solved
         if (!recaptchaSolved || !recaptchaVerifier) {
             showError('Please complete the security verification (reCAPTCHA) first.');
-            console.log('❌ reCAPTCHA not solved. recaptchaSolved:', recaptchaSolved, 'recaptchaVerifier:', recaptchaVerifier);
             return;
         }
 
-        // Format phone number with country code
+        // Format phone number
         currentPhoneNumber = '+91' + phoneNumber;
         console.log('🌍 Formatted phone number:', currentPhoneNumber);
 
-        showLoading('Sending OTP...');
+        // Check for test numbers (development only)
+        if (window.tostiShopDevMode && TEST_PHONE_NUMBERS[currentPhoneNumber]) {
+            console.log('🧪 Using test phone number');
+            simulateTestOTP(currentPhoneNumber);
+            return;
+        }
 
-        // Disable the send button
+        showLoading('Sending OTP...');
         $('#send-otp-btn').prop('disabled', true);
 
         console.log('🔥 About to call Firebase signInWithPhoneNumber');
@@ -298,16 +315,16 @@
         // Send SMS verification
         auth.signInWithPhoneNumber(currentPhoneNumber, recaptchaVerifier)
             .then(function(result) {
-                console.log('✅ Firebase signInWithPhoneNumber success:', result);
+                console.log('✅ Firebase signInWithPhoneNumber success');
                 confirmationResult = result;
                 
                 hideLoading();
                 showSuccess('OTP sent successfully to ' + currentPhoneNumber);
                 
-                // Update display phone number
+                // Update display
                 $('#otp-phone-display').text(currentPhoneNumber);
                 
-                // Switch to OTP view by dispatching event
+                // Switch to OTP view
                 const switchEvent = new CustomEvent('switch-to-otp', {
                     detail: { phone: currentPhoneNumber }
                 });
@@ -318,31 +335,25 @@
                     $('#otp-code').focus();
                 }, 100);
 
-                // Start resend countdown
+                // Start countdown
                 startResendCountdown($('#resend-otp-btn'));
 
             })
             .catch(function(error) {
                 console.error('❌ Firebase signInWithPhoneNumber error:', error);
                 hideLoading();
-                
-                // Re-enable send button
                 $('#send-otp-btn').prop('disabled', false);
                 
                 let errorMessage = 'Failed to send OTP. ';
                 if (error.code === 'auth/too-many-requests') {
-                    errorMessage = 'Too many attempts. Please try again later.';
+                    errorMessage = '🚫 Too many requests. Please try again in 15-30 minutes, or use Google/Email login.';
                 } else if (error.code === 'auth/invalid-phone-number') {
                     errorMessage = 'Invalid phone number format.';
-                } else if (error.code === 'auth/invalid-app-credential') {
-                    errorMessage = 'Security verification failed. Please refresh the page and try again.';
-                    // Reset reCAPTCHA
-                    setupRecaptcha();
                 } else if (error.code === 'auth/captcha-check-failed') {
-                    errorMessage = 'Security verification failed. Please complete the reCAPTCHA again.';
+                    errorMessage = 'Security verification failed. Please try again.';
                     setupRecaptcha();
                 } else {
-                    errorMessage += 'Please try again. Error: ' + (error.message || error.code || 'Unknown error');
+                    errorMessage += 'Please try again or use alternative login method.';
                 }
                 
                 showError(errorMessage);
@@ -350,10 +361,58 @@
     }
 
     /**
+     * Simulate test OTP (development only)
+     */
+    function simulateTestOTP(phoneNumber) {
+        if (!window.tostiShopDevMode) return;
+        
+        console.log('🧪 Simulating test OTP for:', phoneNumber);
+        
+        showLoading('Sending test OTP...');
+        
+        setTimeout(() => {
+            hideLoading();
+            showSuccess('Test OTP sent to ' + phoneNumber + '. Use: ' + TEST_PHONE_NUMBERS[phoneNumber]);
+            
+            $('#otp-phone-display').text(phoneNumber);
+            
+            // Create fake confirmation result
+            confirmationResult = {
+                confirm: function(code) {
+                    return new Promise((resolve, reject) => {
+                        if (code === TEST_PHONE_NUMBERS[phoneNumber]) {
+                            const fakeUser = {
+                                uid: 'test-user-' + Date.now(),
+                                phoneNumber: phoneNumber,
+                                getIdToken: () => Promise.resolve('test-token-' + Date.now())
+                            };
+                            resolve({ user: fakeUser });
+                        } else {
+                            reject({ code: 'auth/invalid-verification-code' });
+                        }
+                    });
+                }
+            };
+            
+            // Switch to OTP view
+            const switchEvent = new CustomEvent('switch-to-otp', {
+                detail: { phone: phoneNumber }
+            });
+            document.dispatchEvent(switchEvent);
+            
+            setTimeout(() => {
+                $('#otp-code').focus();
+            }, 100);
+
+            startResendCountdown($('#resend-otp-btn'));
+            
+        }, 1500);
+    }
+
+    /**
      * Verify OTP code
      */
     function verifyOTP() {
-        // Get OTP from single input field (as per your form design)
         const otpCode = $('#otp-code').val().trim();
         
         if (!otpCode || otpCode.length !== 6 || !/^[0-9]{6}$/.test(otpCode)) {
@@ -369,35 +428,35 @@
 
         showLoading('Verifying OTP...');
 
-        // Verify the SMS code
         confirmationResult.confirm(otpCode)
             .then(function(result) {
                 const user = result.user;
-                console.log('OTP verification successful:', user);
+                console.log('✅ OTP verification successful');
                 
-                // Login successful, send to WordPress
                 loginToWordPress(user, 'phone');
             })
             .catch(function(error) {
                 hideLoading();
-                console.error('OTP verification error:', error);
+                console.error('❌ OTP verification error:', error);
                 
                 let errorMessage = 'Invalid OTP. ';
                 if (error.code === 'auth/invalid-verification-code') {
-                    errorMessage = 'Invalid OTP code. Please check and try again.';
+                    if (window.tostiShopDevMode && TEST_PHONE_NUMBERS[currentPhoneNumber]) {
+                        errorMessage = `Invalid test OTP. Use: ${TEST_PHONE_NUMBERS[currentPhoneNumber]}`;
+                    } else {
+                        errorMessage = 'Invalid OTP code. Please check and try again.';
+                    }
                 } else if (error.code === 'auth/code-expired') {
                     errorMessage = 'OTP code has expired. Please request a new one.';
                 }
                 
                 showError(errorMessage);
-                
-                // Clear OTP input
                 $('#otp-code').val('').focus();
             });
     }
 
     /**
-     * Resend OTP - FIXED VERSION
+     * Resend OTP
      */
     function resendOTP() {
         if (!currentPhoneNumber) {
@@ -405,33 +464,30 @@
             return;
         }
 
-        // Disable resend button temporarily
+        // Check for test numbers
+        if (window.tostiShopDevMode && TEST_PHONE_NUMBERS[currentPhoneNumber]) {
+            simulateTestOTP(currentPhoneNumber);
+            return;
+        }
+
         const resendBtn = $('#resend-otp-btn');
         resendBtn.prop('disabled', true).text('Sending...');
 
-        // Reset and send new OTP
         confirmationResult = null;
-        
-        // Setup fresh reCAPTCHA
         setupRecaptcha();
         
-        // Wait for reCAPTCHA to render, then send OTP
         setTimeout(() => {
             if (recaptchaVerifier) {
                 auth.signInWithPhoneNumber(currentPhoneNumber, recaptchaVerifier)
                     .then(function(result) {
                         confirmationResult = result;
                         showSuccess('New OTP sent to ' + currentPhoneNumber);
-                        
-                        // Reset OTP input
                         $('#otp-code').val('').focus();
-                        
-                        // Re-enable button with countdown
                         startResendCountdown(resendBtn);
                     })
                     .catch(function(error) {
                         console.error('Resend OTP error:', error);
-                        showError('Failed to resend OTP. Please try again.');
+                        showError('Failed to resend OTP. Please try Google/Email login.');
                         resendBtn.prop('disabled', false).text('Resend OTP');
                     });
             }
@@ -461,7 +517,7 @@
      */
     function loginWithGoogle() {
         if (!auth) {
-            showError('Firebase not initialized. Please refresh the page.');
+            showError('Authentication service not available. Please refresh the page.');
             return;
         }
 
@@ -474,22 +530,21 @@
         auth.signInWithPopup(provider)
             .then(function(result) {
                 const user = result.user;
-                console.log('Google login successful:', user);
+                console.log('✅ Google login successful');
                 
-                // Login successful, send to WordPress
                 loginToWordPress(user, 'google');
             })
             .catch(function(error) {
                 hideLoading();
-                console.error('Google login error:', error);
+                console.error('❌ Google login error:', error);
                 
                 let errorMessage = 'Google login failed. ';
                 if (error.code === 'auth/popup-closed-by-user') {
                     errorMessage = 'Login cancelled. Please try again.';
                 } else if (error.code === 'auth/popup-blocked') {
-                    errorMessage = 'Pop-up blocked by browser. Please allow pop-ups and try again.';
+                    errorMessage = 'Pop-up blocked. Please allow pop-ups and try again.';
                 } else {
-                    errorMessage += 'Please try again.';
+                    errorMessage += 'Please try email login instead.';
                 }
                 
                 showError(errorMessage);
@@ -497,20 +552,17 @@
     }
 
     /**
-     * Handle Email Authentication (Login/Register)
+     * Handle Email Authentication
      */
     function handleEmailAuth() {
-        // Get current registration state from Alpine.js
         const alpineElement = document.querySelector('[x-data]');
         const isRegistering = alpineElement && alpineElement._x_dataStack && 
                             alpineElement._x_dataStack[0].isRegistering;
         
         if (isRegistering) {
-            // Register mode
             const email = $('#email-register').val().trim();
             const password = $('#password-register').val();
             
-            // Validate inputs
             if (!email || !password) {
                 showError('Please fill in all required fields.');
                 return;
@@ -530,11 +582,9 @@
             
             registerWithEmail(email, password);
         } else {
-            // Login mode
             const email = $('#email-login').val().trim();
             const password = $('#password-login').val();
             
-            // Validate inputs
             if (!email || !password) {
                 showError('Please fill in all required fields.');
                 return;
@@ -551,7 +601,7 @@
     }
 
     /**
-     * Login with Email and Password
+     * Login with Email
      */
     function loginWithEmail(email, password) {
         showLoading('Logging in...');
@@ -559,14 +609,13 @@
         auth.signInWithEmailAndPassword(email, password)
             .then(function(result) {
                 const user = result.user;
-                console.log('Email login successful:', user);
+                console.log('✅ Email login successful');
                 
-                // Login successful, send to WordPress
                 loginToWordPress(user, 'email');
             })
             .catch(function(error) {
                 hideLoading();
-                console.error('Email login error:', error);
+                console.error('❌ Email login error:', error);
                 
                 let errorMessage = 'Login failed. ';
                 if (error.code === 'auth/user-not-found') {
@@ -575,8 +624,6 @@
                     errorMessage = 'Incorrect password. Please try again.';
                 } else if (error.code === 'auth/invalid-email') {
                     errorMessage = 'Invalid email address format.';
-                } else if (error.code === 'auth/too-many-requests') {
-                    errorMessage = 'Too many failed attempts. Please try again later.';
                 } else {
                     errorMessage += 'Please check your credentials and try again.';
                 }
@@ -586,7 +633,7 @@
     }
 
     /**
-     * Register with Email and Password
+     * Register with Email
      */
     function registerWithEmail(email, password) {
         showLoading('Creating account...');
@@ -594,14 +641,13 @@
         auth.createUserWithEmailAndPassword(email, password)
             .then(function(result) {
                 const user = result.user;
-                console.log('Email registration successful:', user);
+                console.log('✅ Email registration successful');
                 
-                // Registration successful, send to WordPress
                 loginToWordPress(user, 'email');
             })
             .catch(function(error) {
                 hideLoading();
-                console.error('Email registration error:', error);
+                console.error('❌ Email registration error:', error);
                 
                 let errorMessage = 'Registration failed. ';
                 if (error.code === 'auth/email-already-in-use') {
@@ -610,8 +656,6 @@
                     errorMessage = 'Invalid email address format.';
                 } else if (error.code === 'auth/weak-password') {
                     errorMessage = 'Password is too weak. Please choose a stronger password.';
-                } else {
-                    errorMessage += 'Please try again.';
                 }
                 
                 showError(errorMessage);
@@ -619,7 +663,7 @@
     }
 
     /**
-     * Login to WordPress with Firebase user
+     * Login to WordPress - ENHANCED VERSION
      */
     function loginToWordPress(firebaseUser, authMethod) {
         if (!firebaseUser) {
@@ -628,11 +672,11 @@
             return;
         }
 
-        // Get Firebase ID token
+        console.log('🔄 Logging into WordPress...');
+
         firebaseUser.getIdToken()
             .then(function(idToken) {
                 
-                // Prepare user data for WordPress
                 const userData = {
                     action: 'tostishop_firebase_login',
                     firebase_token: idToken,
@@ -641,7 +685,8 @@
                     from_checkout: window.location.href.includes('checkout') ? 'true' : 'false'
                 };
 
-                // Send to WordPress
+                console.log('📤 Sending login request to WordPress');
+
                 $.ajax({
                     url: tostiShopAjax.ajaxurl,
                     type: 'POST',
@@ -650,10 +695,11 @@
                     success: function(response) {
                         hideLoading();
                         
+                        console.log('📥 WordPress response:', response);
+                        
                         if (response.success) {
                             showSuccess(response.data.message || 'Login successful! Redirecting...');
                             
-                            // Redirect after short delay
                             setTimeout(function() {
                                 window.location.href = response.data.redirect_url || tostiShopAjax.redirectUrl;
                             }, 1500);
@@ -664,14 +710,14 @@
                     },
                     error: function(xhr, status, error) {
                         hideLoading();
-                        console.error('WordPress login error:', xhr.responseText, status, error);
+                        console.error('❌ WordPress login error:', xhr.responseText, status, error);
                         showError('Connection error. Please check your internet connection and try again.');
                     }
                 });
             })
             .catch(function(error) {
                 hideLoading();
-                console.error('Token retrieval error:', error);
+                console.error('❌ Token retrieval error:', error);
                 showError('Authentication token error. Please try again.');
             });
     }
@@ -693,10 +739,10 @@
         $('#firebase-error-message').text(message);
         $('#firebase-error').removeClass('hidden');
         
-        // Auto-hide after 8 seconds
+        const hideDelay = message.includes('Too many') ? 10000 : 8000;
         setTimeout(function() {
             hideError();
-        }, 8000);
+        }, hideDelay);
     }
 
     function showSuccess(message) {
@@ -704,7 +750,6 @@
         $('#firebase-success-message').text(message);
         $('#firebase-success').removeClass('hidden');
         
-        // Auto-hide after 5 seconds
         setTimeout(function() {
             hideSuccess();
         }, 5000);
@@ -718,20 +763,12 @@
         $('#firebase-success').addClass('hidden');
     }
 
-    function resetOTPForm() {
-        $('#otp-code').val('');
-        confirmationResult = null;
-        currentPhoneNumber = '';
-        hideError();
-        hideSuccess();
-    }
-
     function isValidEmail(email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
     }
 
-    // Global error handler for unhandled Firebase errors
+    // Global error handler
     window.addEventListener('unhandledrejection', function(event) {
         if (event.reason && event.reason.code && event.reason.code.startsWith('auth/')) {
             console.error('Unhandled Firebase auth error:', event.reason);
