@@ -1,8 +1,8 @@
 /**
  * Firebase Authentication for TostiShop Custom Login Form
- * Production-ready with Invisible reCAPTCHA
+ * Production-ready with enhanced error handling and fallbacks
  * 
- * @version 5.1.0 - Invisible reCAPTCHA
+ * @version 5.2.0 - Fixed Firebase 500 Error & reCAPTCHA Issues
  */
 
 (function($) {
@@ -14,12 +14,15 @@
     let confirmationResult = null;
     let currentPhoneNumber = '';
     let recaptchaSolved = false;
+    let retryAttempts = 0;
+    const MAX_RETRY_ATTEMPTS = 2;
 
     // Test phone numbers (for development only)
     const TEST_PHONE_NUMBERS = window.tostiShopDevMode ? {
         '+919999999999': '123456',
         '+919876543210': '654321',
-        '+919450987150': '111111'
+        '+919450987150': '111111',
+        '+917982377273': '123456'
     } : {};
 
     // Initialize Firebase when DOM is ready
@@ -30,19 +33,29 @@
     });
 
     /**
-     * Initialize Firebase Authentication
+     * Initialize Firebase Authentication - ENHANCED ERROR HANDLING
      */
     function initializeFirebase() {
         try {
             if (typeof tostiShopFirebaseConfig === 'undefined') {
                 console.warn('Firebase configuration not found.');
-                showError('Authentication service not configured. Please contact support.');
+                showError('Authentication service not configured. Please use Google or Email login.');
                 return;
             }
 
             if (typeof firebase === 'undefined') {
                 console.error('Firebase SDK not loaded');
                 showError('Authentication service unavailable. Please refresh the page.');
+                return;
+            }
+
+            // Validate Firebase config
+            const requiredFields = ['apiKey', 'authDomain', 'projectId'];
+            const missingFields = requiredFields.filter(field => !tostiShopFirebaseConfig[field]);
+            
+            if (missingFields.length > 0) {
+                console.error('Missing Firebase config fields:', missingFields);
+                showError('Firebase configuration incomplete. Please use Google or Email login.');
                 return;
             }
 
@@ -53,60 +66,116 @@
 
             console.log('Firebase initialized successfully');
 
-            // Set up INVISIBLE reCAPTCHA
-            setupInvisibleRecaptcha();
+            // Set up invisible reCAPTCHA with better error handling
+            setupInvisibleRecaptchaWithFallback();
 
         } catch (error) {
             console.error('Firebase initialization error:', error);
-            showError('Authentication service initialization failed. Please refresh the page.');
+            showError('Authentication service initialization failed. Please use Google or Email login.');
+            
+            // Disable phone OTP button
+            $('#send-otp-btn').prop('disabled', true)
+                             .removeClass('bg-accent')
+                             .addClass('bg-gray-400')
+                             .text('Phone OTP Unavailable - Use Email/Google');
         }
     }
 
     /**
-     * Setup INVISIBLE reCAPTCHA - Much Better User Experience
+     * Setup Invisible reCAPTCHA with Fallback - FIXED VERSION
      */
-    function setupInvisibleRecaptcha() {
+    function setupInvisibleRecaptchaWithFallback() {
         try {
             // Clear any existing reCAPTCHA
             if (recaptchaVerifier) {
-                recaptchaVerifier.clear();
+                try {
+                    recaptchaVerifier.clear();
+                } catch (e) {
+                    console.warn('Failed to clear existing reCAPTCHA:', e);
+                }
                 recaptchaVerifier = null;
             }
 
-            // Create invisible reCAPTCHA verifier
+            // Check if the button exists
+            const sendButton = document.getElementById('send-otp-btn');
+            if (!sendButton) {
+                console.error('Send OTP button not found');
+                return;
+            }
+
+            // Create invisible reCAPTCHA verifier with enhanced error handling
             recaptchaVerifier = new firebase.auth.RecaptchaVerifier('send-otp-btn', {
                 'size': 'invisible',
                 'callback': function(response) {
                     console.log('✅ Invisible reCAPTCHA solved automatically');
                     recaptchaSolved = true;
-                    // Automatically proceed with OTP sending
+                    retryAttempts = 0; // Reset retry attempts on success
                     sendOTPWithVerifiedRecaptcha();
                 },
                 'expired-callback': function() {
                     console.log('❌ reCAPTCHA EXPIRED');
                     recaptchaSolved = false;
                     showError('Security verification expired. Please try again.');
+                    resetSendButton();
                 },
                 'error-callback': function(error) {
                     console.error('❌ reCAPTCHA ERROR:', error);
                     recaptchaSolved = false;
-                    showError('Security verification failed. Please try again.');
+                    handleRecaptchaError(error);
                 }
             });
 
             console.log('✅ Invisible reCAPTCHA setup complete');
-            
-            // Enable the send button immediately since reCAPTCHA is invisible
             updateSendButtonState();
             
         } catch (error) {
             console.error('❌ Invisible reCAPTCHA setup error:', error);
-            showError('Security verification setup failed. Please refresh the page.');
+            handleRecaptchaSetupError(error);
         }
     }
 
     /**
-     * Update Send OTP Button State - Simplified for Invisible reCAPTCHA
+     * Handle reCAPTCHA setup errors
+     */
+    function handleRecaptchaSetupError(error) {
+        console.error('reCAPTCHA setup failed:', error);
+        
+        // Disable phone OTP and suggest alternatives
+        $('#send-otp-btn').prop('disabled', true)
+                         .removeClass('bg-accent hover:bg-red-600')
+                         .addClass('bg-gray-400 cursor-not-allowed')
+                         .text('Phone OTP Unavailable');
+        
+        showError('Phone verification unavailable. Please use Google Login or Email Login instead.');
+        
+        // Add helpful message
+        setTimeout(() => {
+            showSuccess('💡 Try Google Login (recommended) or Email Login below!');
+        }, 3000);
+    }
+
+    /**
+     * Handle reCAPTCHA runtime errors
+     */
+    function handleRecaptchaError(error) {
+        if (retryAttempts < MAX_RETRY_ATTEMPTS) {
+            retryAttempts++;
+            console.log(`🔄 Retrying reCAPTCHA setup (attempt ${retryAttempts}/${MAX_RETRY_ATTEMPTS})`);
+            
+            setTimeout(() => {
+                setupInvisibleRecaptchaWithFallback();
+            }, 2000);
+            
+            showError('Security verification failed. Retrying...');
+        } else {
+            showError('Security verification repeatedly failed. Please use Google or Email login.');
+            $('#send-otp-btn').prop('disabled', true)
+                             .text('Use Alternative Login Methods');
+        }
+    }
+
+    /**
+     * Update Send OTP Button State - ENHANCED WITH BETTER MESSAGING
      */
     function updateSendButtonState() {
         const phoneValue = $('#mobile-number').val().replace(/[^0-9]/g, '');
@@ -114,26 +183,55 @@
         
         const sendButton = $('#send-otp-btn');
         
+        // Check if reCAPTCHA is available
+        if (!recaptchaVerifier) {
+            sendButton.prop('disabled', true)
+                     .removeClass('bg-accent text-white hover:bg-red-600')
+                     .addClass('bg-gray-400 text-gray-700 cursor-not-allowed')
+                     .text('Phone OTP Unavailable - Use Email/Google');
+            return;
+        }
+        
         if (isValidPhone) {
+            // ✅ VALID PHONE - Enable button with TostiShop accent colors
             sendButton.prop('disabled', false);
-            sendButton.removeClass('bg-gray-400 cursor-not-allowed')
-                     .addClass('bg-accent hover:bg-red-600 cursor-pointer');
+            sendButton.removeClass('bg-gray-100 text-gray-600 border-gray-300 cursor-not-allowed hover:bg-gray-200 hover:border-gray-400')
+                     .addClass('bg-accent text-white border-accent hover:bg-red-600 hover:border-red-600 cursor-pointer shadow-sm hover:shadow-md');
             sendButton.text('Send OTP');
             console.log('✅ Send OTP button ENABLED');
-        } else {
+        } else if (phoneValue.length === 0) {
+            // 🎯 NO INPUT YET - Neutral state
             sendButton.prop('disabled', true);
-            sendButton.removeClass('bg-accent hover:bg-red-600 cursor-pointer')
-                     .addClass('bg-gray-400 cursor-not-allowed');
+            sendButton.removeClass('bg-accent text-white border-accent hover:bg-red-600 hover:border-red-600 cursor-pointer shadow-sm hover:shadow-md')
+                     .addClass('bg-gray-100 text-gray-600 border-gray-300 cursor-not-allowed hover:bg-gray-200 hover:border-gray-400');
+            sendButton.text('Send OTP');
+            console.log('⚪ Send OTP button NEUTRAL (no input)');
+        } else {
+            // ❌ INVALID INPUT - Show validation message
+            sendButton.prop('disabled', true);
+            sendButton.removeClass('bg-accent text-white border-accent hover:bg-red-600 hover:border-red-600 cursor-pointer shadow-sm hover:shadow-md')
+                     .addClass('bg-gray-100 text-gray-600 border-gray-300 cursor-not-allowed hover:bg-gray-200 hover:border-gray-400');
             sendButton.text('Enter Valid Phone Number');
-            console.log('❌ Send OTP button DISABLED');
+            console.log('❌ Send OTP button DISABLED (invalid input)');
         }
     }
 
     /**
-     * Bind all event listeners
+     * Reset send button to default state
+     */
+    function resetSendButton() {
+        $('#send-otp-btn').prop('disabled', false)
+                         .removeClass('bg-gray-400')
+                         .addClass('bg-accent hover:bg-red-600')
+                         .text('Send OTP');
+        updateSendButtonState();
+    }
+
+    /**
+     * Bind all event listeners - ENHANCED ERROR HANDLING
      */
     function bindEvents() {
-        // Mobile OTP Events - Modified for invisible reCAPTCHA
+        // Mobile OTP Events - Enhanced with better error handling
         $('#send-otp-btn').on('click', function(e) {
             e.preventDefault();
             console.log('🔥 Send OTP button clicked');
@@ -157,16 +255,28 @@
                 return;
             }
             
-            // Trigger invisible reCAPTCHA (will call sendOTPWithVerifiedRecaptcha automatically)
+            // Check if reCAPTCHA is ready
+            if (!recaptchaVerifier) {
+                showError('Security verification not ready. Please use Google or Email login.');
+                return;
+            }
+            
+            // Trigger invisible reCAPTCHA
             showLoading('Verifying security...');
+            $(this).prop('disabled', true);
             
             try {
-                // Execute invisible reCAPTCHA
                 recaptchaVerifier.verify();
             } catch (error) {
                 hideLoading();
+                $(this).prop('disabled', false);
                 console.error('reCAPTCHA verification error:', error);
-                showError('Security verification failed. Please try again.');
+                
+                if (error.code === 'auth/internal-error-encountered' || error.message.includes('500')) {
+                    showError('🚫 Firebase service temporarily unavailable. Please try Google Login or Email Login instead.');
+                } else {
+                    showError('Security verification failed. Please try again or use alternative login methods.');
+                }
             }
         });
         
@@ -223,15 +333,14 @@
     }
 
     /**
-     * Send OTP after reCAPTCHA is verified (called automatically by invisible reCAPTCHA)
+     * Send OTP with verified reCAPTCHA - ENHANCED ERROR HANDLING
      */
     function sendOTPWithVerifiedRecaptcha() {
         console.log('🚀 Sending OTP with verified reCAPTCHA');
         
         showLoading('Sending OTP...');
-        $('#send-otp-btn').prop('disabled', true);
 
-        // Send SMS verification
+        // Send SMS verification with enhanced error handling
         auth.signInWithPhoneNumber(currentPhoneNumber, recaptchaVerifier)
             .then(function(result) {
                 console.log('✅ Firebase signInWithPhoneNumber success');
@@ -261,21 +370,38 @@
             .catch(function(error) {
                 console.error('❌ Firebase signInWithPhoneNumber error:', error);
                 hideLoading();
-                $('#send-otp-btn').prop('disabled', false);
+                resetSendButton();
                 
                 let errorMessage = 'Failed to send OTP. ';
-                if (error.code === 'auth/too-many-requests') {
-                    errorMessage = '🚫 Too many requests. Please try again in 15-30 minutes, or use Google/Email login.';
+                let showAlternatives = false;
+                
+                if (error.code === 'auth/internal-error-encountered' || error.message.includes('500')) {
+                    errorMessage = '🚫 Firebase service temporarily unavailable. Please try again in a few minutes.';
+                    showAlternatives = true;
+                } else if (error.code === 'auth/too-many-requests') {
+                    errorMessage = '🚫 Too many requests. Please wait 15-30 minutes or use alternative login methods.';
+                    showAlternatives = true;
                 } else if (error.code === 'auth/invalid-phone-number') {
-                    errorMessage = 'Invalid phone number format.';
+                    errorMessage = 'Invalid phone number format. Please check and try again.';
                 } else if (error.code === 'auth/captcha-check-failed') {
                     errorMessage = 'Security verification failed. Please try again.';
-                    setupInvisibleRecaptcha(); // Reset invisible reCAPTCHA
+                    // Reset reCAPTCHA
+                    setTimeout(() => {
+                        setupInvisibleRecaptchaWithFallback();
+                    }, 1000);
                 } else {
-                    errorMessage += 'Please try again or use alternative login method.';
+                    errorMessage += 'Please try again or use alternative login methods.';
+                    showAlternatives = true;
                 }
                 
                 showError(errorMessage);
+                
+                // Show helpful alternatives
+                if (showAlternatives) {
+                    setTimeout(() => {
+                        showSuccess('💡 Try Google Login (fast & reliable) or Email Login below!');
+                    }, 4000);
+                }
             });
     }
 
@@ -396,7 +522,7 @@
     }
 
     /**
-     * Resend OTP
+     * Resend OTP - ENHANCED ERROR HANDLING
      */
     function resendOTP() {
         if (!currentPhoneNumber) {
@@ -414,7 +540,9 @@
         resendBtn.prop('disabled', true).text('Sending...');
 
         confirmationResult = null;
-        setupInvisibleRecaptcha(); // Reset invisible reCAPTCHA
+        
+        // Reset and setup reCAPTCHA
+        setupInvisibleRecaptchaWithFallback();
         
         setTimeout(() => {
             if (recaptchaVerifier) {
@@ -427,9 +555,18 @@
                     })
                     .catch(function(error) {
                         console.error('Resend OTP error:', error);
-                        showError('Failed to resend OTP. Please try Google/Email login.');
+                        
+                        if (error.code === 'auth/internal-error-encountered') {
+                            showError('Service temporarily unavailable. Please try Google/Email login.');
+                        } else {
+                            showError('Failed to resend OTP. Please try Google/Email login.');
+                        }
+                        
                         resendBtn.prop('disabled', false).text('Resend OTP');
                     });
+            } else {
+                showError('Security verification not ready. Please try Google/Email login.');
+                resendBtn.prop('disabled', false).text('Resend OTP');
             }
         }, 1000);
     }
@@ -453,7 +590,7 @@
     }
 
     /**
-     * Login with Google
+     * Login with Google - RECOMMENDED ALTERNATIVE
      */
     function loginWithGoogle() {
         if (!auth) {
@@ -679,7 +816,7 @@
         $('#firebase-error-message').text(message);
         $('#firebase-error').removeClass('hidden');
         
-        const hideDelay = message.includes('Too many') ? 10000 : 8000;
+        const hideDelay = message.includes('unavailable') || message.includes('500') ? 12000 : 8000;
         setTimeout(function() {
             hideError();
         }, hideDelay);
@@ -712,7 +849,14 @@
     window.addEventListener('unhandledrejection', function(event) {
         if (event.reason && event.reason.code && event.reason.code.startsWith('auth/')) {
             console.error('Unhandled Firebase auth error:', event.reason);
-            showError('Authentication error occurred. Please try again.');
+            
+            // Handle specific Firebase errors
+            if (event.reason.code === 'auth/internal-error-encountered') {
+                showError('🚫 Firebase service temporarily unavailable. Please use Google or Email login.');
+            } else {
+                showError('Authentication error occurred. Please try alternative login methods.');
+            }
+            
             event.preventDefault();
         }
     });
