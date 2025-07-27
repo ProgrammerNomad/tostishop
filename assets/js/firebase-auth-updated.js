@@ -1,9 +1,8 @@
 /**
  * Firebase Authentication for TostiShop Custom Login Form
- * Complete integration with existing form-login.php
- * Handles Mobile OTP, Google Login, and Email Authentication
+ * Fixed reCAPTCHA and phone authentication issues
  * 
- * @version 4.0.0 - Production Ready
+ * @version 4.1.0 - reCAPTCHA Fix
  */
 
 (function($) {
@@ -39,7 +38,7 @@
 
             console.log('Firebase initialized successfully');
 
-            // Set up invisible reCAPTCHA
+            // Set up reCAPTCHA after Firebase is initialized
             setupRecaptcha();
 
         } catch (error) {
@@ -49,22 +48,50 @@
     }
 
     /**
-     * Setup invisible reCAPTCHA for phone authentication
+     * Setup reCAPTCHA for phone authentication - FIXED VERSION
      */
     function setupRecaptcha() {
         try {
+            // Clear any existing reCAPTCHA
+            if (recaptchaVerifier) {
+                recaptchaVerifier.clear();
+                recaptchaVerifier = null;
+            }
+
+            // Clear the container
+            const recaptchaContainer = document.getElementById('recaptcha-container');
+            if (recaptchaContainer) {
+                recaptchaContainer.innerHTML = '';
+            }
+
+            // Create new reCAPTCHA verifier with proper configuration
             recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-                size: 'invisible',
-                callback: function(response) {
-                    console.log('reCAPTCHA verified');
+                'size': 'normal', // Changed from 'invisible' to 'normal' to fix the issue
+                'callback': function(response) {
+                    console.log('reCAPTCHA verified successfully');
+                    // Enable send OTP button
+                    $('#send-otp-btn').prop('disabled', false);
                 },
                 'expired-callback': function() {
                     console.log('reCAPTCHA expired');
-                    showError('Security verification expired. Please try again.');
-                }
+                    showError('reCAPTCHA expired. Please solve it again.');
+                    $('#send-otp-btn').prop('disabled', true);
+                },
+                'theme': 'light'
             });
+
+            // Render the reCAPTCHA
+            recaptchaVerifier.render().then(function(widgetId) {
+                console.log('reCAPTCHA rendered successfully');
+                window.recaptchaWidgetId = widgetId;
+            }).catch(function(error) {
+                console.error('reCAPTCHA render error:', error);
+                showError('reCAPTCHA failed to load. Please refresh the page.');
+            });
+
         } catch (error) {
             console.error('reCAPTCHA setup error:', error);
+            showError('reCAPTCHA setup failed. Please refresh the page and try again.');
         }
     }
 
@@ -103,10 +130,20 @@
             handleEmailAuth();
         });
 
-        // OTP Navigation
-        $(document).on('click', '[x-show="currentView === \'otp\'"] button[\\@click="currentView = \'initial\'"]', function() {
-            // Reset OTP form when going back
-            resetOTPForm();
+        // Mobile number input validation
+        $('#mobile-number').on('input', function() {
+            const value = $(this).val().replace(/[^0-9]/g, '');
+            $(this).val(value);
+            
+            // Validate and enable/disable send OTP button
+            if (value.length === 10 && /^[6-9][0-9]{9}$/.test(value)) {
+                // Valid number, check reCAPTCHA status
+                if (recaptchaVerifier && window.recaptchaWidgetId !== undefined) {
+                    $('#send-otp-btn').prop('disabled', false);
+                }
+            } else {
+                $('#send-otp-btn').prop('disabled', true);
+            }
         });
     }
 
@@ -114,33 +151,21 @@
      * Setup OTP input field behavior
      */
     function setupOTPInputs() {
-        // Setup single OTP input field (6-digit)
         $('#otp-code').on('input', function() {
-            const value = $(this).val();
-            // Only allow numbers
-            $(this).val(value.replace(/[^0-9]/g, ''));
-        });
-
-        // Allow only numeric input
-        $('#otp-code').on('keypress', function(e) {
-            // Allow only numbers, backspace, delete, tab, escape, enter
-            if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
-                // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
-                (e.keyCode === 65 && e.ctrlKey === true) ||
-                (e.keyCode === 67 && e.ctrlKey === true) ||
-                (e.keyCode === 86 && e.ctrlKey === true) ||
-                (e.keyCode === 88 && e.ctrlKey === true) ||
-                // Allow numbers 0-9
-                (e.keyCode >= 48 && e.keyCode <= 57) ||
-                (e.keyCode >= 96 && e.keyCode <= 105)) {
-                return;
+            const value = $(this).val().replace(/[^0-9]/g, '');
+            $(this).val(value);
+            
+            // Auto-verify when 6 digits are entered
+            if (value.length === 6) {
+                setTimeout(() => {
+                    verifyOTP();
+                }, 500);
             }
-            e.preventDefault();
         });
     }
 
     /**
-     * Send OTP to mobile number
+     * Send OTP to mobile number - FIXED VERSION
      */
     function sendOTP() {
         const phoneInput = $('#mobile-number');
@@ -153,16 +178,19 @@
             return;
         }
 
+        // Check if reCAPTCHA is solved
+        if (!recaptchaVerifier) {
+            showError('reCAPTCHA verification failed. Please refresh the page and try again.');
+            return;
+        }
+
         // Format phone number with country code
         currentPhoneNumber = '+91' + phoneNumber;
 
         showLoading('Sending OTP...');
 
-        // Clear any previous reCAPTCHA
-        if (recaptchaVerifier) {
-            recaptchaVerifier.clear();
-            setupRecaptcha();
-        }
+        // Disable the send button
+        $('#send-otp-btn').prop('disabled', true);
 
         // Send SMS verification
         auth.signInWithPhoneNumber(currentPhoneNumber, recaptchaVerifier)
@@ -186,16 +214,26 @@
                     $('#otp-code').focus();
                 }, 100);
 
+                // Start resend countdown
+                startResendCountdown($('#resend-otp-btn'));
+
             })
             .catch(function(error) {
                 hideLoading();
                 console.error('SMS sending error:', error);
+                
+                // Re-enable send button
+                $('#send-otp-btn').prop('disabled', false);
                 
                 let errorMessage = 'Failed to send OTP. ';
                 if (error.code === 'auth/too-many-requests') {
                     errorMessage = 'Too many attempts. Please try again later.';
                 } else if (error.code === 'auth/invalid-phone-number') {
                     errorMessage = 'Invalid phone number format.';
+                } else if (error.code === 'auth/invalid-app-credential') {
+                    errorMessage = 'reCAPTCHA verification failed. Please refresh the page and try again.';
+                    // Reset reCAPTCHA
+                    setupRecaptcha();
                 } else {
                     errorMessage += 'Please try again.';
                 }
@@ -252,7 +290,7 @@
     }
 
     /**
-     * Resend OTP
+     * Resend OTP - FIXED VERSION
      */
     function resendOTP() {
         if (!currentPhoneNumber) {
@@ -266,27 +304,31 @@
 
         // Reset and send new OTP
         confirmationResult = null;
-        if (recaptchaVerifier) {
-            recaptchaVerifier.clear();
-            setupRecaptcha();
-        }
-
-        auth.signInWithPhoneNumber(currentPhoneNumber, recaptchaVerifier)
-            .then(function(result) {
-                confirmationResult = result;
-                showSuccess('New OTP sent to ' + currentPhoneNumber);
-                
-                // Reset OTP input
-                $('#otp-code').val('').focus();
-                
-                // Re-enable button with countdown
-                startResendCountdown(resendBtn);
-            })
-            .catch(function(error) {
-                console.error('Resend OTP error:', error);
-                showError('Failed to resend OTP. Please try again.');
-                resendBtn.prop('disabled', false).text('Resend OTP');
-            });
+        
+        // Setup fresh reCAPTCHA
+        setupRecaptcha();
+        
+        // Wait for reCAPTCHA to render, then send OTP
+        setTimeout(() => {
+            if (recaptchaVerifier) {
+                auth.signInWithPhoneNumber(currentPhoneNumber, recaptchaVerifier)
+                    .then(function(result) {
+                        confirmationResult = result;
+                        showSuccess('New OTP sent to ' + currentPhoneNumber);
+                        
+                        // Reset OTP input
+                        $('#otp-code').val('').focus();
+                        
+                        // Re-enable button with countdown
+                        startResendCountdown(resendBtn);
+                    })
+                    .catch(function(error) {
+                        console.error('Resend OTP error:', error);
+                        showError('Failed to resend OTP. Please try again.');
+                        resendBtn.prop('disabled', false).text('Resend OTP');
+                    });
+            }
+        }, 1000);
     }
 
     /**
@@ -294,7 +336,7 @@
      */
     function startResendCountdown(button) {
         let countdown = 30;
-        const originalText = 'Resend OTP';
+        button.prop('disabled', true);
         
         const interval = setInterval(() => {
             button.text(`Resend OTP (${countdown}s)`);
@@ -302,7 +344,7 @@
             
             if (countdown < 0) {
                 clearInterval(interval);
-                button.prop('disabled', false).text(originalText);
+                button.prop('disabled', false).text('Resend OTP');
             }
         }, 1000);
     }
