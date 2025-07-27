@@ -18,7 +18,7 @@
     const MAX_RETRY_ATTEMPTS = 2;
 
     // Test phone numbers (for development only)
-    const TEST_PHONE_NUMBERS = window.tostiShopDevMode ? {
+    const TEST_PHONE_NUMBERS = (window.tostiShopDevMode && window.tostiShopDevMode.enabled) ? {
         '+919999999999': '123456',
         '+919876543210': '654321',
         '+919450987150': '111111',
@@ -757,12 +757,13 @@
                 const userData = {
                     action: 'tostishop_firebase_login',
                     firebase_token: idToken,
+                    // SIMPLIFIED - Just use the nonce directly
                     nonce: tostiShopAjax.nonce,
                     auth_method: authMethod,
                     from_checkout: window.location.href.includes('checkout') ? 'true' : 'false'
                 };
 
-                console.log('📤 Sending login request to WordPress');
+                console.log('📤 Sending login request to WordPress with nonce:', userData.nonce);
 
                 $.ajax({
                     url: tostiShopAjax.ajaxurl,
@@ -782,7 +783,21 @@
                             }, 1500);
                             
                         } else {
-                            showError(response.data.message || 'Login failed. Please try again.');
+                            const errorCode = response.data.code || '';
+                            let errorMessage = response.data.message || 'Login failed. Please try again.';
+                            
+                            // Add better error messages with debugging info
+                            if (errorCode === 'nonce_failed') {
+                                errorMessage = 'Security verification failed. Please refresh the page and try again.';
+                                console.error('Nonce verification failed. Sent:', userData.nonce);
+                            } else if (errorCode === 'firebase_auth_failed') {
+                                errorMessage = 'Authentication token verification failed. Please try again or use a different login method.';
+                                console.error('Firebase auth failed. Token length:', idToken ? idToken.length : 0);
+                            } else if (errorCode === 'token_invalid') {
+                                errorMessage = 'Authentication token invalid. Please try a different login method.';
+                            }
+                            
+                            showError(errorMessage);
                         }
                     },
                     error: function(xhr, status, error) {

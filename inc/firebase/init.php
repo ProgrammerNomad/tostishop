@@ -1,7 +1,7 @@
 <?php
 /**
- * Firebase Authentication Initialization
- * TostiShop Theme - Firebase Module Loader
+ * Firebase Authentication Integration
+ * Initialize Firebase authentication for TostiShop theme
  */
 
 // Prevent direct access
@@ -9,10 +9,11 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Load Firebase modules
+// Include Firebase components
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/enqueue.php';
 require_once __DIR__ . '/ajax-handlers.php';
+require_once __DIR__ . '/token-verification.php';
 
 /**
  * Initialize Firebase Authentication System
