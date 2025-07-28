@@ -1018,7 +1018,7 @@
     }
 
     /**
-     * Auto-register Google users with available data - NEW FUNCTION
+     * Auto-register Google users with available data - SIMPLIFIED VERSION
      */
     function autoRegisterGoogleUser(firebaseUser, authMethod) {
         console.log('🔍 Auto-registering Google user:', firebaseUser.displayName, firebaseUser.email);
@@ -1029,17 +1029,21 @@
         
         // Validate that we have minimum required data
         if (!userName || !userEmail) {
-            console.log('❌ Missing required Google data, falling back to registration form');
+            console.log('❌ Missing required Google data - falling back to manual registration');
             showUserRegistrationModal(firebaseUser, authMethod);
             return;
         }
         
-        // Split name into first and last
-        const nameParts = userName.split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || nameParts[0]; // Use first name as last name if only one name
+        console.log('✅ Google user has required data, proceeding with auto-registration');
         
-        showLoading('Creating your TostiShop account...');
+        // Split name into first and last
+        const nameParts = userName.trim().split(' ');
+        const firstName = nameParts[0] || 'User';
+        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'Google';
+        
+        console.log('👤 Auto-registering with:', { firstName, lastName, userEmail });
+        
+        showLoading('Setting up your TostiShop account...');
         
         // Get Firebase token and create WordPress user automatically
         firebaseUser.getIdToken()
@@ -1057,7 +1061,7 @@
                     from_checkout: window.location.href.includes('checkout') ? 'true' : 'false'
                 };
 
-                console.log('📤 Sending auto-registration request for Google user');
+                console.log('📤 Sending Google auto-registration request:', registrationData);
 
                 $.ajax({
                     url: tostiShopAjax.ajaxurl,
@@ -1066,48 +1070,33 @@
                     timeout: 30000,
                     success: function(response) {
                         hideLoading();
-                        
-                        console.log('📥 Auto-registration response:', response);
+                        console.log('📥 Google auto-registration response:', response);
                         
                         if (response.success) {
-                            showSuccess('🎉 Welcome to TostiShop! Google account linked successfully. Redirecting...');
+                            console.log('✅ Google auto-registration successful!');
+                            showSuccess('🎉 Welcome to TostiShop! Your account has been created successfully. Redirecting...');
                             
                             setTimeout(function() {
                                 window.location.href = response.data.redirect_url || tostiShopAjax.redirectUrl || '/my-account/';
-                            }, 2000);
+                            }, 1500);
                             
                         } else {
-                            console.log('❌ Auto-registration failed, showing manual form');
-                            const errorMessage = response.data ? response.data.message : 'Auto-registration failed.';
-                            
-                            // If auto-registration fails, fall back to manual registration
-                            showError(errorMessage + ' Please complete your registration manually.');
-                            setTimeout(() => {
-                                showUserRegistrationModal(firebaseUser, authMethod);
-                            }, 2000);
+                            console.log('❌ Google auto-registration failed:', response.data);
+                            const errorMessage = response.data && response.data.message ? response.data.message : 'Auto-registration failed.';
+                            showError('Registration failed: ' + errorMessage);
                         }
                     },
                     error: function(xhr, status, error) {
                         hideLoading();
-                        console.error('❌ Auto-registration error:', xhr.responseText, status, error);
-                        
-                        // Fall back to manual registration
-                        showError('Auto-registration failed. Please complete your registration manually.');
-                        setTimeout(() => {
-                            showUserRegistrationModal(firebaseUser, authMethod);
-                        }, 2000);
+                        console.error('❌ Google auto-registration AJAX error:', xhr.responseText, status, error);
+                        showError('Registration failed due to connection error. Please try again.');
                     }
                 });
             })
             .catch(function(error) {
                 hideLoading();
                 console.error('❌ Token retrieval error during auto-registration:', error);
-                
-                // Fall back to manual registration
-                showError('Authentication error. Please complete your registration manually.');
-                setTimeout(() => {
-                    showUserRegistrationModal(firebaseUser, authMethod);
-                }, 2000);
+                showError('Authentication error. Please try again.');
             });
     }
 

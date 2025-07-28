@@ -154,11 +154,38 @@ function tostishop_handle_firebase_register() {
     
     // Check if email already exists
     if (email_exists($user_email)) {
-        wp_send_json_error(array(
-            'message' => 'An account with this email already exists. Please use a different email or try logging in.',
-            'code' => 'email_exists'
-        ));
-        return;
+        // Check if this is the same Firebase user trying to register again
+        $existing_user = get_user_by('email', $user_email);
+        $existing_firebase_uid = get_user_meta($existing_user->ID, 'firebase_uid', true);
+        
+        if ($existing_firebase_uid === $firebase_user_data['uid']) {
+            // Same Firebase user - just log them in
+            wp_set_current_user($existing_user->ID);
+            wp_set_auth_cookie($existing_user->ID, true);
+            
+            $redirect_url = home_url('/my-account/');
+            if ($from_checkout) {
+                $redirect_url = wc_get_checkout_url();
+            }
+            
+            error_log('✅ Firebase user re-linked to existing account: ' . $existing_user->ID);
+            
+            wp_send_json_success(array(
+                'message' => 'Welcome back to TostiShop!',
+                'redirect_url' => $redirect_url,
+                'user_id' => $existing_user->ID,
+                'auth_method' => $auth_method
+            ));
+            return;
+            
+        } else {
+            // Different Firebase user with same email
+            wp_send_json_error(array(
+                'message' => 'An account with this email already exists. Please use a different email or try logging in.',
+                'code' => 'email_exists'
+            ));
+            return;
+        }
     }
 
     try {
@@ -248,21 +275,38 @@ function tostishop_handle_firebase_register() {
  * Simulate Firebase user data (replace with actual Firebase Admin SDK in production)
  */
 function tostishop_simulate_firebase_user($token, $auth_method) {
-    // For development - simulate Firebase user based on auth method
+    // In development mode, simulate Firebase user based on auth method
+    // For production, this should use Firebase Admin SDK to verify tokens
+    
     $user_data = array(
-        'uid' => 'firebase_user_' . time() . '_' . wp_rand(1000, 9999),
+        'uid' => '',
         'email' => '',
         'name' => '',
         'phone_number' => ''
     );
     
     if ($auth_method === 'phone') {
-        // For phone auth, we typically only have phone number
-        $user_data['phone_number'] = '+919450987150'; // Replace with actual phone from token
+        // For phone auth, use consistent test data
+        $user_data['uid'] = 'firebase_phone_test_user';
+        $user_data['phone_number'] = '+919450987150';
+        
     } elseif ($auth_method === 'google') {
-        // For Google auth, we have email and name
-        $user_data['email'] = 'user@gmail.com'; // Replace with actual data from token
-        $user_data['name'] = 'Google User'; // Replace with actual name from token
+        // For Google auth, create a hash from the token to ensure same user gets same data
+        // This way, the same Firebase user will always get the same simulated data
+        $user_hash = substr(md5($token), 0, 8);
+        
+        $user_data['uid'] = 'firebase_google_' . $user_hash;
+        $user_data['email'] = 'googleuser' . $user_hash . '@gmail.com';
+        $user_data['name'] = 'Google User ' . $user_hash;
+        $user_data['email_verified'] = true;
+        
+        error_log('🔍 Simulating Google user (HASH-BASED): ' . $user_data['name'] . ' (' . $user_data['email'] . ')');
+        
+    } elseif ($auth_method === 'email') {
+        // For email auth, use hash-based consistent data
+        $user_hash = substr(md5($token), 0, 8);
+        $user_data['uid'] = 'firebase_email_' . $user_hash;
+        $user_data['email'] = 'emailuser' . $user_hash . '@example.com';
     }
     
     return $user_data;
