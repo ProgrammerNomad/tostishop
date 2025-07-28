@@ -291,16 +291,46 @@
             loginWithGoogle();
         });
 
-        // Email Authentication Events
+        // Email Authentication Events - IMPROVED WITH DEBUGGING
         $('#email-login-btn').on('click', function(e) {
             e.preventDefault();
-            handleEmailAuth();
+            console.log('🔑 Email login button clicked');
+            debugFormState();
+            handleEmailLogin();
         });
         
         $('#email-register-btn').on('click', function(e) {
             e.preventDefault();
-            handleEmailAuth();
+            console.log('📝 Email register button clicked');
+            debugFormState();
+            handleEmailRegister();
         });
+        
+        // Debug function to help diagnose form issues
+        function debugFormState() {
+            console.log('🔍 Form State Debug:', {
+                emailLoginField: {
+                    exists: $('#email-login').length > 0,
+                    value: $('#email-login').val(),
+                    visible: $('#email-login').is(':visible')
+                },
+                passwordLoginField: {
+                    exists: $('#password-login').length > 0,
+                    value: $('#password-login').val() ? 'present' : 'empty',
+                    visible: $('#password-login').is(':visible')
+                },
+                emailRegisterField: {
+                    exists: $('#email-register').length > 0,
+                    value: $('#email-register').val(),
+                    visible: $('#email-register').is(':visible')
+                },
+                passwordRegisterField: {
+                    exists: $('#password-register').length > 0,
+                    value: $('#password-register').val() ? 'present' : 'empty',
+                    visible: $('#password-register').is(':visible')
+                }
+            });
+        }
 
         // User Registration Modal Events
         $('#complete-registration-form').on('submit', function(e) {
@@ -649,52 +679,76 @@
     }
 
     /**
-     * Handle Email Authentication
+     * Handle Email Login - DEDICATED FUNCTION
      */
-    function handleEmailAuth() {
-        const alpineElement = document.querySelector('[x-data]');
-        const isRegistering = alpineElement && alpineElement._x_dataStack && 
-                            alpineElement._x_dataStack[0].isRegistering;
+    function handleEmailLogin() {
+        console.log('� Processing email login');
+        const email = $('#email-login').val()?.trim() || '';
+        const password = $('#password-login').val() || '';
         
-        if (isRegistering) {
-            const email = $('#email-register').val().trim();
-            const password = $('#password-register').val();
-            
-            if (!email || !password) {
-                showError('Please fill in all required fields.');
-                return;
-            }
-
-            if (!isValidEmail(email)) {
-                showError('Please enter a valid email address.');
-                $('#email-register').focus();
-                return;
-            }
-
-            if (password.length < 6) {
-                showError('Password must be at least 6 characters long.');
-                $('#password-register').focus();
-                return;
-            }
-            
-            registerWithEmail(email, password);
-        } else {
-            const email = $('#email-login').val().trim();
-            const password = $('#password-login').val();
-            
-            if (!email || !password) {
-                showError('Please fill in all required fields.');
-                return;
-            }
-
-            if (!isValidEmail(email)) {
-                showError('Please enter a valid email address.');
-                $('#email-login').focus();
-                return;
-            }
-            
-            loginWithEmail(email, password);
+        console.log('� Login form values:', {
+            email: email ? 'present' : 'empty',
+            password: password ? 'present' : 'empty',
+            emailLength: email.length,
+            passwordLength: password.length
+        });
+        
+        if (!email || !password) {
+            console.error('❌ Login validation failed: missing fields');
+            showError('Please fill in all required fields.');
+            return;
         }
+
+        if (!isValidEmail(email)) {
+            console.error('❌ Login validation failed: invalid email');
+            showError('Please enter a valid email address.');
+            $('#email-login').focus();
+            return;
+        }
+        
+        console.log('✅ Login validation passed, proceeding...');
+        loginWithEmail(email, password);
+    }
+
+    /**
+     * Handle Email Registration - DEDICATED FUNCTION
+     */
+    function handleEmailRegister() {
+        console.log('� Processing email registration');
+        const email = $('#email-register').val()?.trim() || '';
+        const password = $('#password-register').val() || '';
+        
+        console.log('� Registration form values:', {
+            email: email ? 'present' : 'empty',
+            password: password ? 'present' : 'empty',
+            emailLength: email.length,
+            passwordLength: password.length,
+            emailField: $('#email-register').length > 0 ? 'found' : 'not found',
+            passwordField: $('#password-register').length > 0 ? 'found' : 'not found'
+        });
+        
+        if (!email || !password) {
+            console.error('❌ Registration validation failed: missing fields');
+            showError('Please fill in all required fields.');
+            return;
+        }
+
+        if (!isValidEmail(email)) {
+            console.error('❌ Registration validation failed: invalid email');
+            showError('Please enter a valid email address.');
+            $('#email-register').focus();
+            return;
+        }
+
+        if (password.length < 6) {
+            console.error('❌ Registration validation failed: password too short');
+            showError('Password must be at least 6 characters long.');
+            $('#password-register').focus();
+            return;
+        }
+        
+        console.log('✅ Registration validation passed, proceeding...');
+        registerWithEmail(email, password);
     }
 
     /**
@@ -809,9 +863,23 @@
                                 // Google users have name and email, auto-register them
                                 console.log('� Google user - auto-registering with available data');
                                 autoRegisterGoogleUser(firebaseUser, authMethod);
+                            } else if (authMethod === 'email') {
+                                // Email users: check if we have enough data for auto-registration
+                                const firebaseData = response.data.firebase_data || {};
+                                const userEmail = firebaseData.email || firebaseUser.email || '';
+                                
+                                console.log('📧 Email user detected, email:', userEmail);
+                                
+                                if (userEmail) {
+                                    // Show registration modal with email pre-filled
+                                    console.log('📱 Email user - showing registration form with pre-filled email');
+                                    showUserRegistrationModal(firebaseUser, authMethod);
+                                } else {
+                                    showError('Email address not found. Please try a different login method.');
+                                }
                             } else {
-                                // Phone and email users need registration form
-                                console.log('📱 Phone/Email user - showing registration form');
+                                // Phone users need registration form
+                                console.log('📱 Phone user - showing registration form');
                                 showUserRegistrationModal(firebaseUser, authMethod);
                             }
                             
@@ -847,11 +915,17 @@
      */
     function showUserRegistrationModal(firebaseUser, authMethod) {
         console.log('🔄 Showing registration modal for new user');
+        console.log('👤 Firebase User:', firebaseUser);
+        console.log('🔐 Auth Method:', authMethod);
         
         // Pre-fill available data
         const userEmail = firebaseUser.email || '';
         const userName = firebaseUser.displayName || '';
         const userPhone = firebaseUser.phoneNumber || currentPhoneNumber || '';
+        
+        console.log('📧 Email to pre-fill:', userEmail);
+        console.log('👤 Name to pre-fill:', userName);
+        console.log('📱 Phone to pre-fill:', userPhone);
         
         // Split name into first and last if available
         if (userName) {
@@ -920,20 +994,29 @@
         const lastName = $('#user-last-name').val().trim();
         const email = $('#user-email').val().trim();
         
+        console.log('🔄 Completing user registration with data:', {
+            firstName: firstName,
+            lastName: lastName,
+            email: email
+        });
+        
         // Validation
         if (!firstName || firstName.length < 2) {
+            console.error('❌ First name validation failed:', firstName);
             showError('Please enter your first name (at least 2 characters).');
             $('#user-first-name').focus();
             return;
         }
         
         if (!lastName || lastName.length < 2) {
+            console.error('❌ Last name validation failed:', lastName);
             showError('Please enter your last name (at least 2 characters).');
             $('#user-last-name').focus();
             return;
         }
         
         if (!email || !isValidEmail(email)) {
+            console.error('❌ Email validation failed:', email);
             showError('Please enter a valid email address.');
             $('#user-email').focus();
             return;
@@ -943,7 +1026,12 @@
         const authMethod = window.pendingAuthMethod;
         const phoneNumber = window.pendingPhoneNumber || '';
         
+        console.log('🔄 Firebase user data:', firebaseUser);
+        console.log('🔄 Auth method:', authMethod);
+        console.log('🔄 Phone number:', phoneNumber);
+        
         if (!firebaseUser) {
+            console.error('❌ No Firebase user found');
             showError('Session expired. Please try logging in again.');
             $('#user-registration-modal').addClass('hidden');
             return;
