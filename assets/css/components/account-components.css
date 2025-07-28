@@ -406,34 +406,69 @@
 }
 
 /* ==========================================================================
-   Fix for Color Conflicts
+   Fix for Color Conflicts - Global Primary Colors
    ========================================================================== */
 
-/* Override any generic primary color classes with TostiShop brand */
-.woocommerce-MyAccount-navigation .bg-primary,
-.woocommerce-MyAccount-content .bg-primary {
+/* Global primary color classes - applies site-wide */
+.bg-primary {
     background-color: var(--navy-900) !important;
     color: white !important;
+}
+
+.text-primary {
+    color: var(--navy-900) !important;
 }
 
 .border-primary {
     border-color: var(--navy-900) !important;
 }
 
-/* Text primary should only set text color, not background */
-.text-primary:not(.bg-primary) {
-    color: var(--navy-900) !important;
-    background-color: transparent !important;
-}
-
-/* When both text-primary and bg-primary are used together */
-.text-primary.bg-primary {
+/* Specific overrides for My Account and WooCommerce areas */
+.woocommerce-MyAccount-navigation .bg-primary,
+.woocommerce-MyAccount-content .bg-primary {
     background-color: var(--navy-900) !important;
     color: white !important;
 }
 
+/* Ensure proper contrast for buttons and interactive elements */
+.bg-primary .text-primary,
+.bg-primary a,
+.bg-primary button,
+.bg-primary .button,
+.bg-primary svg,
+.bg-primary .icon {
+    color: white !important;
+    fill: white !important;
+}
+
+/* Fix for dashboard quick action cards */
+.bg-primary .inline-flex,
+.bg-primary .flex {
+    color: white !important;
+}
+
+/* Fix for icon visibility in primary buttons */
+.bg-primary svg path,
+.bg-primary .icon path {
+    stroke: white !important;
+    fill: white !important;
+}
+
+/* Override any remaining text-primary when used with bg-primary */
+.bg-primary .text-primary {
+    color: white !important;
+    background-color: transparent !important;
+}
+
+/* Hover states for primary buttons */
+.bg-primary:hover {
+    background-color: var(--navy-800) !important;
+    color: white !important;
+}
+
 /* Focus states for accessibility */
-.account-nav-link:focus {
+.bg-primary:focus,
+.text-primary:focus {
     outline: 2px solid var(--accent) !important;
     outline-offset: 2px !important;
 }

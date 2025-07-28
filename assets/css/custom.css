@@ -384,16 +384,7 @@
     transform: scale(1.05);
 }
 
-/* Brand colors helper classes */
-.bg-primary {
-    background-color: #14175b;
-    color: white; /* Ensure text is visible on dark background */
-}
-
-.text-primary {
-    color: #14175b;
-}
-
+/* Brand colors helper classes - Only accent color, primary colors handled in account-components.css */
 .bg-accent {
     background-color: #e42029;
 }
@@ -1084,11 +1075,6 @@ textarea:focus {
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
-    .account-nav-link.bg-primary {
-        background: #000 !important;
-        color: #fff !important;
-    }
-    
     .notification-enter-active,
     .notification-exit-active {
         border: 2px solid currentColor;
