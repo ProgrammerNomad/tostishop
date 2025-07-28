@@ -41,10 +41,10 @@ if (empty($product) || !$product->is_visible()) {
             <?php endif; ?>
         </a>
         
-        <!-- Sale Badge -->
-        <?php if ($product->is_on_sale()) : ?>
-            <div class="absolute top-2 left-2 bg-accent text-white text-xs font-bold px-2 py-1 rounded">
-                <?php _e('Sale', 'tostishop'); ?>
+        <!-- Sale Badge - Hide on homepage deals section -->
+        <?php if ( $product->is_on_sale() && ! ( isset( $woocommerce_loop['is_homepage'] ) && $woocommerce_loop['is_homepage'] ) ) : ?>
+            <div class="onsale">
+                <?php _e( 'Sale', 'tostishop' ); ?>
             </div>
         <?php endif; ?>
     </div>

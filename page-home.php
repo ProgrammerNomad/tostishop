@@ -317,13 +317,56 @@ global $woocommerce;
                     ?>
                         <div class="product-wrapper w-40 sm:w-44 md:w-48 lg:w-52">
                             <div class="deal-card relative">
-                                <?php if ( $discount_percentage > 0 ) : ?>
-                                    <div class="absolute top-2 left-2 z-10 bg-accent text-white text-xs font-bold px-2 py-1 rounded-full">
-                                        <?php echo esc_html( $discount_percentage ); ?>% OFF
+                                <!-- Custom Product Display for Deals -->
+                                <div class="product-item">
+                                    <!-- Discount Badge (% OFF only) -->
+                                    <?php if ( $discount_percentage > 0 ) : ?>
+                                        <div class="absolute top-2 left-2 z-20 discount-badge">
+                                            <?php echo esc_html( $discount_percentage ); ?>% OFF
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <!-- Product Image -->
+                                    <div class="product-image">
+                                        <a href="<?php echo esc_url( get_permalink( $product->get_id() ) ); ?>">
+                                            <?php echo $product->get_image( array( 200, 200 ) ); ?>
+                                        </a>
                                     </div>
-                                <?php endif; ?>
-                                
-                                <?php wc_get_template_part( 'content', 'product' ); ?>
+                                    
+                                    <!-- Product Info -->
+                                    <div class="product-info">
+                                        <h3 class="product-title">
+                                            <a href="<?php echo esc_url( get_permalink( $product->get_id() ) ); ?>">
+                                                <?php echo esc_html( $product->get_name() ); ?>
+                                            </a>
+                                        </h3>
+                                        
+                                        <!-- Product Rating -->
+                                        <?php if ( $product->get_average_rating() ) : ?>
+                                            <div class="star-rating">
+                                                <?php echo wc_get_rating_html( $product->get_average_rating() ); ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        
+                                        <!-- Product Price -->
+                                        <div class="product-price">
+                                            <?php echo $product->get_price_html(); ?>
+                                        </div>
+                                        
+                                        <!-- Add to Cart Button -->
+                                        <?php if ( $product->is_purchasable() && $product->is_in_stock() ) : ?>
+                                            <button class="add-to-cart-btn" 
+                                                    data-product-id="<?php echo esc_attr( $product->get_id() ); ?>"
+                                                    data-quantity="1">
+                                                Add to Cart
+                                            </button>
+                                        <?php else : ?>
+                                            <button class="add-to-cart-btn" disabled>
+                                                Out of Stock
+                                            </button>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     <?php 
