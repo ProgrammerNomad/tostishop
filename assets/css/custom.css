@@ -243,45 +243,6 @@
     transition: opacity 0.2s ease;
 }
 
-/* Desktop Account Navigation Improvements */
-@media (min-width: 1024px) {
-    .woocommerce-MyAccount-navigation {
-        background: white;
-        border-radius: 0.75rem;
-        border: 1px solid #e5e7eb;
-        padding: 1.5rem;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-        position: sticky;
-        top: 2rem;
-        display: block !important;
-    }
-    
-    .woocommerce-MyAccount-navigation-list {
-        display: block !important;
-    }
-    
-    .account-nav-link {
-        display: flex !important;
-        align-items: center;
-        transition: all 0.2s ease;
-    }
-    
-    .account-nav-link:not(.bg-primary):hover {
-        transform: translateX(0.25rem);
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-        background-color: #f9fafb;
-    }
-    
-    .account-nav-link .hidden.lg\:flex {
-        display: flex !important;
-    }
-    
-    .account-nav-link.bg-primary {
-        background: linear-gradient(135deg, #14175b 0%, #1e40af 100%);
-        box-shadow: 0 4px 12px 0 rgba(20, 23, 91, 0.3);
-    }
-}
-
 /* List view specific layouts - this was missing proper connection */
 #productGrid[data-view="list"] .product-item {
     display: flex !important;
@@ -459,63 +420,10 @@
     outline-offset: 2px;
 }
 
-/* My Account Page Styles */
+/* My Account Page Styles - Navigation styles moved to account-components.css */
 
-/* Navigation active state fix */
-.woocommerce-MyAccount-navigation .is-active a,
-.woocommerce-MyAccount-navigation .is-active .account-nav-link {
-    background-color: #14175b !important;
-    color: white !important;
-}
-
-/* Desktop-specific navigation enhancements */
+/* Desktop-specific enhancements */
 @media (min-width: 1024px) {
-    .woocommerce-MyAccount-navigation {
-        background: white;
-        border-radius: 0.75rem;
-        border: 1px solid #e5e7eb;
-        padding: 1.5rem;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-        position: sticky;
-        top: 2rem;
-        max-height: calc(100vh - 4rem);
-        overflow-y: auto;
-    }
-    
-    .woocommerce-MyAccount-navigation-list {
-        gap: 0.25rem;
-    }
-    
-    .woocommerce-MyAccount-navigation-list li {
-        margin-bottom: 0.25rem;
-    }
-    
-    .account-nav-link {
-        padding: 0.875rem 1rem !important;
-        font-size: 0.875rem;
-        border-radius: 0.5rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
-        position: relative;
-    }
-    
-    .account-nav-link:not(.bg-primary):hover {
-        background-color: #f8fafc !important;
-        color: #14175b !important;
-        transform: translateX(0.25rem);
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-    }
-    
-    .account-nav-link.bg-primary {
-        background: linear-gradient(135deg, #14175b 0%, #1e40af 100%);
-        box-shadow: 0 4px 12px 0 rgba(20, 23, 91, 0.3);
-    }
-    
-    .account-nav-link.bg-primary:hover {
-        transform: translateX(0.25rem);
-        box-shadow: 0 6px 16px 0 rgba(20, 23, 91, 0.4);
-    }
-    
     /* Enhanced desktop content area */
     .woocommerce-MyAccount-content {
         padding: 0;

@@ -36,7 +36,7 @@ do_action( 'woocommerce_before_account_navigation' );
 	</div>
 
 	<!-- Navigation Menu -->
-	<ul class="woocommerce-MyAccount-navigation-list lg:block space-y-2 lg:space-y-1" 
+	<ul class="woocommerce-MyAccount-navigation-list lg:block" 
 		:class="{ 'hidden': !mobileMenuOpen }" 
 		x-show="mobileMenuOpen || window.innerWidth >= 1024"
 		x-transition:enter="transition ease-out duration-200"
@@ -51,8 +51,7 @@ do_action( 'woocommerce_before_account_navigation' );
 		<?php foreach ( wc_get_account_menu_items() as $endpoint => $label ) : ?>
 			<li class="<?php echo wc_get_account_menu_item_classes( $endpoint ); ?>">
 				<a href="<?php echo esc_url( wc_get_account_endpoint_url( $endpoint ) ); ?>" 
-				   class="account-nav-link flex items-center px-4 py-3 lg:py-3 xl:py-4 text-sm lg:text-base font-medium rounded-lg transition-all duration-200 group
-				          <?php echo wc_get_account_menu_item_classes( $endpoint ) === 'is-active' ? 'bg-primary text-white shadow-sm' : 'text-gray-700 hover:bg-gray-50 hover:text-primary'; ?>">
+				   class="account-nav-link flex items-center px-4 py-3 lg:py-3 xl:py-4 text-sm lg:text-base font-medium rounded-lg transition-all duration-200 group">
 					
 					<!-- Icons for each menu item -->
 					<?php if ( $endpoint === 'dashboard' ) : ?>

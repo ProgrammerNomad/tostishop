@@ -1,0 +1,429 @@
+/* ==========================================================================
+   TostiShop Account Components CSS
+   Comprehensive styling for My Account pages using TostiShop brand colors
+   ========================================================================== */
+
+/* TostiShop Brand Colors */
+:root {
+    --navy-900: #14175b;
+    --navy-800: #1e1b7a;
+    --accent: #e42029;
+    --silver-50: #ecebee;
+    --silver-100: #d9d8dd;
+}
+
+/* ==========================================================================
+   My Account Navigation - Brand Color Fix
+   ========================================================================== */
+
+/* Base Navigation Styles */
+.woocommerce-MyAccount-navigation {
+    background: white;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile Navigation Toggle */
+.woocommerce-MyAccount-navigation button {
+    background: var(--silver-50) !important;
+    border: 1px solid #e5e7eb !important;
+    color: #374151 !important;
+}
+
+.woocommerce-MyAccount-navigation button:hover {
+    background: var(--silver-100) !important;
+}
+
+/* Navigation List */
+.woocommerce-MyAccount-navigation-list {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.woocommerce-MyAccount-navigation-list li {
+    margin-bottom: 0.25rem !important;
+}
+
+/* Navigation Links - Base Styles */
+.account-nav-link {
+    display: flex !important;
+    align-items: center !important;
+    padding: 0.875rem 1rem !important;
+    text-decoration: none !important;
+    border-radius: 0.5rem !important;
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+    transition: all 0.2s ease !important;
+    color: #374151 !important;
+    background: transparent !important;
+}
+
+/* Navigation Links - Hover State */
+.account-nav-link:hover {
+    background: var(--silver-50) !important;
+    color: var(--navy-900) !important;
+    transform: translateX(0.125rem);
+    text-decoration: none !important;
+}
+
+/* Navigation Links - Active State (TostiShop Brand Colors) */
+.woocommerce-MyAccount-navigation .is-active .account-nav-link,
+.woocommerce-MyAccount-navigation .is-active a,
+.account-nav-link.bg-primary {
+    background: var(--navy-900) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px 0 rgba(20, 23, 91, 0.3) !important;
+}
+
+.woocommerce-MyAccount-navigation .is-active .account-nav-link:hover,
+.woocommerce-MyAccount-navigation .is-active a:hover,
+.account-nav-link.bg-primary:hover {
+    background: var(--navy-800) !important;
+    color: white !important;
+    transform: translateX(0.125rem);
+}
+
+/* Icons in Navigation */
+.account-nav-link svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    margin-right: 0.75rem !important;
+    flex-shrink: 0 !important;
+}
+
+/* Desktop Specific Navigation Styles */
+@media (min-width: 1024px) {
+    .woocommerce-MyAccount-navigation {
+        padding: 1.5rem !important;
+        position: sticky;
+        top: 2rem;
+        max-height: calc(100vh - 4rem);
+        overflow-y: auto;
+        display: block !important;
+    }
+    
+    .woocommerce-MyAccount-navigation-list {
+        display: block !important;
+        gap: 0.25rem;
+    }
+    
+    .account-nav-link {
+        padding: 1rem 1.25rem !important;
+        font-size: 1rem !important;
+    }
+    
+    .account-nav-link svg {
+        width: 1.25rem !important;
+        height: 1.25rem !important;
+    }
+    
+    /* Desktop hover effects */
+    .account-nav-link:not(.bg-primary):hover {
+        transform: translateX(0.25rem);
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* ==========================================================================
+   Account Page Content Styling
+   ========================================================================== */
+
+/* Page Headers */
+.woocommerce-MyAccount-content h2,
+.woocommerce-MyAccount-content h3 {
+    color: var(--navy-900) !important;
+    font-weight: 700 !important;
+}
+
+/* Form Elements */
+.woocommerce-MyAccount-content input[type="text"],
+.woocommerce-MyAccount-content input[type="email"],
+.woocommerce-MyAccount-content input[type="password"],
+.woocommerce-MyAccount-content textarea,
+.woocommerce-MyAccount-content select {
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.5rem !important;
+    padding: 0.75rem !important;
+    font-size: 0.875rem !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.woocommerce-MyAccount-content input[type="text"]:focus,
+.woocommerce-MyAccount-content input[type="email"]:focus,
+.woocommerce-MyAccount-content input[type="password"]:focus,
+.woocommerce-MyAccount-content textarea:focus,
+.woocommerce-MyAccount-content select:focus {
+    border-color: var(--navy-900) !important;
+    box-shadow: 0 0 0 3px rgba(20, 23, 91, 0.1) !important;
+    outline: none !important;
+}
+
+/* Buttons - Primary (TostiShop Brand Colors) */
+.woocommerce-MyAccount-content .button,
+.woocommerce-MyAccount-content button[type="submit"],
+.woocommerce-MyAccount-content input[type="submit"] {
+    background: var(--navy-900) !important;
+    color: white !important;
+    border: none !important;
+    padding: 0.75rem 1.5rem !important;
+    border-radius: 0.5rem !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+}
+
+.woocommerce-MyAccount-content .button:hover,
+.woocommerce-MyAccount-content button[type="submit"]:hover,
+.woocommerce-MyAccount-content input[type="submit"]:hover {
+    background: var(--navy-800) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px 0 rgba(20, 23, 91, 0.3) !important;
+}
+
+/* Secondary Buttons */
+.woocommerce-MyAccount-content .button-secondary {
+    background: transparent !important;
+    color: #6b7280 !important;
+    border: 1px solid #d1d5db !important;
+}
+
+.woocommerce-MyAccount-content .button-secondary:hover {
+    background: var(--silver-50) !important;
+    color: var(--navy-900) !important;
+    border-color: var(--navy-900) !important;
+}
+
+/* ==========================================================================
+   Status Badges and Alerts
+   ========================================================================== */
+
+/* Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-badge.completed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.processing {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.pending {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.status-badge.cancelled {
+    background: #fecaca;
+    color: #dc2626;
+}
+
+/* Alert Messages */
+.woocommerce-message,
+.woocommerce-error,
+.woocommerce-info {
+    border-radius: 0.5rem !important;
+    padding: 1rem !important;
+    margin: 1rem 0 !important;
+}
+
+.woocommerce-message {
+    background: #dcfce7 !important;
+    border: 1px solid #86efac !important;
+    color: #166534 !important;
+}
+
+.woocommerce-error {
+    background: #fecaca !important;
+    border: 1px solid #fca5a5 !important;
+    color: #dc2626 !important;
+}
+
+.woocommerce-info {
+    background: #e0e7ff !important;
+    border: 1px solid #c7d2fe !important;
+    color: #3730a3 !important;
+}
+
+/* ==========================================================================
+   Tables and Data Display
+   ========================================================================== */
+
+/* Order Tables */
+.woocommerce-orders-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    background: white !important;
+    border-radius: 0.5rem !important;
+    overflow: hidden !important;
+}
+
+.woocommerce-orders-table th {
+    background: var(--silver-50) !important;
+    color: var(--navy-900) !important;
+    font-weight: 600 !important;
+    padding: 1rem !important;
+    text-align: left !important;
+    border-bottom: 1px solid #e5e7eb !important;
+}
+
+.woocommerce-orders-table td {
+    padding: 1rem !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+    vertical-align: top !important;
+}
+
+.woocommerce-orders-table tr:hover {
+    background: var(--silver-50) !important;
+}
+
+/* Order Actions */
+.woocommerce-orders-table .button.view {
+    background: var(--navy-900) !important;
+    color: white !important;
+    font-size: 0.75rem !important;
+    padding: 0.5rem 1rem !important;
+}
+
+.woocommerce-orders-table .button.view:hover {
+    background: var(--navy-800) !important;
+}
+
+/* ==========================================================================
+   Mobile Responsive Fixes
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    /* Mobile Navigation */
+    .woocommerce-MyAccount-navigation {
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+    }
+    
+    .account-nav-link {
+        padding: 0.875rem !important;
+        font-size: 0.875rem !important;
+    }
+    
+    /* Mobile Forms */
+    .woocommerce-MyAccount-content {
+        padding: 1rem !important;
+    }
+    
+    /* Mobile Tables - Stack vertically */
+    .woocommerce-orders-table {
+        display: block !important;
+    }
+    
+    .woocommerce-orders-table thead,
+    .woocommerce-orders-table tbody,
+    .woocommerce-orders-table th,
+    .woocommerce-orders-table td,
+    .woocommerce-orders-table tr {
+        display: block !important;
+    }
+    
+    .woocommerce-orders-table thead tr {
+        position: absolute !important;
+        top: -9999px !important;
+        left: -9999px !important;
+    }
+    
+    .woocommerce-orders-table tr {
+        border: 1px solid #e5e7eb !important;
+        border-radius: 0.5rem !important;
+        margin-bottom: 1rem !important;
+        padding: 1rem !important;
+        background: white !important;
+    }
+}
+
+/* ==========================================================================
+   Account Dashboard Specific Styles
+   ========================================================================== */
+
+/* Dashboard Welcome Message */
+.woocommerce-MyAccount-content p:first-child {
+    font-size: 1.125rem !important;
+    color: #6b7280 !important;
+    margin-bottom: 2rem !important;
+}
+
+/* Dashboard Links */
+.woocommerce-MyAccount-content a {
+    color: var(--navy-900) !important;
+    text-decoration: none !important;
+    font-weight: 500 !important;
+}
+
+.woocommerce-MyAccount-content a:hover {
+    color: var(--accent) !important;
+    text-decoration: underline !important;
+}
+
+/* ==========================================================================
+   Address Book Styling
+   ========================================================================== */
+
+.woocommerce-Address {
+    background: white !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0.5rem !important;
+    padding: 1.5rem !important;
+    transition: box-shadow 0.2s ease !important;
+}
+
+.woocommerce-Address:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.woocommerce-Address h3 {
+    color: var(--navy-900) !important;
+    font-size: 1.125rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 1rem !important;
+}
+
+.woocommerce-Address address {
+    color: #6b7280 !important;
+    line-height: 1.6 !important;
+    margin-bottom: 1.5rem !important;
+}
+
+/* ==========================================================================
+   Fix for Color Conflicts
+   ========================================================================== */
+
+/* Override any generic primary color classes with TostiShop brand */
+.woocommerce-MyAccount-navigation .bg-primary,
+.woocommerce-MyAccount-content .bg-primary,
+.text-primary {
+    background-color: var(--navy-900) !important;
+    color: white !important;
+}
+
+.border-primary {
+    border-color: var(--navy-900) !important;
+}
+
+.text-primary {
+    color: var(--navy-900) !important;
+}
+
+/* Focus states for accessibility */
+.account-nav-link:focus {
+    outline: 2px solid var(--accent) !important;
+    outline-offset: 2px !important;
+}
