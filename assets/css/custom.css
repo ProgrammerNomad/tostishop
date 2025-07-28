@@ -2694,88 +2694,35 @@ footer button:focus {
     }
 }
 
-/* Navigation Buttons - TostiShop Brand Colors */
-.deals-next,
-.deals-prev {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 50px !important;
-    height: 50px !important;
-    background: linear-gradient(135deg, #14175b 0%, #1e3a8a 100%) !important;
-    border: 2px solid rgba(255, 255, 255, 0.2) !important;
-    border-radius: 50% !important;
-    color: white !important;
-    z-index: 30;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 15px rgba(20, 23, 91, 0.3);
-    opacity: 0.9;
-}
-
-.deals-next:hover,
-.deals-prev:hover {
-    background: linear-gradient(135deg, #e42029 0%, #dc2626 100%) !important;
-    transform: translateY(-50%) scale(1.1);
-    box-shadow: 0 6px 20px rgba(228, 32, 41, 0.4);
-    opacity: 1;
-}
-
-.deals-next {
-    right: 1rem;
-}
-
-.deals-prev {
-    left: 1rem;
-}
-
-.deals-next::after,
-.deals-prev::after {
-    font-size: 16px !important;
-    font-weight: bold;
-}
-
-/* Swiper Navigation Button Icons */
-.deals-next::after {
-    content: '›';
-}
-
-.deals-prev::after {
-    content: '‹';
-}
-
-/* Pagination Dots - TostiShop Brand Colors */
+/* Amazon-style Full Width Design - No pagination needed */
 .deals-pagination {
-    position: relative !important;
-    margin-top: 30px !important;
-    text-align: center;
+    display: none; /* Hide pagination for Amazon style */
 }
 
-.deals-pagination .swiper-pagination-bullet {
-    width: 12px !important;
-    height: 12px !important;
-    background: #cbd5e1 !important;
-    opacity: 0.5 !important;
-    margin: 0 6px !important;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-    cursor: pointer;
+/* Accessibility and Performance */
+.deals-next:focus,
+.deals-prev:focus {
+    outline: 2px solid #14175b;
+    outline-offset: 2px;
 }
 
-.deals-pagination .swiper-pagination-bullet-active {
-    background: linear-gradient(135deg, #e42029 0%, #dc2626 100%) !important;
-    opacity: 1 !important;
-    transform: scale(1.2);
-    box-shadow: 0 2px 8px rgba(228, 32, 41, 0.4);
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    .deals-next,
+    .deals-prev {
+        transition: none;
+    }
+    
+    .amazon-product-card {
+        transition: none;
+    }
+    
+    .amazon-product-card .product-image img {
+        transition: none;
+    }
 }
 
-.deals-pagination .swiper-pagination-bullet:hover {
-    opacity: 0.8 !important;
-    transform: scale(1.1);
-}
+/* End of Amazon-style Today's Deals Slider */
 
 /* Product Cards in Swiper */
 .deals-swiper .product-item {
