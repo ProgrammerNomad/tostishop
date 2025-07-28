@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize all homepage features
     initScrollAnimations();
     initProductSliders();
+    initTodaysDealsSwiper(); // Add Swiper initialization
     initNewsletterForm();
     initFirebaseLogin();
     initCategoryFilters();
@@ -93,6 +94,106 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    /**
+     * Today's Deals Swiper Initialization
+     */
+    function initTodaysDealsSwiper() {
+        // Check if Swiper is loaded and element exists
+        if (typeof Swiper !== 'undefined' && document.querySelector('.deals-swiper')) {
+            const dealsSwiper = new Swiper('.deals-swiper', {
+                // Basic settings
+                slidesPerView: 1,
+                spaceBetween: 20,
+                loop: true,
+                centeredSlides: false,
+                
+                // Responsive breakpoints
+                breakpoints: {
+                    // Mobile (>= 480px)
+                    480: {
+                        slidesPerView: 2,
+                        spaceBetween: 15,
+                    },
+                    // Tablet (>= 640px)
+                    640: {
+                        slidesPerView: 3,
+                        spaceBetween: 20,
+                    },
+                    // Desktop small (>= 768px)
+                    768: {
+                        slidesPerView: 4,
+                        spaceBetween: 25,
+                    },
+                    // Desktop medium (>= 1024px)
+                    1024: {
+                        slidesPerView: 5,
+                        spaceBetween: 30,
+                    },
+                    // Desktop large (>= 1280px)
+                    1280: {
+                        slidesPerView: 6,
+                        spaceBetween: 30,
+                    }
+                },
+                
+                // Navigation arrows
+                navigation: {
+                    nextEl: '.deals-next',
+                    prevEl: '.deals-prev',
+                },
+                
+                // Pagination dots
+                pagination: {
+                    el: '.deals-pagination',
+                    clickable: true,
+                    renderBullet: function (index, className) {
+                        return '<span class="' + className + '"></span>';
+                    },
+                },
+                
+                // Autoplay (optional)
+                autoplay: {
+                    delay: 4000,
+                    disableOnInteraction: false,
+                    pauseOnMouseEnter: true,
+                },
+                
+                // Effects
+                effect: 'slide',
+                speed: 600,
+                
+                // Additional settings
+                grabCursor: true,
+                watchSlidesProgress: true,
+                watchSlidesVisibility: true,
+                
+                // Callbacks
+                on: {
+                    init: function () {
+                        console.log('Today\'s Deals Swiper initialized');
+                    },
+                    slideChange: function () {
+                        // Optional: Track slide changes for analytics
+                    }
+                }
+            });
+            
+            // Pause autoplay on hover (additional control)
+            const swiperContainer = document.querySelector('.deals-swiper');
+            if (swiperContainer) {
+                swiperContainer.addEventListener('mouseenter', () => {
+                    dealsSwiper.autoplay.stop();
+                });
+                
+                swiperContainer.addEventListener('mouseleave', () => {
+                    dealsSwiper.autoplay.start();
+                });
+            }
+        } else {
+            console.warn('Swiper not loaded or .deals-swiper element not found');
+        }
+    }
+
     /**
      * Newsletter form handling
      */

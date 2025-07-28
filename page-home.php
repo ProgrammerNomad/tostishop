@@ -278,102 +278,114 @@ global $woocommerce;
                 </p>
             </div>
             
-            <!-- Single Row Centered Deals -->
-            <div class="flex justify-center">
-                <div class="flex flex-wrap justify-center gap-6 lg:gap-8 max-w-6xl">
-                    <?php
-                    global $woocommerce_loop;
-                    
-                    $sale_products = wc_get_products( array(
-                        'status' => 'publish',
-                        'visibility' => 'catalog',
-                        'on_sale' => true,
-                        'limit' => 6,
-                        'orderby' => 'date',
-                        'order' => 'DESC',
-                    ) );
-                    
-                    if ( ! empty( $sale_products ) ) :
-                        $woocommerce_loop['columns'] = 6;
-                        $woocommerce_loop['is_homepage'] = true;
+            <!-- Today's Deals Swiper Slider -->
+            <div class="deals-slider-container relative">
+                <!-- Swiper -->
+                <div class="swiper deals-swiper">
+                    <div class="swiper-wrapper">
+                        <?php
+                        global $woocommerce_loop;
                         
-                        foreach ( $sale_products as $sale_product ) :
-                            // Calculate discount percentage
-                            $regular_price = (float) $sale_product->get_regular_price();
-                            $sale_price = (float) $sale_product->get_sale_price();
-                            $discount_percentage = 0;
+                        $sale_products = wc_get_products( array(
+                            'status' => 'publish',
+                            'visibility' => 'catalog',
+                            'on_sale' => true,
+                            'limit' => 12, // Increased limit for slider
+                            'orderby' => 'date',
+                            'order' => 'DESC',
+                        ) );
+                        
+                        if ( ! empty( $sale_products ) ) :
+                            $woocommerce_loop['columns'] = 6;
+                            $woocommerce_loop['is_homepage'] = true;
                             
-                            if ( $regular_price > 0 && $sale_price > 0 ) {
-                                $discount_percentage = round( ( ( $regular_price - $sale_price ) / $regular_price ) * 100 );
-                            }
-                            
-                            // Setup WooCommerce product context
-                            $post_object = get_post( $sale_product->get_id() );
-                            setup_postdata( $GLOBALS['post'] =& $post_object );
-                            
-                            // Set global product
-                            global $product;
-                            $product = $sale_product;
-                    ?>
-                        <div class="product-wrapper w-40 sm:w-44 md:w-48 lg:w-52">
-                            <div class="deal-card relative">
-                                <!-- Custom Product Display for Deals -->
-                                <div class="product-item">
-                                    <!-- Discount Badge (% OFF only) -->
-                                    <?php if ( $discount_percentage > 0 ) : ?>
-                                        <div class="discount-badge">
-                                            <?php echo esc_html( $discount_percentage ); ?>% OFF
-                                        </div>
-                                    <?php endif; ?>
-                                    
-                                    <!-- Product Image -->
-                                    <div class="product-image">
-                                        <a href="<?php echo esc_url( get_permalink( $product->get_id() ) ); ?>">
-                                            <?php echo $product->get_image( array( 200, 200 ) ); ?>
-                                        </a>
-                                    </div>
-                                    
-                                    <!-- Product Info -->
-                                    <div class="product-info">
-                                        <h3 class="product-title">
-                                            <a href="<?php echo esc_url( get_permalink( $product->get_id() ) ); ?>">
-                                                <?php echo esc_html( $product->get_name() ); ?>
-                                            </a>
-                                        </h3>
-                                        
-                                        <!-- Product Rating -->
-                                        <?php if ( $product->get_average_rating() ) : ?>
-                                            <div class="star-rating">
-                                                <?php echo wc_get_rating_html( $product->get_average_rating() ); ?>
+                            foreach ( $sale_products as $sale_product ) :
+                                // Calculate discount percentage
+                                $regular_price = (float) $sale_product->get_regular_price();
+                                $sale_price = (float) $sale_product->get_sale_price();
+                                $discount_percentage = 0;
+                                
+                                if ( $regular_price > 0 && $sale_price > 0 ) {
+                                    $discount_percentage = round( ( ( $regular_price - $sale_price ) / $regular_price ) * 100 );
+                                }
+                                
+                                // Setup WooCommerce product context
+                                $post_object = get_post( $sale_product->get_id() );
+                                setup_postdata( $GLOBALS['post'] =& $post_object );
+                                
+                                // Set global product
+                                global $product;
+                                $product = $sale_product;
+                        ?>
+                            <div class="swiper-slide">
+                                <div class="product-wrapper">
+                                    <div class="deal-card relative">
+                                        <!-- Custom Product Display for Deals -->
+                                        <div class="product-item">
+                                            <!-- Discount Badge (% OFF only) -->
+                                            <?php if ( $discount_percentage > 0 ) : ?>
+                                                <div class="discount-badge">
+                                                    <?php echo esc_html( $discount_percentage ); ?>% OFF
+                                                </div>
+                                            <?php endif; ?>
+                                            
+                                            <!-- Product Image -->
+                                            <div class="product-image">
+                                                <a href="<?php echo esc_url( get_permalink( $product->get_id() ) ); ?>">
+                                                    <?php echo $product->get_image( array( 200, 200 ) ); ?>
+                                                </a>
                                             </div>
-                                        <?php endif; ?>
-                                        
-                                        <!-- Product Price -->
-                                        <div class="product-price">
-                                            <?php echo $product->get_price_html(); ?>
+                                            
+                                            <!-- Product Info -->
+                                            <div class="product-info">
+                                                <h3 class="product-title">
+                                                    <a href="<?php echo esc_url( get_permalink( $product->get_id() ) ); ?>">
+                                                        <span class="line-clamp-2"><?php echo esc_html( $product->get_name() ); ?></span>
+                                                    </a>
+                                                </h3>
+                                                
+                                                <!-- Product Rating -->
+                                                <?php if ( $product->get_average_rating() ) : ?>
+                                                    <div class="star-rating">
+                                                        <?php echo wc_get_rating_html( $product->get_average_rating() ); ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                                
+                                                <!-- Product Price -->
+                                                <div class="product-price">
+                                                    <?php echo $product->get_price_html(); ?>
+                                                </div>
+                                                
+                                                <!-- Add to Cart Button -->
+                                                <?php if ( $product->is_purchasable() && $product->is_in_stock() ) : ?>
+                                                    <button class="add-to-cart-btn" 
+                                                            data-product-id="<?php echo esc_attr( $product->get_id() ); ?>"
+                                                            data-quantity="1">
+                                                        Add to Cart
+                                                    </button>
+                                                <?php else : ?>
+                                                    <button class="add-to-cart-btn" disabled>
+                                                        Out of Stock
+                                                    </button>
+                                                <?php endif; ?>
+                                            </div>
                                         </div>
-                                        
-                                        <!-- Add to Cart Button -->
-                                        <?php if ( $product->is_purchasable() && $product->is_in_stock() ) : ?>
-                                            <button class="add-to-cart-btn" 
-                                                    data-product-id="<?php echo esc_attr( $product->get_id() ); ?>"
-                                                    data-quantity="1">
-                                                Add to Cart
-                                            </button>
-                                        <?php else : ?>
-                                            <button class="add-to-cart-btn" disabled>
-                                                Out of Stock
-                                            </button>
-                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    <?php 
-                        endforeach;
-                        wp_reset_postdata();
-                    endif;
-                    ?>
+                        <?php 
+                            endforeach;
+                            wp_reset_postdata();
+                        endif;
+                        ?>
+                    </div>
+                    
+                    <!-- Navigation buttons -->
+                    <div class="swiper-button-next deals-next"></div>
+                    <div class="swiper-button-prev deals-prev"></div>
+                    
+                    <!-- Pagination dots -->
+                    <div class="swiper-pagination deals-pagination"></div>
                 </div>
             </div>
         </div>
