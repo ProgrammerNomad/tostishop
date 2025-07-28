@@ -30,12 +30,6 @@ function tostishop_scripts() {
     // Page-specific assets
     tostishop_enqueue_page_specific_assets();
     
-    // Swiper.js for homepage sliders (offline version - v11.2.10)
-    if (is_page_template('page-home.php') || is_front_page()) {
-        wp_enqueue_style('swiper-css', get_template_directory_uri() . '/assets/css/swiper.min.css', array(), '11.2.10');
-        wp_enqueue_script('swiper-js', get_template_directory_uri() . '/assets/js/swiper.min.js', array(), '11.2.10', true);
-    }
-    
     // Firebase Authentication (India-specific)
     if (is_account_page() || is_checkout()) {
         tostishop_enqueue_firebase_auth();

@@ -17,6 +17,8 @@ yarn.lock
 # But ignore other build artifacts
 dist/
 build/
+*.min.css
+*.min.js
 *.map
 
 # ===========================================

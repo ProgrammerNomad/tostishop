@@ -40,9 +40,9 @@ function tostishop_handle_firebase_login() {
     $from_checkout = isset($_POST['from_checkout']) && $_POST['from_checkout'] === 'true';
     
     try {
-        // For development, decode the actual Firebase user data from token
-        // In production, this should use Firebase Admin SDK for full verification
-        $firebase_user_data = tostishop_decode_firebase_token($firebase_token, $auth_method);
+        // For development, simulate Firebase user data
+        // In production, replace this with actual Firebase token verification
+        $firebase_user_data = tostishop_simulate_firebase_user($firebase_token, $auth_method);
         
         if (!$firebase_user_data) {
             wp_send_json_error(array(
@@ -152,10 +152,18 @@ function tostishop_handle_firebase_register() {
         return;
     }
     
+    // Check if email already exists
+    if (email_exists($user_email)) {
+        wp_send_json_error(array(
+            'message' => 'An account with this email already exists. Please use a different email or try logging in.',
+            'code' => 'email_exists'
+        ));
+        return;
+    }
+
     try {
-        // Verify Firebase token first
-                // Verify Firebase token again
-        $firebase_user_data = tostishop_decode_firebase_token($firebase_token, $auth_method);
+        // Verify Firebase token again
+        $firebase_user_data = tostishop_simulate_firebase_user($firebase_token, $auth_method);
         
         if (!$firebase_user_data) {
             wp_send_json_error(array(
@@ -163,81 +171,6 @@ function tostishop_handle_firebase_register() {
                 'code' => 'firebase_auth_failed'
             ));
             return;
-        }
-    
-        // ✅ SMART EXISTING USER HANDLING
-        // Check if this Firebase user already exists first
-        $existing_user_id = tostishop_find_existing_user($firebase_user_data, $auth_method);
-        if ($existing_user_id) {
-            error_log('🔄 Existing Firebase user found during registration, logging them in: ' . $existing_user_id);
-            
-            wp_set_current_user($existing_user_id);
-            wp_set_auth_cookie($existing_user_id, true);
-            
-            $redirect_url = home_url('/my-account/');
-            if ($from_checkout) {
-                $redirect_url = wc_get_checkout_url();
-            }
-            
-            wp_send_json_success(array(
-                'message' => 'Welcome back to TostiShop!',
-                'redirect_url' => $redirect_url,
-                'user_id' => $existing_user_id,
-                'auth_method' => $auth_method
-            ));
-            return;
-        }
-        
-        // Check if email already exists (but doesn't have Firebase UID)
-        $existing_email_user = get_user_by('email', $user_email);
-        if ($existing_email_user) {
-            error_log('🔍 Found user with same email: ' . $existing_email_user->ID);
-            
-            // Check if this user already has Firebase UID
-            $existing_firebase_uid = get_user_meta($existing_email_user->ID, 'firebase_uid', true);
-            
-            if (empty($existing_firebase_uid)) {
-                // Email exists but no Firebase UID - link the accounts
-                error_log('� Linking existing email user to Firebase UID');
-                update_user_meta($existing_email_user->ID, 'firebase_uid', $firebase_user_data['uid']);
-                update_user_meta($existing_email_user->ID, 'firebase_auth_method', $auth_method);
-                
-                wp_set_current_user($existing_email_user->ID);
-                wp_set_auth_cookie($existing_email_user->ID, true);
-                
-                $redirect_url = home_url('/my-account/');
-                if ($from_checkout) {
-                    $redirect_url = wc_get_checkout_url();
-                }
-                
-                wp_send_json_success(array(
-                    'message' => 'Account linked successfully! Welcome back to TostiShop!',
-                    'redirect_url' => $redirect_url,
-                    'user_id' => $existing_email_user->ID,
-                    'auth_method' => $auth_method
-                ));
-                return;
-            } else {
-                // This case should have been caught by the Firebase UID check above
-                // But if it somehow gets here, also handle it gracefully
-                error_log('🔄 User with email and Firebase UID exists, logging them in');
-                
-                wp_set_current_user($existing_email_user->ID);
-                wp_set_auth_cookie($existing_email_user->ID, true);
-                
-                $redirect_url = home_url('/my-account/');
-                if ($from_checkout) {
-                    $redirect_url = wc_get_checkout_url();
-                }
-                
-                wp_send_json_success(array(
-                    'message' => 'Welcome back to TostiShop!',
-                    'redirect_url' => $redirect_url,
-                    'user_id' => $existing_email_user->ID,
-                    'auth_method' => $auth_method
-                ));
-                return;
-            }
         }
 
         // Create WordPress user
@@ -314,123 +247,53 @@ function tostishop_handle_firebase_register() {
 /**
  * Simulate Firebase user data (replace with actual Firebase Admin SDK in production)
  */
-function tostishop_decode_firebase_token($token, $auth_method) {
-    // Instead of simulation, decode the actual Firebase JWT token
-    // The token contains real user data from Firebase authentication
+function tostishop_simulate_firebase_user($token, $auth_method) {
+    // For development - simulate Firebase user based on auth method
+    $user_data = array(
+        'uid' => 'firebase_user_' . time() . '_' . wp_rand(1000, 9999),
+        'email' => '',
+        'name' => '',
+        'phone_number' => ''
+    );
     
-    error_log('🔍 Decoding Firebase token for auth method: ' . $auth_method);
-    
-    try {
-        // Firebase JWT tokens have 3 parts separated by dots
-        $token_parts = explode('.', $token);
-        
-        if (count($token_parts) !== 3) {
-            error_log('❌ Invalid JWT token format');
-            return false;
-        }
-        
-        // Decode the payload (middle part) - this contains user data
-        $payload_base64 = $token_parts[1];
-        
-        // Add padding if needed for base64 decode
-        $payload_base64 = str_pad($payload_base64, strlen($payload_base64) % 4, '=', STR_PAD_RIGHT);
-        
-        // Convert Firebase base64url to standard base64
-        $payload_base64 = str_replace(['-', '_'], ['+', '/'], $payload_base64);
-        
-        $payload_json = base64_decode($payload_base64);
-        $payload = json_decode($payload_json, true);
-        
-        if (!$payload) {
-            error_log('❌ Failed to decode token payload');
-            return false;
-        }
-        
-        error_log('✅ Decoded Firebase token payload: ' . json_encode($payload));
-        
-        // Extract real user data from the token
-        $user_data = array(
-            'uid' => $payload['sub'] ?? 'unknown_uid', // Firebase UID
-            'email' => $payload['email'] ?? '',
-            'name' => $payload['name'] ?? '',
-            'phone_number' => $payload['phone_number'] ?? '',
-            'email_verified' => $payload['email_verified'] ?? false,
-            'picture' => $payload['picture'] ?? ''
-        );
-        
-        // Log the extracted data
-        error_log('📤 Extracted user data: ' . json_encode($user_data));
-        
-        return $user_data;
-        
-    } catch (Exception $e) {
-        error_log('❌ Error decoding Firebase token: ' . $e->getMessage());
-        
-        // Fallback for development/testing
-        if (defined('TOSTISHOP_DEV_MODE') && TOSTISHOP_DEV_MODE) {
-            error_log('� Using development fallback data');
-            
-            $user_data = array(
-                'uid' => 'dev_user_' . time(),
-                'email' => '',
-                'name' => '',
-                'phone_number' => ''
-            );
-            
-            if ($auth_method === 'phone') {
-                $user_data['phone_number'] = '+919450987150';
-            } elseif ($auth_method === 'google') {
-                $user_data['email'] = 'devgoogleuser@gmail.com';
-                $user_data['name'] = 'Dev Google User';
-                $user_data['email_verified'] = true;
-            } elseif ($auth_method === 'email') {
-                $user_data['email'] = 'devemailuser@example.com';
-            }
-            
-            return $user_data;
-        }
-        
-        return false;
+    if ($auth_method === 'phone') {
+        // For phone auth, we typically only have phone number
+        $user_data['phone_number'] = '+919450987150'; // Replace with actual phone from token
+    } elseif ($auth_method === 'google') {
+        // For Google auth, we have email and name
+        $user_data['email'] = 'user@gmail.com'; // Replace with actual data from token
+        $user_data['name'] = 'Google User'; // Replace with actual name from token
     }
+    
+    return $user_data;
 }
 
 /**
  * Find existing WordPress user based on Firebase data
  */
 function tostishop_find_existing_user($firebase_user_data, $auth_method) {
-    error_log('🔍 Looking for existing user with Firebase UID: ' . $firebase_user_data['uid']);
-    error_log('🔍 Email: ' . ($firebase_user_data['email'] ?? 'none'));
-    error_log('🔍 Auth method: ' . $auth_method);
-    
-    // Try to find user by Firebase UID first (most reliable)
+    // Try to find user by Firebase UID first
     $users = get_users(array(
         'meta_key' => 'firebase_uid',
         'meta_value' => $firebase_user_data['uid'],
         'number' => 1
     ));
     
-    error_log('🔍 Firebase UID search found: ' . count($users) . ' users');
-    
     if (!empty($users)) {
-        error_log('✅ Found user by Firebase UID: ' . $users[0]->ID);
         return $users[0]->ID;
     }
     
-    // Try by email if available (for linking existing accounts)
+    // Try by email if available
     if (!empty($firebase_user_data['email'])) {
         $user = get_user_by('email', $firebase_user_data['email']);
         if ($user) {
-            error_log('✅ Found user by email, linking Firebase UID: ' . $user->ID);
-            // Link Firebase UID to existing user for future logins
+            // Link Firebase UID to existing user
             update_user_meta($user->ID, 'firebase_uid', $firebase_user_data['uid']);
-            update_user_meta($user->ID, 'firebase_auth_method', $auth_method);
             return $user->ID;
-        } else {
-            error_log('❌ No user found with email: ' . $firebase_user_data['email']);
         }
     }
     
-    // Try by phone for phone auth (for linking existing accounts)
+    // Try by phone for phone auth
     if ($auth_method === 'phone' && !empty($firebase_user_data['phone_number'])) {
         $users = get_users(array(
             'meta_key' => 'firebase_phone',
@@ -439,14 +302,11 @@ function tostishop_find_existing_user($firebase_user_data, $auth_method) {
         ));
         
         if (!empty($users)) {
-            error_log('✅ Found user by phone, linking Firebase UID: ' . $users[0]->ID);
             update_user_meta($users[0]->ID, 'firebase_uid', $firebase_user_data['uid']);
-            update_user_meta($users[0]->ID, 'firebase_auth_method', $auth_method);
             return $users[0]->ID;
         }
     }
     
-    error_log('❌ No existing user found for Firebase UID: ' . $firebase_user_data['uid']);
     return false;
 }
 

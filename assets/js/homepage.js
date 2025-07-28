@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize all homepage features
     initScrollAnimations();
     initProductSliders();
-    initTodaysDealsSwiper(); // Add Swiper initialization
     initNewsletterForm();
     initFirebaseLogin();
     initCategoryFilters();
@@ -94,115 +93,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    /**
-     * Today's Deals Swiper Initialization - Amazon Style
-     */
-    function initTodaysDealsSwiper() {
-        // Check if Swiper is loaded and element exists
-        if (typeof Swiper !== 'undefined' && document.querySelector('.deals-swiper')) {
-            const dealsSwiper = new Swiper('.deals-swiper', {
-                // Basic settings for Amazon-style slider
-                slidesPerView: 'auto', // Let CSS control the width
-                spaceBetween: 16,
-                loop: false, // No loop for Amazon style
-                centeredSlides: false,
-                freeMode: true, // Allow free scrolling like Amazon
-                
-                // Responsive breakpoints - Amazon style with partial products
-                breakpoints: {
-                    // Mobile (< 640px) - 2 full + partial 3rd
-                    320: {
-                        slidesPerView: 2.3,
-                        spaceBetween: 12,
-                        freeMode: true,
-                    },
-                    // Mobile Large (>= 640px) - 3 full + partial 4th
-                    640: {
-                        slidesPerView: 3.2,
-                        spaceBetween: 14,
-                        freeMode: true,
-                    },
-                    // Tablet (>= 768px) - 3.5 products visible
-                    768: {
-                        slidesPerView: 3.5,
-                        spaceBetween: 16,
-                        freeMode: true,
-                    },
-                    // Desktop medium (>= 1024px) - 4 full + partial 5th
-                    1024: {
-                        slidesPerView: 4.2,
-                        spaceBetween: 18,
-                        freeMode: true,
-                    },
-                    // Desktop large (>= 1280px) - 4.5 products visible
-                    1280: {
-                        slidesPerView: 4.5,
-                        spaceBetween: 20,
-                        freeMode: true,
-                    }
-                },
-                
-                // Navigation arrows
-                navigation: {
-                    nextEl: '.deals-next',
-                    prevEl: '.deals-prev',
-                },
-                
-                // No pagination for Amazon style
-                pagination: false,
-                
-                // No autoplay for Amazon style
-                autoplay: false,
-                
-                // Effects and performance
-                effect: 'slide',
-                speed: 300, // Faster for Amazon feel
-                
-                // Amazon-style interaction settings
-                grabCursor: true,
-                watchSlidesProgress: true,
-                watchSlidesVisibility: true,
-                touchRatio: 1,
-                touchAngle: 45,
-                simulateTouch: true,
-                allowTouchMove: true,
-                
-                // Free mode settings for smooth Amazon-like scrolling
-                freeMode: {
-                    enabled: true,
-                    sticky: false,
-                    momentumBounce: false,
-                    momentumRatio: 0.5,
-                    momentumVelocityRatio: 0.5,
-                },
-                
-                // Callbacks
-                on: {
-                    init: function () {
-                        console.log('Amazon-style Today\'s Deals Swiper initialized');
-                        // Add loaded class for CSS animations
-                        const swiperEl = document.querySelector('.deals-swiper');
-                        if (swiperEl) {
-                            swiperEl.classList.add('swiper-loaded');
-                        }
-                    },
-                    slideChange: function () {
-                        // Optional: Track slide changes for analytics
-                        if (typeof gtag !== 'undefined') {
-                            gtag('event', 'deals_slider_interaction', {
-                                'event_category': 'engagement',
-                                'slide_index': this.activeIndex
-                            });
-                        }
-                    }
-                }
-            });
-            
-        } else {
-            console.warn('Swiper not loaded or .deals-swiper element not found');
-        }
-    }
-
     /**
      * Newsletter form handling
      */
