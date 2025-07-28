@@ -802,9 +802,18 @@
                             }, 1500);
                             
                         } else if (response.data.code === 'user_not_registered') {
-                            // 🆕 NEW USER - Show registration form
-                            console.log('👤 New user detected, showing registration form');
-                            showUserRegistrationModal(firebaseUser, authMethod);
+                            // 🆕 NEW USER - Handle based on auth method
+                            console.log('👤 New user detected, auth method:', authMethod);
+                            
+                            if (authMethod === 'google') {
+                                // Google users have name and email, auto-register them
+                                console.log('� Google user - auto-registering with available data');
+                                autoRegisterGoogleUser(firebaseUser, authMethod);
+                            } else {
+                                // Phone and email users need registration form
+                                console.log('📱 Phone/Email user - showing registration form');
+                                showUserRegistrationModal(firebaseUser, authMethod);
+                            }
                             
                         } else {
                             const errorCode = response.data.code || '';
@@ -1005,6 +1014,100 @@
                 hideLoading();
                 console.error('❌ Token retrieval error:', error);
                 showError('Authentication error. Please try again.');
+            });
+    }
+
+    /**
+     * Auto-register Google users with available data - NEW FUNCTION
+     */
+    function autoRegisterGoogleUser(firebaseUser, authMethod) {
+        console.log('🔍 Auto-registering Google user:', firebaseUser.displayName, firebaseUser.email);
+        
+        // Extract user data from Google profile
+        const userName = firebaseUser.displayName || '';
+        const userEmail = firebaseUser.email || '';
+        
+        // Validate that we have minimum required data
+        if (!userName || !userEmail) {
+            console.log('❌ Missing required Google data, falling back to registration form');
+            showUserRegistrationModal(firebaseUser, authMethod);
+            return;
+        }
+        
+        // Split name into first and last
+        const nameParts = userName.split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || nameParts[0]; // Use first name as last name if only one name
+        
+        showLoading('Creating your TostiShop account...');
+        
+        // Get Firebase token and create WordPress user automatically
+        firebaseUser.getIdToken()
+            .then(function(idToken) {
+                
+                const registrationData = {
+                    action: 'tostishop_firebase_register',
+                    firebase_token: idToken,
+                    nonce: tostiShopAjax.nonce,
+                    auth_method: authMethod,
+                    first_name: firstName,
+                    last_name: lastName,
+                    user_email: userEmail,
+                    user_phone: '', // Google doesn't provide phone
+                    from_checkout: window.location.href.includes('checkout') ? 'true' : 'false'
+                };
+
+                console.log('📤 Sending auto-registration request for Google user');
+
+                $.ajax({
+                    url: tostiShopAjax.ajaxurl,
+                    type: 'POST',
+                    data: registrationData,
+                    timeout: 30000,
+                    success: function(response) {
+                        hideLoading();
+                        
+                        console.log('📥 Auto-registration response:', response);
+                        
+                        if (response.success) {
+                            showSuccess('🎉 Welcome to TostiShop! Google account linked successfully. Redirecting...');
+                            
+                            setTimeout(function() {
+                                window.location.href = response.data.redirect_url || tostiShopAjax.redirectUrl || '/my-account/';
+                            }, 2000);
+                            
+                        } else {
+                            console.log('❌ Auto-registration failed, showing manual form');
+                            const errorMessage = response.data ? response.data.message : 'Auto-registration failed.';
+                            
+                            // If auto-registration fails, fall back to manual registration
+                            showError(errorMessage + ' Please complete your registration manually.');
+                            setTimeout(() => {
+                                showUserRegistrationModal(firebaseUser, authMethod);
+                            }, 2000);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        hideLoading();
+                        console.error('❌ Auto-registration error:', xhr.responseText, status, error);
+                        
+                        // Fall back to manual registration
+                        showError('Auto-registration failed. Please complete your registration manually.');
+                        setTimeout(() => {
+                            showUserRegistrationModal(firebaseUser, authMethod);
+                        }, 2000);
+                    }
+                });
+            })
+            .catch(function(error) {
+                hideLoading();
+                console.error('❌ Token retrieval error during auto-registration:', error);
+                
+                // Fall back to manual registration
+                showError('Authentication error. Please complete your registration manually.');
+                setTimeout(() => {
+                    showUserRegistrationModal(firebaseUser, authMethod);
+                }, 2000);
             });
     }
 
