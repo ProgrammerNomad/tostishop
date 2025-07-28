@@ -669,6 +669,8 @@
     transform: translateX(4px);
 }
 
+/* Remove duplicate badge styles and keep only these clean ones */
+
 /* Hide WooCommerce default sale badge in deals section */
 .deal-card .onsale,
 .deal-card .woocommerce-onsale,
@@ -677,88 +679,13 @@
     display: none !important;
 }
 
-/* Ensure our custom % OFF badge is prominent */
-.deal-card .discount-badge,
-.deal-card .absolute.top-2.left-2 {
-    display: block !important;
-    position: absolute !important;
-    top: 0.5rem !important;
-    left: 0.5rem !important;
-    background: #e42029 !important;
-    color: white !important;
-    font-size: 0.75rem !important;
-    font-weight: 700 !important;
-    padding: 0.25rem 0.5rem !important;
-    border-radius: 9999px !important;
-    z-index: 15 !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.025em !important;
-}
-
-/* Hide sale badges in all homepage product sections when showing custom badges */
-.tostishop-homepage .onsale,
-.tostishop-homepage .woocommerce-onsale {
-    display: none !important;
-}
-
-/* Enhanced % OFF Badge Styling */
-.discount-badge {
-    background: linear-gradient(135deg, #e42029 0%, #dc2626 100%) !important;
-    color: white !important;
-    font-size: 0.75rem !important;
-    font-weight: 800 !important;
-    padding: 0.375rem 0.625rem !important;
-    border-radius: 50px !important;
-    z-index: 20 !important;
-    box-shadow: 
-        0 2px 8px rgba(228, 32, 41, 0.4),
-        0 0 0 2px rgba(255, 255, 255, 0.3) !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.05em !important;
-    border: 1.5px solid rgba(255, 255, 255, 0.2) !important;
-    backdrop-filter: blur(4px) !important;
-    animation: badgePulse 2s infinite !important;
-}
-
-/* Pulse animation for % OFF badge */
-@keyframes badgePulse {
-    0%, 100% {
-        transform: scale(1);
-        box-shadow: 
-            0 2px 8px rgba(228, 32, 41, 0.4),
-            0 0 0 2px rgba(255, 255, 255, 0.3);
-    }
-    50% {
-        transform: scale(1.05);
-        box-shadow: 
-            0 4px 12px rgba(228, 32, 41, 0.6),
-            0 0 0 3px rgba(255, 255, 255, 0.4);
-    }
-}
-
-/* Remove animation on mobile for better performance */
-@media (max-width: 640px) {
-    .discount-badge {
-        animation: none !important;
-        font-size: 0.625rem !important;
-        padding: 0.25rem 0.5rem !important;
-    }
-}
-
-/* Ensure sale badges are hidden globally in homepage sections */
+/* Homepage sections use global .discount-badge class */
 .tostishop-homepage .onsale,
 .tostishop-homepage .woocommerce-onsale,
 .tostishop-homepage .sale-flash,
 .tostishop-homepage .wc-onsale {
     display: none !important;
     visibility: hidden !important;
-}
-
-/* Product wrapper positioning for badge */
-.deal-card .product-wrapper,
-.deal-card .product-item {
-    position: relative !important;
 }
 
 /* Enhanced product hover with % OFF badge */

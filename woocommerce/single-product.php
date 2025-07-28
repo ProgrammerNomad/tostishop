@@ -287,27 +287,57 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                     
                     <!-- Main Image -->
                     <div class="mb-4">
-                        <div class="bg-gray-100 rounded-lg overflow-hidden aspect-square">
+                        <div class="bg-gray-100 rounded-lg overflow-hidden aspect-square relative">
                             <?php if (has_post_thumbnail()) : ?>
                                 <?php the_post_thumbnail('large', array(
                                     'class' => 'w-full h-full object-cover main-product-image',
-                                    'id' => 'main-product-image'
+                                    'alt' => get_the_title()
                                 )); ?>
+                            <?php else : ?>
+                                <img src="<?php echo esc_url(wc_placeholder_img_src()); ?>" 
+                                     alt="<?php echo esc_attr(get_the_title()); ?>" 
+                                     class="w-full h-full object-cover">
                             <?php endif; ?>
                             
-                            <!-- Gallery Images (initially hidden) -->
-                            <?php
-                            $attachment_ids = $product->get_gallery_image_ids();
-                            foreach ($attachment_ids as $index => $attachment_id) :
-                                $image_url = wp_get_attachment_image_url($attachment_id, 'large');
-                            ?>
-                                <img src="<?php echo esc_url($image_url); ?>" 
-                                     alt="<?php echo esc_attr(get_post_meta($attachment_id, '_wp_attachment_image_alt', true)); ?>"
-                                     class="w-full h-full object-cover gallery-image"
-                                     style="display: none;"
-                                     data-gallery-index="<?php echo $index + 1; ?>">
-                            <?php endforeach; ?>
+                            <!-- Main Product % OFF Badge -->
+                            <?php if ( $product->is_on_sale() ) : ?>
+                                <?php
+                                // Calculate discount percentage for main product
+                                $regular_price = (float) $product->get_regular_price();
+                                $sale_price = (float) $product->get_sale_price();
+                                $discount_percentage = 0;
+                                
+                                if ( $regular_price > 0 && $sale_price > 0 ) {
+                                    $discount_percentage = round( ( ( $regular_price - $sale_price ) / $regular_price ) * 100 );
+                                }
+                                ?>
+                                
+                                <?php if ( $discount_percentage > 0 ) : ?>
+                                    <!-- % OFF Badge for main product using global discount-badge class -->
+                                    <div class="discount-badge">
+                                        <?php echo esc_html( $discount_percentage ); ?>% OFF
+                                    </div>
+                                <?php else : ?>
+                                    <!-- Fallback "Sale" badge if percentage can't be calculated -->
+                                    <div class="absolute top-2 left-2 bg-accent text-white text-xs font-bold px-2 py-1 rounded">
+                                        <?php _e( 'Sale', 'tostishop' ); ?>
+                                    </div>
+                                <?php endif; ?>
+                            <?php endif; ?>
                         </div>
+                        
+                        <!-- Gallery Images (initially hidden) -->
+                        <?php
+                        $attachment_ids = $product->get_gallery_image_ids();
+                        foreach ($attachment_ids as $index => $attachment_id) :
+                            $image_url = wp_get_attachment_image_url($attachment_id, 'large');
+                        ?>
+                            <img src="<?php echo esc_url($image_url); ?>" 
+                                 alt="<?php echo esc_attr(get_post_meta($attachment_id, '_wp_attachment_image_alt', true)); ?>"
+                                 class="w-full h-full object-cover gallery-image"
+                                 style="display: none;"
+                                 data-gallery-index="<?php echo $index + 1; ?>">
+                        <?php endforeach; ?>
                     </div>
                     
                     <!-- Thumbnail Navigation -->
@@ -715,9 +745,28 @@ if ( ! empty( $related_products ) ) :
                         
                         <!-- Sale Badge -->
                         <?php if ( $related_product->is_on_sale() ) : ?>
-                            <div class="absolute top-2 left-2 bg-accent text-white text-xs font-bold px-2 py-1 rounded">
-                                <?php _e( 'Sale', 'tostishop' ); ?>
-                            </div>
+                            <?php
+                            // Calculate discount percentage for related products
+                            $regular_price = (float) $related_product->get_regular_price();
+                            $sale_price = (float) $related_product->get_sale_price();
+                            $discount_percentage = 0;
+                            
+                            if ( $regular_price > 0 && $sale_price > 0 ) {
+                                $discount_percentage = round( ( ( $regular_price - $sale_price ) / $regular_price ) * 100 );
+                            }
+                            ?>
+                            
+                            <?php if ( $discount_percentage > 0 ) : ?>
+                                <!-- % OFF Badge using global discount-badge class -->
+                                <div class="discount-badge">
+                                    <?php echo esc_html( $discount_percentage ); ?>% OFF
+                                </div>
+                            <?php else : ?>
+                                <!-- Fallback "Sale" badge if percentage can't be calculated -->
+                                <div class="absolute top-2 left-2 bg-accent text-white text-xs font-bold px-2 py-1 rounded">
+                                    <?php _e( 'Sale', 'tostishop' ); ?>
+                                </div>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                     
@@ -754,7 +803,7 @@ if ( ! empty( $related_products ) ) :
                             for ( $i = 1; $i <= 5; $i++ ) :
                                 if ( $i <= $rating ) : ?>
                                     <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.927c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
                                     </svg>
                                 <?php else : ?>
                                     <svg class="w-3 h-3 text-gray-300" fill="currentColor" viewBox="0 0 20 20">

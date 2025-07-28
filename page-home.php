@@ -321,7 +321,7 @@ global $woocommerce;
                                 <div class="product-item">
                                     <!-- Discount Badge (% OFF only) -->
                                     <?php if ( $discount_percentage > 0 ) : ?>
-                                        <div class="absolute top-2 left-2 z-20 discount-badge">
+                                        <div class="discount-badge">
                                             <?php echo esc_html( $discount_percentage ); ?>% OFF
                                         </div>
                                     <?php endif; ?>

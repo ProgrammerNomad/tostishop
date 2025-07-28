@@ -1,18 +1,7 @@
 <?php
 /**
  * The template for displaying product content within loops
- *
- * This template can be overridden by copying it to yourtheme/woocommerce/content-product.php.
- *
- * HOWEVER, on occasion WooCommerce will need to update template files and you
- * (the theme developer) will need to copy the new files to your theme to
- * maintain compatibility. We try to do this as little as possible, but it does
- * happen. When this occurs the version of the template file will be bumped and
- * the readme will list any important changes.
- *
- * @see     https://docs.woocommerce.com/document/template-structure/
- * @package WooCommerce\Templates
- * @version 9.4.0
+ * Following TostiShop coding guidelines with unified badge system
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -23,9 +12,38 @@ global $product;
 if (empty($product) || !$product->is_visible()) {
     return;
 }
+
+// Determine if we should show % OFF badges (centralized logic)
+$show_percentage_badge = (
+    is_shop() || 
+    is_product_category() || 
+    is_product_tag() ||
+    is_woocommerce() ||  // Add this for broader WooCommerce coverage
+    ( isset( $woocommerce_loop['is_homepage'] ) && $woocommerce_loop['is_homepage'] )
+);
+
+// Calculate discount percentage once
+$discount_percentage = 0;
+if ( $product->is_on_sale() ) {
+    $regular_price = (float) $product->get_regular_price();
+    $sale_price = (float) $product->get_sale_price();
+    
+    if ( $regular_price > 0 && $sale_price > 0 ) {
+        $discount_percentage = round( ( ( $regular_price - $sale_price ) / $regular_price ) * 100 );
+    }
+}
 ?>
 
-<div <?php wc_product_class('product-item group bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200', $product); ?>>
+<div <?php 
+    wc_product_class(
+        'product-item group bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200', 
+        $product
+    ); 
+    ?>
+    <?php if ( $discount_percentage > 0 ) : ?>
+        data-discount="<?php echo esc_attr( $discount_percentage ); ?>"
+    <?php endif; ?>
+>
     <!-- Product Image (Clickable) -->
     <div class="product-image relative bg-gray-100 rounded-t-lg overflow-hidden mb-4 aspect-square">
         <a href="<?php echo esc_url(get_permalink()); ?>" class="block h-full">
@@ -41,11 +59,19 @@ if (empty($product) || !$product->is_visible()) {
             <?php endif; ?>
         </a>
         
-        <!-- Sale Badge - Hide on homepage deals section -->
-        <?php if ( $product->is_on_sale() && ! ( isset( $woocommerce_loop['is_homepage'] ) && $woocommerce_loop['is_homepage'] ) ) : ?>
-            <div class="onsale">
-                <?php _e( 'Sale', 'tostishop' ); ?>
-            </div>
+        <!-- Enhanced Sale Badge Logic -->
+        <?php if ( $product->is_on_sale() ) : ?>
+            <?php if ( $show_percentage_badge && $discount_percentage > 0 ) : ?>
+                <!-- % OFF Badge for Shop/Category/Homepage -->
+                <div class="discount-badge absolute top-2 left-2 z-20 bg-gradient-to-br from-accent to-red-700 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg border-2 border-white/30 backdrop-blur-sm uppercase tracking-wide">
+                    <?php echo esc_html( $discount_percentage ); ?>% OFF
+                </div>
+            <?php elseif ( !$show_percentage_badge ) : ?>
+                <!-- Default "Sale" badge for single product pages -->
+                <div class="absolute top-2 left-2 z-10 bg-accent text-white text-xs font-bold px-2 py-1 rounded shadow-md">
+                    <?php _e( 'Sale', 'tostishop' ); ?>
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
     
@@ -58,13 +84,19 @@ if (empty($product) || !$product->is_visible()) {
             $category = $categories[0];
         ?>
             <p class="text-xs text-primary font-medium uppercase tracking-wide">
-                <a href="<?php echo esc_url(get_term_link($category)); ?>" class="hover:text-navy-900 transition-colors duration-200"><?php echo esc_html($category->name); ?></a>
+                <a href="<?php echo esc_url(get_term_link($category)); ?>" 
+                   class="hover:text-navy-900 transition-colors duration-200">
+                    <?php echo esc_html($category->name); ?>
+                </a>
             </p>
         <?php endif; ?>
         
         <!-- Product Title - Clickable -->
         <h3 class="product-title text-sm font-medium text-gray-900 leading-tight">
-            <a href="<?php echo esc_url(get_permalink()); ?>" class="line-clamp-2 hover:text-navy-900 transition-colors duration-200"><?php the_title(); ?></a>
+            <a href="<?php echo esc_url(get_permalink()); ?>" 
+               class="line-clamp-2 hover:text-navy-900 transition-colors duration-200">
+                <?php the_title(); ?>
+            </a>
         </h3>
         
         <!-- Rating Area - Always Show (even if empty) -->
