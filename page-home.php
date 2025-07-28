@@ -1,15 +1,13 @@
 <?php
 /**
- * TostiShop Custom Homepage Template
+ * Template Name: Home Page
  * 
- * Mobile-First WooCommerce Homepage with all features
- * Template Name: TostiShop Homepage
- * 
- * @package TostiShop
- * @version 1.0.0
+ * TostiShop Homepage Template - Mobile-First with Pure Tailwind CSS
+ * Comprehensive e-commerce homepage with all sections
+ * No custom CSS required - Everything built with Tailwind utility classes
  */
 
-defined( 'ABSPATH' ) || exit;
+defined('ABSPATH') || exit;
 
 get_header(); 
 
@@ -62,7 +60,7 @@ global $woocommerce;
                     
                     <!-- CTA Buttons -->
                     <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                        <a href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>" 
+                        <a href="<?php echo esc_url(wc_get_page_permalink('shop')); ?>" 
                            class="inline-flex items-center justify-center px-8 py-4 bg-accent text-white font-semibold rounded-lg hover:bg-red-600 transition-colors duration-200 shadow-lg">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
@@ -100,38 +98,38 @@ global $woocommerce;
             
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 lg:gap-8">
                 <?php
-                $categories = get_terms( array(
+                $categories = get_terms(array(
                     'taxonomy' => 'product_cat',
                     'hide_empty' => true,
                     'number' => 6,
                     'parent' => 0,
                     'orderby' => 'count',
                     'order' => 'DESC'
-                ) );
+                ));
                 
-                if ( $categories && ! is_wp_error( $categories ) ) :
-                    foreach ( $categories as $category ) :
-                        $thumbnail_id = get_term_meta( $category->term_id, 'thumbnail_id', true );
-                        $image_url = $thumbnail_id ? wp_get_attachment_url( $thumbnail_id ) : wc_placeholder_img_src();
+                if ($categories && !is_wp_error($categories)) :
+                    foreach ($categories as $category) :
+                        $thumbnail_id = get_term_meta($category->term_id, 'thumbnail_id', true);
+                        $image_url = $thumbnail_id ? wp_get_attachment_url($thumbnail_id) : wc_placeholder_img_src();
                 ?>
-                    <div class="category-card group" data-category-id="<?php echo esc_attr( $category->term_id ); ?>">
-                        <a href="<?php echo esc_url( get_term_link( $category ) ); ?>" 
+                    <div class="category-card group" data-category-id="<?php echo esc_attr($category->term_id); ?>">
+                        <a href="<?php echo esc_url(get_term_link($category)); ?>" 
                            class="block bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-100 group-hover:border-accent">
                             
                             <!-- Category Image -->
                             <div class="aspect-square bg-gray-100 overflow-hidden">
-                                <img src="<?php echo esc_url( $image_url ); ?>" 
-                                     alt="<?php echo esc_attr( $category->name ); ?>"
+                                <img src="<?php echo esc_url($image_url); ?>" 
+                                     alt="<?php echo esc_attr($category->name); ?>"
                                      class="w-full h-full object-cover">
                             </div>
                             
                             <!-- Category Info -->
                             <div class="p-4 text-center">
                                 <h3 class="font-semibold text-navy-900 group-hover:text-accent transition-colors duration-200 mb-1">
-                                    <?php echo esc_html( $category->name ); ?>
+                                    <?php echo esc_html($category->name); ?>
                                 </h3>
                                 <p class="text-sm text-gray-500">
-                                    <?php echo esc_html( $category->count ); ?> products
+                                    <?php echo esc_html($category->count); ?> products
                                 </p>
                             </div>
                         </a>
@@ -162,39 +160,39 @@ global $woocommerce;
                 global $woocommerce_loop;
                 
                 // Get featured products first
-                $featured_products = wc_get_products( array(
+                $featured_products = wc_get_products(array(
                     'status' => 'publish',
                     'visibility' => 'catalog',
                     'featured' => true,
                     'limit' => 8,
-                ) );
+                ));
                 
                 // If no featured products, get recent products
-                if ( empty( $featured_products ) ) {
-                    $featured_products = wc_get_products( array(
+                if (empty($featured_products)) {
+                    $featured_products = wc_get_products(array(
                         'status' => 'publish',
                         'visibility' => 'catalog',
                         'limit' => 8,
                         'orderby' => 'date',
                         'order' => 'DESC',
-                    ) );
+                    ));
                 }
                 
                 // Display products with proper WooCommerce loop setup
-                if ( ! empty( $featured_products ) ) :
+                if (!empty($featured_products)) :
                     $woocommerce_loop['columns'] = 4;
                     $woocommerce_loop['is_homepage'] = true;
                     
-                    foreach ( $featured_products as $featured_product ) :
-                        $post_object = get_post( $featured_product->get_id() );
+                    foreach ($featured_products as $featured_product) :
+                        $post_object = get_post($featured_product->get_id());
                         
-                        setup_postdata( $GLOBALS['post'] =& $post_object );
+                        setup_postdata($GLOBALS['post'] =& $post_object);
                         
                         // Set global product
                         global $product;
                         $product = $featured_product;
                         
-                        wc_get_template_part( 'content', 'product' );
+                        wc_get_template_part('content', 'product');
                     endforeach;
                     
                     wp_reset_postdata();
@@ -204,7 +202,7 @@ global $woocommerce;
             
             <!-- View All Button -->
             <div class="text-center mt-16">
-                <a href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>" 
+                <a href="<?php echo esc_url(wc_get_page_permalink('shop')); ?>" 
                    class="inline-flex items-center px-8 py-4 bg-navy-900 text-white font-semibold rounded-lg hover:bg-navy-800 transition-colors duration-200 shadow-lg hover:shadow-xl">
                     View All Products
                     <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,45 +236,45 @@ global $woocommerce;
                 <?php
                 global $woocommerce_loop;
                 
-                $sale_products = wc_get_products( array(
+                $sale_products = wc_get_products(array(
                     'status' => 'publish',
                     'visibility' => 'catalog',
                     'on_sale' => true,
                     'limit' => 8,
                     'orderby' => 'date',
                     'order' => 'DESC',
-                ) );
+                ));
                 
-                if ( ! empty( $sale_products ) ) :
+                if (!empty($sale_products)) :
                     $woocommerce_loop['columns'] = 4;
                     $woocommerce_loop['is_homepage'] = true;
                     
-                    foreach ( $sale_products as $sale_product ) :
+                    foreach ($sale_products as $sale_product) :
                         // Calculate discount percentage
                         $regular_price = (float) $sale_product->get_regular_price();
                         $sale_price = (float) $sale_product->get_sale_price();
                         $discount_percentage = 0;
                         
-                        if ( $regular_price > 0 && $sale_price > 0 ) {
-                            $discount_percentage = round( ( ( $regular_price - $sale_price ) / $regular_price ) * 100 );
+                        if ($regular_price > 0 && $sale_price > 0) {
+                            $discount_percentage = round((($regular_price - $sale_price) / $regular_price) * 100);
                         }
                         
                         // Setup WooCommerce product context
-                        $post_object = get_post( $sale_product->get_id() );
-                        setup_postdata( $GLOBALS['post'] =& $post_object );
+                        $post_object = get_post($sale_product->get_id());
+                        setup_postdata($GLOBALS['post'] =& $post_object);
                         
                         // Set global product
                         global $product;
                         $product = $sale_product;
                 ?>
                         <div class="deal-card relative">
-                            <?php if ( $discount_percentage > 0 ) : ?>
+                            <?php if ($discount_percentage > 0) : ?>
                                 <div class="absolute top-2 left-2 z-10 bg-accent text-white text-xs font-bold px-2 py-1 rounded-full">
-                                    <?php echo esc_html( $discount_percentage ); ?>% OFF
+                                    <?php echo esc_html($discount_percentage); ?>% OFF
                                 </div>
                             <?php endif; ?>
                             
-                            <?php wc_get_template_part( 'content', 'product' ); ?>
+                            <?php wc_get_template_part('content', 'product'); ?>
                         </div>
                 <?php 
                     endforeach;
@@ -351,7 +349,7 @@ global $woocommerce;
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <?php
                 // Get latest product reviews
-                $reviews = get_comments( array(
+                $reviews = get_comments(array(
                     'post_type' => 'product',
                     'status' => 'approve',
                     'number' => 3,
@@ -362,17 +360,17 @@ global $woocommerce;
                             'compare' => '>='
                         )
                     )
-                ) );
+                ));
                 
-                if ( $reviews ) :
-                    foreach ( $reviews as $review ) :
-                        $rating = get_comment_meta( $review->comment_ID, 'rating', true );
-                        $product = wc_get_product( $review->comment_post_ID );
+                if ($reviews) :
+                    foreach ($reviews as $review) :
+                        $rating = get_comment_meta($review->comment_ID, 'rating', true);
+                        $product = wc_get_product($review->comment_post_ID);
                 ?>
                     <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                         <!-- Rating Stars -->
                         <div class="flex items-center mb-4">
-                            <?php for ( $i = 1; $i <= 5; $i++ ) : ?>
+                            <?php for ($i = 1; $i <= 5; $i++) : ?>
                                 <svg class="w-5 h-5 <?php echo $i <= $rating ? 'text-yellow-400' : 'text-gray-300'; ?>" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
                                 </svg>
@@ -381,18 +379,18 @@ global $woocommerce;
                         
                         <!-- Review Content -->
                         <p class="text-gray-700 mb-4 italic">
-                            "<?php echo esc_html( wp_trim_words( $review->comment_content, 20 ) ); ?>"
+                            "<?php echo esc_html(wp_trim_words($review->comment_content, 20)); ?>"
                         </p>
                         
                         <!-- Customer Info -->
                         <div class="flex items-center">
                             <div class="w-10 h-10 bg-navy-900 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                                <?php echo esc_html( strtoupper( substr( $review->comment_author, 0, 1 ) ) ); ?>
+                                <?php echo esc_html(strtoupper(substr($review->comment_author, 0, 1))); ?>
                             </div>
                             <div class="ml-3">
-                                <p class="font-semibold text-gray-900"><?php echo esc_html( $review->comment_author ); ?></p>
-                                <?php if ( $product ) : ?>
-                                    <p class="text-sm text-gray-500">Purchased: <?php echo esc_html( $product->get_name() ); ?></p>
+                                <p class="font-semibold text-gray-900"><?php echo esc_html($review->comment_author); ?></p>
+                                <?php if ($product) : ?>
+                                    <p class="text-sm text-gray-500">Purchased: <?php echo esc_html($product->get_name()); ?></p>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -422,12 +420,12 @@ global $woocommerce;
                         )
                     );
                     
-                    foreach ( $fallback_testimonials as $testimonial ) :
+                    foreach ($fallback_testimonials as $testimonial) :
                 ?>
                     <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                         <!-- Rating Stars -->
                         <div class="flex items-center mb-4">
-                            <?php for ( $i = 1; $i <= 5; $i++ ) : ?>
+                            <?php for ($i = 1; $i <= 5; $i++) : ?>
                                 <svg class="w-5 h-5 <?php echo $i <= $testimonial['rating'] ? 'text-yellow-400' : 'text-gray-300'; ?>" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
                                 </svg>
@@ -436,17 +434,17 @@ global $woocommerce;
                         
                         <!-- Review Content -->
                         <p class="text-gray-700 mb-4 italic">
-                            "<?php echo esc_html( $testimonial['content'] ); ?>"
+                            "<?php echo esc_html($testimonial['content']); ?>"
                         </p>
                         
                         <!-- Customer Info -->
                         <div class="flex items-center">
                             <div class="w-10 h-10 bg-navy-900 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                                <?php echo esc_html( strtoupper( substr( $testimonial['name'], 0, 1 ) ) ); ?>
+                                <?php echo esc_html(strtoupper(substr($testimonial['name'], 0, 1))); ?>
                             </div>
                             <div class="ml-3">
-                                <p class="font-semibold text-gray-900"><?php echo esc_html( $testimonial['name'] ); ?></p>
-                                <p class="text-sm text-gray-500">Purchased: <?php echo esc_html( $testimonial['product'] ); ?></p>
+                                <p class="font-semibold text-gray-900"><?php echo esc_html($testimonial['name']); ?></p>
+                                <p class="text-sm text-gray-500">Purchased: <?php echo esc_html($testimonial['product']); ?></p>
                             </div>
                         </div>
                     </div>
@@ -472,7 +470,7 @@ global $woocommerce;
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <?php
-                $blog_posts = get_posts( array(
+                $blog_posts = get_posts(array(
                     'post_type' => 'post',
                     'posts_per_page' => 2,
                     'post_status' => 'publish',
@@ -482,28 +480,28 @@ global $woocommerce;
                             'compare' => 'EXISTS'
                         )
                     )
-                ) );
+                ));
                 
-                if ( $blog_posts ) :
-                    foreach ( $blog_posts as $post ) :
-                        setup_postdata( $post );
+                if ($blog_posts) :
+                    foreach ($blog_posts as $post) :
+                        setup_postdata($post);
                 ?>
                     <article class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200">
-                        <?php if ( has_post_thumbnail() ) : ?>
+                        <?php if (has_post_thumbnail()) : ?>
                             <div class="aspect-video overflow-hidden">
                                 <a href="<?php the_permalink(); ?>">
-                                    <?php the_post_thumbnail( 'large', array( 'class' => 'w-full h-full object-cover hover:scale-105 transition-transform duration-300' ) ); ?>
+                                    <?php the_post_thumbnail('large', array('class' => 'w-full h-full object-cover hover:scale-105 transition-transform duration-300')); ?>
                                 </a>
                             </div>
                         <?php endif; ?>
                         
                         <div class="p-6">
                             <div class="flex items-center text-sm text-gray-500 mb-3">
-                                <time datetime="<?php echo get_the_date( 'c' ); ?>">
+                                <time datetime="<?php echo get_the_date('c'); ?>">
                                     <?php echo get_the_date(); ?>
                                 </time>
                                 <span class="mx-2">•</span>
-                                <span><?php echo esc_html( get_the_category_list( ', ' ) ); ?></span>
+                                <span><?php echo esc_html(get_the_category_list(', ')); ?></span>
                             </div>
                             
                             <h3 class="text-xl font-semibold text-navy-900 mb-3 hover:text-accent transition-colors duration-200">
@@ -511,7 +509,7 @@ global $woocommerce;
                             </h3>
                             
                             <p class="text-gray-600 mb-4">
-                                <?php echo esc_html( wp_trim_words( get_the_excerpt(), 20 ) ); ?>
+                                <?php echo esc_html(wp_trim_words(get_the_excerpt(), 20)); ?>
                             </p>
                             
                             <a href="<?php the_permalink(); ?>" 
@@ -542,7 +540,6 @@ global $woocommerce;
             </div>
         </div>
     </section>
-
 
     <!-- 8. Footer CTA / Service Strip -->
     <section class="py-8 bg-silver-50 border-t border-gray-200">
@@ -603,20 +600,20 @@ global $woocommerce;
 {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "<?php echo esc_js( get_bloginfo( 'name' ) ); ?>",
-    "url": "<?php echo esc_url( home_url() ); ?>",
-    "description": "<?php echo esc_js( get_bloginfo( 'description' ) ); ?>",
+    "name": "<?php echo esc_js(get_bloginfo('name')); ?>",
+    "url": "<?php echo esc_url(home_url()); ?>",
+    "description": "<?php echo esc_js(get_bloginfo('description')); ?>",
     "potentialAction": {
         "@type": "SearchAction",
-        "target": "<?php echo esc_url( home_url() ); ?>/?s={search_term_string}",
+        "target": "<?php echo esc_url(home_url()); ?>/?s={search_term_string}",
         "query-input": "required name=search_term_string"
     },
     "publisher": {
         "@type": "Organization",
-        "name": "<?php echo esc_js( get_bloginfo( 'name' ) ); ?>",
+        "name": "<?php echo esc_js(get_bloginfo('name')); ?>",
         "logo": {
             "@type": "ImageObject",
-            "url": "<?php echo esc_url( get_theme_file_uri( '/assets/images/logo.png' ) ); ?>"
+            "url": "<?php echo esc_url(get_theme_file_uri('/assets/images/logo.png')); ?>"
         },
         "sameAs": [
             "https://www.facebook.com/tostishop",
@@ -637,10 +634,12 @@ global $woocommerce;
             "@type": "ListItem",
             "position": 1,
             "name": "Home",
-            "item": "<?php echo esc_url( home_url() ); ?>"
+            "item": "<?php echo esc_url(home_url()); ?>"
         }
     ]
 }
 </script>
+
+<?php get_footer(); ?>
 
 <?php get_footer(); ?>
