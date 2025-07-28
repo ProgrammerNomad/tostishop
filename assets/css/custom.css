@@ -31,7 +31,19 @@
 }
 
 /* List view specific layouts */
-#productGrid[data-v/* Enhanced Color Swatches */
+#productGrid[data-view="list"] .product-item {
+    display: flex !important;
+    align-items: stretch;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    padding: 1rem;
+    gap: 1rem;
+    width: 100%;
+}
+
+/* Enhanced Color Swatches */
 .color-swatch input[type="radio"]:checked + span {
     border-color: #14175b !important;
     border-width: 3px !important;
@@ -268,7 +280,10 @@
         background: linear-gradient(135deg, #14175b 0%, #1e40af 100%);
         box-shadow: 0 4px 12px 0 rgba(20, 23, 91, 0.3);
     }
-} .product-item {
+}
+
+/* List view specific layouts - this was missing proper connection */
+#productGrid[data-view="list"] .product-item {
     display: flex !important;
     align-items: stretch;
     background: white;
@@ -562,7 +577,6 @@
         transform: scale(1.02);
         transition: all 0.2s ease;
     }
-}
 }
 
 /* Account page form styles */
@@ -1950,4 +1964,3 @@ footer button:focus {
         display: none;
     }
 }
-
