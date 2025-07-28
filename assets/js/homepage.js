@@ -95,43 +95,49 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     /**
-     * Today's Deals Swiper Initialization
+     * Today's Deals Swiper Initialization - Amazon Style
      */
     function initTodaysDealsSwiper() {
         // Check if Swiper is loaded and element exists
         if (typeof Swiper !== 'undefined' && document.querySelector('.deals-swiper')) {
             const dealsSwiper = new Swiper('.deals-swiper', {
-                // Basic settings
-                slidesPerView: 1,
-                spaceBetween: 20,
+                // Basic settings for Amazon-style slider
+                slidesPerView: 2.3, // Mobile: 2 full + partial 3rd
+                spaceBetween: 15,
                 loop: true,
                 centeredSlides: false,
+                freeMode: false,
                 
-                // Responsive breakpoints
+                // Responsive breakpoints - Amazon style with partial products
                 breakpoints: {
                     // Mobile (>= 480px)
                     480: {
-                        slidesPerView: 2,
+                        slidesPerView: 2.4, // 2 full + larger partial 3rd
                         spaceBetween: 15,
                     },
-                    // Tablet (>= 640px)
+                    // Tablet (>= 640px) 
                     640: {
-                        slidesPerView: 3,
+                        slidesPerView: 3.3, // 3 full + partial 4th
                         spaceBetween: 20,
                     },
                     // Desktop small (>= 768px)
                     768: {
-                        slidesPerView: 4,
-                        spaceBetween: 25,
+                        slidesPerView: 3.5, // 3 full + larger partial 4th
+                        spaceBetween: 20,
                     },
                     // Desktop medium (>= 1024px)
                     1024: {
-                        slidesPerView: 5,
-                        spaceBetween: 30,
+                        slidesPerView: 4.3, // 4 full + partial 5th (as requested)
+                        spaceBetween: 25,
                     },
                     // Desktop large (>= 1280px)
                     1280: {
-                        slidesPerView: 6,
+                        slidesPerView: 4.4, // 4 full + larger partial 5th
+                        spaceBetween: 25,
+                    },
+                    // Extra large (>= 1536px)
+                    1536: {
+                        slidesPerView: 4.5, // 4 full + half of 5th
                         spaceBetween: 30,
                     }
                 },
@@ -151,44 +157,104 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                 },
                 
-                // Autoplay (optional)
+                // Autoplay settings
                 autoplay: {
-                    delay: 4000,
+                    delay: 5000,
                     disableOnInteraction: false,
                     pauseOnMouseEnter: true,
+                    reverseDirection: false,
                 },
                 
-                // Effects
+                // Effects and performance
                 effect: 'slide',
                 speed: 600,
                 
-                // Additional settings
+                // Additional Amazon-style settings
                 grabCursor: true,
                 watchSlidesProgress: true,
                 watchSlidesVisibility: true,
+                preventInteractionOnTransition: false,
+                touchRatio: 1,
+                touchAngle: 45,
+                simulateTouch: true,
+                allowTouchMove: true,
+                
+                // Smooth scrolling behavior
+                freeMode: {
+                    enabled: false,
+                    sticky: true,
+                },
                 
                 // Callbacks
                 on: {
                     init: function () {
-                        console.log('Today\'s Deals Swiper initialized');
+                        console.log('Today\'s Deals Amazon-Style Swiper initialized');
+                        // Add loaded class for CSS animations
+                        document.querySelector('.deals-swiper').classList.add('swiper-loaded');
                     },
                     slideChange: function () {
                         // Optional: Track slide changes for analytics
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'deals_slider_interaction', {
+                                'event_category': 'engagement',
+                                'slide_index': this.activeIndex
+                            });
+                        }
+                    },
+                    touchStart: function() {
+                        // Pause autoplay on touch
+                        this.autoplay.stop();
+                    },
+                    touchEnd: function() {
+                        // Resume autoplay after touch
+                        setTimeout(() => {
+                            this.autoplay.start();
+                        }, 3000);
                     }
                 }
             });
             
-            // Pause autoplay on hover (additional control)
+            // Enhanced hover controls for Amazon-style experience
             const swiperContainer = document.querySelector('.deals-swiper');
             if (swiperContainer) {
+                let hoverTimeout;
+                
                 swiperContainer.addEventListener('mouseenter', () => {
                     dealsSwiper.autoplay.stop();
+                    clearTimeout(hoverTimeout);
                 });
                 
                 swiperContainer.addEventListener('mouseleave', () => {
-                    dealsSwiper.autoplay.start();
+                    hoverTimeout = setTimeout(() => {
+                        dealsSwiper.autoplay.start();
+                    }, 1000);
+                });
+                
+                // Add smooth scroll behavior on navigation click
+                const navButtons = document.querySelectorAll('.deals-next, .deals-prev');
+                navButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        // Add click feedback
+                        button.style.transform = 'translateY(-50%) scale(0.95)';
+                        setTimeout(() => {
+                            button.style.transform = 'translateY(-50%) scale(1.1)';
+                        }, 100);
+                        setTimeout(() => {
+                            button.style.transform = 'translateY(-50%)';
+                        }, 200);
+                    });
                 });
             }
+            
+            // Keyboard navigation support
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    dealsSwiper.slidePrev();
+                } else if (e.key === 'ArrowRight') {
+                    dealsSwiper.slideNext();
+                }
+            });
+            
         } else {
             console.warn('Swiper not loaded or .deals-swiper element not found');
         }
