@@ -98,48 +98,51 @@ global $woocommerce;
                 </p>
             </div>
             
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 lg:gap-8">
-                <?php
-                $categories = get_terms( array(
-                    'taxonomy' => 'product_cat',
-                    'hide_empty' => true,
-                    'number' => 6,
-                    'parent' => 0,
-                    'orderby' => 'count',
-                    'order' => 'DESC'
-                ) );
-                
-                if ( $categories && ! is_wp_error( $categories ) ) :
-                    foreach ( $categories as $category ) :
-                        $thumbnail_id = get_term_meta( $category->term_id, 'thumbnail_id', true );
-                        $image_url = $thumbnail_id ? wp_get_attachment_url( $thumbnail_id ) : wc_placeholder_img_src();
-                ?>
-                    <div class="category-card group" data-category-id="<?php echo esc_attr( $category->term_id ); ?>">
-                        <a href="<?php echo esc_url( get_term_link( $category ) ); ?>" 
-                           class="block bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-100 group-hover:border-accent">
-                            
-                            <!-- Category Image -->
-                            <div class="aspect-square bg-gray-100 overflow-hidden">
-                                <img src="<?php echo esc_url( $image_url ); ?>" 
-                                     alt="<?php echo esc_attr( $category->name ); ?>"
-                                     class="w-full h-full object-cover">
-                            </div>
-                            
-                            <!-- Category Info -->
-                            <div class="p-4 text-center">
-                                <h3 class="font-semibold text-navy-900 group-hover:text-accent transition-colors duration-200 mb-1">
-                                    <?php echo esc_html( $category->name ); ?>
-                                </h3>
-                                <p class="text-sm text-gray-500">
-                                    <?php echo esc_html( $category->count ); ?> products
-                                </p>
-                            </div>
-                        </a>
-                    </div>
-                <?php 
-                    endforeach;
-                endif;
-                ?>
+            <!-- Single Row Centered Categories -->
+            <div class="flex justify-center">
+                <div class="flex flex-wrap justify-center gap-6 lg:gap-8 max-w-6xl">
+                    <?php
+                    $categories = get_terms( array(
+                        'taxonomy' => 'product_cat',
+                        'hide_empty' => true,
+                        'number' => 6,
+                        'parent' => 0,
+                        'orderby' => 'count',
+                        'order' => 'DESC'
+                    ) );
+                    
+                    if ( $categories && ! is_wp_error( $categories ) ) :
+                        foreach ( $categories as $category ) :
+                            $thumbnail_id = get_term_meta( $category->term_id, 'thumbnail_id', true );
+                            $image_url = $thumbnail_id ? wp_get_attachment_url( $thumbnail_id ) : wc_placeholder_img_src();
+                    ?>
+                        <div class="category-card group w-32 sm:w-40 md:w-44 lg:w-48" data-category-id="<?php echo esc_attr( $category->term_id ); ?>">
+                            <a href="<?php echo esc_url( get_term_link( $category ) ); ?>" 
+                               class="block bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-100 group-hover:border-accent">
+                                
+                                <!-- Category Image -->
+                                <div class="aspect-square bg-gray-100 overflow-hidden">
+                                    <img src="<?php echo esc_url( $image_url ); ?>" 
+                                         alt="<?php echo esc_attr( $category->name ); ?>"
+                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                </div>
+                                
+                                <!-- Category Info -->
+                                <div class="p-3 lg:p-4 text-center">
+                                    <h3 class="font-semibold text-navy-900 group-hover:text-accent transition-colors duration-200 mb-1 text-sm lg:text-base">
+                                        <?php echo esc_html( $category->name ); ?>
+                                    </h3>
+                                    <p class="text-xs lg:text-sm text-gray-500">
+                                        <?php echo esc_html( $category->count ); ?> products
+                                    </p>
+                                </div>
+                            </a>
+                        </div>
+                    <?php 
+                        endforeach;
+                    endif;
+                    ?>
+                </div>
             </div>
         </div>
     </section>
@@ -156,58 +159,100 @@ global $woocommerce;
                 </p>
             </div>
             
-            <!-- Featured Products Grid -->
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
-                <?php
-                global $woocommerce_loop;
-                
-                // Get featured products first
-                $featured_products = wc_get_products( array(
-                    'status' => 'publish',
-                    'visibility' => 'catalog',
-                    'featured' => true,
-                    'limit' => 8,
-                ) );
-                
-                // If no featured products, get recent products
-                if ( empty( $featured_products ) ) {
+            <!-- Single Row Centered Featured Products -->
+            <div class="flex justify-center">
+                <div class="flex flex-wrap justify-center gap-6 lg:gap-8 max-w-6xl">
+                    <?php
+                    global $woocommerce_loop;
+                    
+                    // Get featured products first
                     $featured_products = wc_get_products( array(
                         'status' => 'publish',
                         'visibility' => 'catalog',
-                        'limit' => 8,
-                        'orderby' => 'date',
-                        'order' => 'DESC',
+                        'featured' => true,
+                        'limit' => 6,
                     ) );
-                }
-                
-                // Display products with proper WooCommerce loop setup
-                if ( ! empty( $featured_products ) ) :
-                    $woocommerce_loop['columns'] = 4;
-                    $woocommerce_loop['is_homepage'] = true;
                     
-                    foreach ( $featured_products as $featured_product ) :
-                        $post_object = get_post( $featured_product->get_id() );
-                        
-                        setup_postdata( $GLOBALS['post'] =& $post_object );
-                        
-                        // Set global product
-                        global $product;
-                        $product = $featured_product;
-                        
-                        wc_get_template_part( 'content', 'product' );
-                    endforeach;
+                    // If no featured products, get recent products
+                    if ( empty( $featured_products ) ) {
+                        $featured_products = wc_get_products( array(
+                            'status' => 'publish',
+                            'visibility' => 'catalog',
+                            'limit' => 6,
+                            'orderby' => 'date',
+                            'order' => 'DESC',
+                        ) );
+                    }
                     
-                    wp_reset_postdata();
-                endif;
-                ?>
+                    // Display products
+                    if ( ! empty( $featured_products ) ) :
+                        foreach ( $featured_products as $featured_product ) :
+                            // Setup WooCommerce product context
+                            $post_object = get_post( $featured_product->get_id() );
+                            setup_postdata( $GLOBALS['post'] =& $post_object );
+                            
+                            // Set global product
+                            global $product;
+                            $product = $featured_product;
+                    ?>
+                        <div class="product-wrapper w-40 sm:w-44 md:w-48 lg:w-52">
+                            <div class="product-item">
+                                <!-- Product Image -->
+                                <div class="product-image">
+                                    <a href="<?php echo esc_url( get_permalink( $product->get_id() ) ); ?>">
+                                        <?php echo $product->get_image( array( 200, 200 ) ); ?>
+                                    </a>
+                                </div>
+                                
+                                <!-- Product Info -->
+                                <div class="product-info">
+                                    <h3 class="product-title">
+                                        <a href="<?php echo esc_url( get_permalink( $product->get_id() ) ); ?>">
+                                            <?php echo esc_html( $product->get_name() ); ?>
+                                        </a>
+                                    </h3>
+                                    
+                                    <!-- Product Rating -->
+                                    <?php if ( $product->get_average_rating() ) : ?>
+                                        <div class="star-rating">
+                                            <?php echo wc_get_rating_html( $product->get_average_rating() ); ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <!-- Product Price -->
+                                    <div class="product-price">
+                                        <?php echo $product->get_price_html(); ?>
+                                    </div>
+                                    
+                                    <!-- Add to Cart Button -->
+                                    <?php if ( $product->is_purchasable() && $product->is_in_stock() ) : ?>
+                                        <button class="add-to-cart-btn" 
+                                                data-product-id="<?php echo esc_attr( $product->get_id() ); ?>"
+                                                data-quantity="1">
+                                            Add to Cart
+                                        </button>
+                                    <?php else : ?>
+                                        <button class="add-to-cart-btn" disabled>
+                                            Out of Stock
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php 
+                        endforeach;
+                        wp_reset_postdata();
+                    endif;
+                    ?>
+                </div>
             </div>
             
             <!-- View All Button -->
             <div class="text-center mt-16">
                 <a href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>" 
-                   class="inline-flex items-center px-8 py-4 bg-navy-900 text-white font-semibold rounded-lg hover:bg-navy-800 transition-colors duration-200 shadow-lg hover:shadow-xl">
+                   class="view-all-btn">
                     View All Products
-                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
                     </svg>
                 </a>
@@ -215,11 +260,11 @@ global $woocommerce;
         </div>
     </section>
 
-    <!-- 4. Top Offers / Today's Deals -->
+    <!-- 4. Today's Deals -->
     <section class="py-20 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
-                <div class="inline-flex items-center px-4 py-2 bg-accent text-white rounded-full text-sm font-semibold mb-6">
+                <div class="inline-flex items-center px-4 py-2 bg-accent/10 text-accent rounded-full text-sm font-medium mb-4">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
@@ -233,56 +278,60 @@ global $woocommerce;
                 </p>
             </div>
             
-            <!-- Deals Grid -->
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 lg:gap-8">
-                <?php
-                global $woocommerce_loop;
-                
-                $sale_products = wc_get_products( array(
-                    'status' => 'publish',
-                    'visibility' => 'catalog',
-                    'on_sale' => true,
-                    'limit' => 8,
-                    'orderby' => 'date',
-                    'order' => 'DESC',
-                ) );
-                
-                if ( ! empty( $sale_products ) ) :
-                    $woocommerce_loop['columns'] = 4;
-                    $woocommerce_loop['is_homepage'] = true;
+            <!-- Single Row Centered Deals -->
+            <div class="flex justify-center">
+                <div class="flex flex-wrap justify-center gap-6 lg:gap-8 max-w-6xl">
+                    <?php
+                    global $woocommerce_loop;
                     
-                    foreach ( $sale_products as $sale_product ) :
-                        // Calculate discount percentage
-                        $regular_price = (float) $sale_product->get_regular_price();
-                        $sale_price = (float) $sale_product->get_sale_price();
-                        $discount_percentage = 0;
+                    $sale_products = wc_get_products( array(
+                        'status' => 'publish',
+                        'visibility' => 'catalog',
+                        'on_sale' => true,
+                        'limit' => 6,
+                        'orderby' => 'date',
+                        'order' => 'DESC',
+                    ) );
+                    
+                    if ( ! empty( $sale_products ) ) :
+                        $woocommerce_loop['columns'] = 6;
+                        $woocommerce_loop['is_homepage'] = true;
                         
-                        if ( $regular_price > 0 && $sale_price > 0 ) {
-                            $discount_percentage = round( ( ( $regular_price - $sale_price ) / $regular_price ) * 100 );
-                        }
-                        
-                        // Setup WooCommerce product context
-                        $post_object = get_post( $sale_product->get_id() );
-                        setup_postdata( $GLOBALS['post'] =& $post_object );
-                        
-                        // Set global product
-                        global $product;
-                        $product = $sale_product;
-                ?>
-                        <div class="deal-card relative">
-                            <?php if ( $discount_percentage > 0 ) : ?>
-                                <div class="absolute top-2 left-2 z-10 bg-accent text-white text-xs font-bold px-2 py-1 rounded-full">
-                                    <?php echo esc_html( $discount_percentage ); ?>% OFF
-                                </div>
-                            <?php endif; ?>
+                        foreach ( $sale_products as $sale_product ) :
+                            // Calculate discount percentage
+                            $regular_price = (float) $sale_product->get_regular_price();
+                            $sale_price = (float) $sale_product->get_sale_price();
+                            $discount_percentage = 0;
                             
-                            <?php wc_get_template_part( 'content', 'product' ); ?>
+                            if ( $regular_price > 0 && $sale_price > 0 ) {
+                                $discount_percentage = round( ( ( $regular_price - $sale_price ) / $regular_price ) * 100 );
+                            }
+                            
+                            // Setup WooCommerce product context
+                            $post_object = get_post( $sale_product->get_id() );
+                            setup_postdata( $GLOBALS['post'] =& $post_object );
+                            
+                            // Set global product
+                            global $product;
+                            $product = $sale_product;
+                    ?>
+                        <div class="product-wrapper w-40 sm:w-44 md:w-48 lg:w-52">
+                            <div class="deal-card relative">
+                                <?php if ( $discount_percentage > 0 ) : ?>
+                                    <div class="absolute top-2 left-2 z-10 bg-accent text-white text-xs font-bold px-2 py-1 rounded-full">
+                                        <?php echo esc_html( $discount_percentage ); ?>% OFF
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <?php wc_get_template_part( 'content', 'product' ); ?>
+                            </div>
                         </div>
-                <?php 
-                    endforeach;
-                    wp_reset_postdata();
-                endif;
-                ?>
+                    <?php 
+                        endforeach;
+                        wp_reset_postdata();
+                    endif;
+                    ?>
+                </div>
             </div>
         </div>
     </section>
