@@ -115,3 +115,26 @@ All My Account components now use the official TostiShop brand colors:
 - **Light Silver White (`#ecebee`)** - Background highlights and subtle states
 
 This ensures a cohesive brand experience throughout the My Account area that matches the rest of the TostiShop theme.
+
+---
+
+## Additional Navigation Fixes (Latest Update)
+
+### Fixed Layout Conflicts
+**Issue:** Navigation had fixed `min-width: 320px` causing layout problems
+**Solution:** Removed fixed min-width from `@media (min-width: 1280px)` in custom.css
+
+### Fixed Positioning Issues  
+**Issue:** `position: sticky` was causing layout conflicts
+**Solution:** Changed to `position: relative` in account-components.css for better compatibility
+
+### Removed CSS Duplication
+**Issue:** custom.css had duplicate navigation styles conflicting with account-components.css
+**Solution:** Removed redundant styles from custom.css, maintaining organized structure in components
+
+### Result
+✅ No more fixed dimensions causing mobile/tablet layout issues
+✅ No positioning conflicts or sticky behavior problems  
+✅ Clean CSS architecture with no duplicate rules
+✅ Responsive design works properly on all screen sizes
+✅ TostiShop brand colors maintained consistently

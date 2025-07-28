@@ -387,6 +387,7 @@
 /* Brand colors helper classes */
 .bg-primary {
     background-color: #14175b;
+    color: white; /* Ensure text is visible on dark background */
 }
 
 .text-primary {
@@ -811,17 +812,6 @@
     background-color: #d1d5db;
 }
 
-/* Account navigation improvements */
-.woocommerce-MyAccount-navigation ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.woocommerce-MyAccount-navigation li {
-    margin-bottom: 0.25rem;
-}
-
 /* Desktop Cart and Checkout Enhancements */
 @media (min-width: 1024px) {
     /* Wider cart/checkout container */
@@ -912,27 +902,7 @@
     background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2314175b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
 }
 
-.woocommerce-MyAccount-navigation a {
-    display: flex;
-    align-items: center;
-    padding: 0.75rem 1rem;
-    color: #374151;
-    text-decoration: none;
-    border-radius: 0.5rem;
-    transition: all 0.2s ease;
-    font-weight: 500;
-    font-size: 0.875rem;
-}
-
-.woocommerce-MyAccount-navigation a:hover {
-    background-color: #f3f4f6;
-    color: #14175b;
-}
-
-.woocommerce-MyAccount-navigation .is-active a {
-    background-color: #14175b;
-    color: white;
-}
+/* Navigation styling moved to account-components.css */
 
 /* Responsive table fixes */
 @media (max-width: 768px) {
@@ -976,24 +946,6 @@
         white-space: nowrap;
         font-weight: 600;
         color: #374151;
-    }
-}
-
-/* Desktop Navigation Visibility Fix */
-@media (min-width: 1024px) {
-    .woocommerce-MyAccount-navigation-list {
-        display: block !important; /* Force show on desktop regardless of Alpine.js state */
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-    
-    .woocommerce-MyAccount-navigation .lg\:block {
-        display: block !important;
-    }
-    
-    /* Hide mobile toggle on desktop */
-    .woocommerce-MyAccount-navigation .lg\:hidden {
-        display: none !important;
     }
 }
 
@@ -1085,11 +1037,7 @@
         border: 1px solid #e2e8f0;
     }
     
-    /* Enhanced navigation for very wide screens */
-    .woocommerce-MyAccount-navigation {
-        min-width: 320px;
-    }
-    
+    /* Enhanced navigation styling for very wide screens - removed fixed min-width */
     .account-nav-link {
         padding: 1.25rem 1.75rem !important;
         font-size: 1.1rem !important;
