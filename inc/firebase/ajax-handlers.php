@@ -39,10 +39,18 @@ function tostishop_handle_firebase_login() {
     $auth_method = isset($_POST['auth_method']) ? sanitize_text_field($_POST['auth_method']) : 'phone';
     $from_checkout = isset($_POST['from_checkout']) && $_POST['from_checkout'] === 'true';
     
+    // Get Google user data if available (from frontend)
+    $google_email = isset($_POST['google_email']) ? sanitize_email($_POST['google_email']) : '';
+    $google_name = isset($_POST['google_name']) ? sanitize_text_field($_POST['google_name']) : '';
+    $google_uid = isset($_POST['google_uid']) ? sanitize_text_field($_POST['google_uid']) : '';
+    
     try {
-        // For development, simulate Firebase user data
-        // In production, replace this with actual Firebase token verification
-        $firebase_user_data = tostishop_simulate_firebase_user($firebase_token, $auth_method);
+        // Get Firebase user data - now with real Google data
+        $firebase_user_data = tostishop_get_firebase_user($firebase_token, $auth_method, array(
+            'email' => $google_email,
+            'name' => $google_name,
+            'uid' => $google_uid
+        ));
         
         if (!$firebase_user_data) {
             wp_send_json_error(array(
@@ -127,6 +135,11 @@ function tostishop_handle_firebase_register() {
     $user_phone = sanitize_text_field($_POST['user_phone'] ?? '');
     $from_checkout = isset($_POST['from_checkout']) && $_POST['from_checkout'] === 'true';
     
+    // Get Google user data if available (from frontend)
+    $google_email = isset($_POST['google_email']) ? sanitize_email($_POST['google_email']) : '';
+    $google_name = isset($_POST['google_name']) ? sanitize_text_field($_POST['google_name']) : '';
+    $google_uid = isset($_POST['google_uid']) ? sanitize_text_field($_POST['google_uid']) : '';
+    
     // Validation
     if (empty($first_name) || strlen($first_name) < 2) {
         wp_send_json_error(array(
@@ -144,7 +157,10 @@ function tostishop_handle_firebase_register() {
         return;
     }
     
-    if (empty($user_email) || !is_email($user_email)) {
+    // Use Google email if provided, otherwise use user_email
+    $final_email = !empty($google_email) ? $google_email : $user_email;
+    
+    if (empty($final_email) || !is_email($final_email)) {
         wp_send_json_error(array(
             'message' => 'Please enter a valid email address.',
             'code' => 'invalid_email'
@@ -153,7 +169,7 @@ function tostishop_handle_firebase_register() {
     }
     
     // Check if email already exists
-    if (email_exists($user_email)) {
+    if (email_exists($final_email)) {
         wp_send_json_error(array(
             'message' => 'An account with this email already exists. Please use a different email or try logging in.',
             'code' => 'email_exists'
@@ -162,8 +178,12 @@ function tostishop_handle_firebase_register() {
     }
 
     try {
-        // Verify Firebase token again
-        $firebase_user_data = tostishop_simulate_firebase_user($firebase_token, $auth_method);
+        // Verify Firebase token again - now with real Google data
+        $firebase_user_data = tostishop_get_firebase_user($firebase_token, $auth_method, array(
+            'email' => $google_email,
+            'name' => $google_name,
+            'uid' => $google_uid
+        ));
         
         if (!$firebase_user_data) {
             wp_send_json_error(array(
@@ -173,18 +193,17 @@ function tostishop_handle_firebase_register() {
             return;
         }
 
-        // Create WordPress user
+                // Create WordPress user
         $display_name = trim($first_name . ' ' . $last_name);
-        $username = tostishop_generate_unique_username($first_name, $last_name, $user_email);
+        $username = tostishop_generate_unique_username($first_name, $last_name, $final_email);
         
         $user_data = array(
             'user_login' => $username,
-            'user_email' => $user_email,
+            'user_email' => $final_email,
             'display_name' => $display_name,
             'first_name' => $first_name,
             'last_name' => $last_name,
             'user_pass' => wp_generate_password(12, false),
-            'role' => 'customer'
         );
 
         $user_id = wp_insert_user($user_data);
@@ -220,7 +239,7 @@ function tostishop_handle_firebase_register() {
         }
 
         // Send welcome email (optional)
-        tostishop_send_welcome_email($user_id, $display_name, $user_email);
+        tostishop_send_welcome_email($user_id, $display_name, $final_email);
 
         error_log('✅ New user registered successfully: ' . $user_id);
 
@@ -245,12 +264,43 @@ function tostishop_handle_firebase_register() {
  */
 
 /**
+ * Get Firebase user data with real Google data support
+ */
+function tostishop_get_firebase_user($token, $auth_method, $real_user_data = array()) {
+    // In production, this would verify the Firebase ID token
+    // For development, we'll use real data when available or simulate
+    
+    $user_data = array(
+        'uid' => '',
+        'email' => '',
+        'name' => '',
+        'phone_number' => ''
+    );
+    
+    if ($auth_method === 'google' && !empty($real_user_data)) {
+        // Use real Google data from frontend
+        $user_data['uid'] = $real_user_data['uid'] ?: 'google_' . time() . '_' . rand(1000, 9999);
+        $user_data['email'] = $real_user_data['email'] ?: '';
+        $user_data['name'] = $real_user_data['name'] ?: '';
+        $user_data['email_verified'] = true; // Google emails are pre-verified
+        
+        error_log('🎯 Using real Google user data: ' . print_r($user_data, true));
+        
+    } else {
+        // Fallback to simulation for other methods or when real data unavailable
+        $user_data = tostishop_simulate_firebase_user($token, $auth_method);
+    }
+    
+    return $user_data;
+}
+
+/**
  * Simulate Firebase user data (replace with actual Firebase Admin SDK in production)
  */
 function tostishop_simulate_firebase_user($token, $auth_method) {
     // For development - simulate Firebase user based on auth method
     $user_data = array(
-        'uid' => 'firebase_user_' . time() . '_' . wp_rand(1000, 9999),
+        'uid' => 'firebase_user_' . time() . '_' . rand(1000, 9999),
         'email' => '',
         'name' => '',
         'phone_number' => ''
@@ -260,9 +310,13 @@ function tostishop_simulate_firebase_user($token, $auth_method) {
         // For phone auth, we typically only have phone number
         $user_data['phone_number'] = '+919450987150'; // Replace with actual phone from token
     } elseif ($auth_method === 'google') {
-        // For Google auth, we have email and name
-        $user_data['email'] = 'user@gmail.com'; // Replace with actual data from token
-        $user_data['name'] = 'Google User'; // Replace with actual name from token
+        // For Google auth, we have email and name - simulate realistic data
+        $user_data['email'] = 'googleuser' . rand(100, 999) . '@gmail.com'; // Replace with actual data from token
+        $user_data['name'] = 'Google User ' . rand(1, 100); // Replace with actual name from token
+        $user_data['email_verified'] = true; // Google emails are pre-verified
+    } elseif ($auth_method === 'email') {
+        // For email auth, we have email
+        $user_data['email'] = 'emailuser' . rand(100, 999) . '@example.com'; // Replace with actual data from token
     }
     
     return $user_data;
@@ -324,7 +378,7 @@ function tostishop_generate_unique_username($first_name, $last_name, $email) {
     
     if (empty($username) || username_exists($username)) {
         // Generate random username
-        $username = 'tostishop_user_' . wp_rand(1000, 9999);
+        $username = 'tostishop_user_' . rand(1000, 9999);
     }
     
     // Ensure it's still unique

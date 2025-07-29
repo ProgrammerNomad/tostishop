@@ -17,11 +17,16 @@
     let retryAttempts = 0;
     const MAX_RETRY_ATTEMPTS = 2;
 
+    // Google login loop prevention
+    let googleLoginAttempts = 0;
+    const MAX_GOOGLE_LOGIN_ATTEMPTS = 1;
+
     // Test phone numbers (DISABLED IN PRODUCTION)
     const TEST_PHONE_NUMBERS = {}; // Empty object for production
 
     // Initialize Firebase when DOM is ready
     $(document).ready(function() {
+        console.log('🚀 TostiShop Firebase Auth v5.3.0 - Enhanced Google Auto-Registration');
         initializeFirebase();
         bindEvents();
         setupOTPInputs();
@@ -288,6 +293,7 @@
         // Google Login Event  
         $('#google-login-btn').on('click', function(e) {
             e.preventDefault();
+            googleLoginAttempts = 0; // Reset attempts on new login click
             loginWithGoogle();
         });
 
@@ -610,7 +616,7 @@
     }
 
     /**
-     * Login with Google - RECOMMENDED ALTERNATIVE
+     * Login with Google - ENHANCED WITH AUTO-REGISTRATION & LOOP PREVENTION
      */
     function loginWithGoogle() {
         if (!auth) {
@@ -628,8 +634,15 @@
             .then(function(result) {
                 const user = result.user;
                 console.log('✅ Google login successful');
+                console.log('📋 Google User Data:', {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName,
+                    photoURL: user.photoURL
+                });
                 
-                loginToWordPress(user, 'google');
+                // For Google auth, we handle differently than phone auth
+                loginToWordPressWithGoogle(user);
             })
             .catch(function(error) {
                 hideLoading();
@@ -830,6 +843,189 @@
                 hideLoading();
                 console.error('❌ Token retrieval error:', error);
                 showError('Authentication token error. Please try again.');
+            });
+    }
+
+    /**
+     * Login to WordPress with Google - ENHANCED WITH AUTO-REGISTRATION & LOOP PREVENTION
+     * For Google auth, we try login first. If user doesn't exist, we auto-register them.
+     */
+    function loginToWordPressWithGoogle(firebaseUser) {
+        if (!firebaseUser) {
+            hideLoading();
+            showError('Google authentication failed. Please try again.');
+            return;
+        }
+
+        // Prevent infinite loops
+        if (googleLoginAttempts >= MAX_GOOGLE_LOGIN_ATTEMPTS) {
+            hideLoading();
+            console.error('❌ Maximum Google login attempts reached');
+            showError('Google login failed after multiple attempts. Please refresh the page and try again.');
+            return;
+        }
+
+        googleLoginAttempts++;
+        console.log('🔄 Logging into WordPress with Google... (Attempt: ' + googleLoginAttempts + ')');
+
+        firebaseUser.getIdToken()
+            .then(function(idToken) {
+                
+                const userData = {
+                    action: 'tostishop_firebase_login',
+                    firebase_token: idToken,
+                    nonce: tostiShopAjax.nonce,
+                    auth_method: 'google',
+                    // Pass actual Google user data to backend
+                    google_email: firebaseUser.email || '',
+                    google_name: firebaseUser.displayName || '',
+                    google_uid: firebaseUser.uid || '',
+                    from_checkout: window.location.href.includes('checkout') ? 'true' : 'false'
+                };
+
+                console.log('📤 Sending Google login request to WordPress with user data:', {
+                    email: firebaseUser.email,
+                    name: firebaseUser.displayName,
+                    uid: firebaseUser.uid
+                });
+
+                $.ajax({
+                    url: tostiShopAjax.ajaxurl,
+                    type: 'POST',
+                    data: userData,
+                    timeout: 30000,
+                    success: function(response) {
+                        console.log('📥 WordPress Google login response:', response);
+                        
+                        if (response.success) {
+                            // ✅ EXISTING USER - Login successful
+                            hideLoading();
+                            googleLoginAttempts = 0; // Reset attempts on success
+                            showSuccess(response.data.message || 'Welcome back! Redirecting...');
+                            
+                            setTimeout(function() {
+                                window.location.href = response.data.redirect_url || tostiShopAjax.redirectUrl;
+                            }, 1500);
+                            
+                        } else if (response.data.code === 'user_not_registered') {
+                            // 🆕 NEW GOOGLE USER - Auto-register them (no modal)
+                            console.log('👤 New Google user detected, auto-registering...');
+                            autoRegisterGoogleUser(firebaseUser);
+                            
+                        } else {
+                            hideLoading();
+                            googleLoginAttempts = 0; // Reset attempts on final error
+                            const errorCode = response.data.code || '';
+                            let errorMessage = response.data.message || 'Google login failed. Please try again.';
+                            
+                            if (errorCode === 'nonce_failed') {
+                                errorMessage = 'Security verification failed. Please refresh the page and try again.';
+                            } else if (errorCode === 'firebase_auth_failed') {
+                                errorMessage = 'Google authentication verification failed. Please try again.';
+                            }
+                            
+                            showError(errorMessage);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        hideLoading();
+                        googleLoginAttempts = 0; // Reset attempts on connection error
+                        console.error('❌ WordPress Google login error:', xhr.responseText, status, error);
+                        showError('Connection error. Please check your internet connection and try again.');
+                    }
+                });
+            })
+            .catch(function(error) {
+                hideLoading();
+                googleLoginAttempts = 0; // Reset attempts on token error
+                console.error('❌ Google token retrieval error:', error);
+                showError('Authentication token error. Please try again.');
+            });
+    }
+
+    /**
+     * Auto-register Google user - NO MODAL NEEDED, NO LOOPS
+     */
+    function autoRegisterGoogleUser(firebaseUser) {
+        console.log('🔄 Auto-registering Google user...');
+        
+        showLoading('Creating your account...');
+        
+        // Extract name from Google data
+        const displayName = firebaseUser.displayName || '';
+        const nameParts = displayName.split(' ');
+        const firstName = nameParts[0] || 'User';
+        const lastName = nameParts.slice(1).join(' ') || 'Google';
+        
+        firebaseUser.getIdToken()
+            .then(function(idToken) {
+                
+                const registrationData = {
+                    action: 'tostishop_firebase_register',
+                    firebase_token: idToken,
+                    nonce: tostiShopAjax.nonce,
+                    auth_method: 'google',
+                    first_name: firstName,
+                    last_name: lastName,
+                    user_email: firebaseUser.email || '',
+                    // Pass actual Google user data to backend
+                    google_email: firebaseUser.email || '',
+                    google_name: firebaseUser.displayName || '',
+                    google_uid: firebaseUser.uid || '',
+                    user_phone: '', // Google doesn't provide phone
+                    from_checkout: window.location.href.includes('checkout') ? 'true' : 'false'
+                };
+                
+                console.log('📤 Sending Google auto-registration request with user data:', {
+                    email: firebaseUser.email,
+                    name: firebaseUser.displayName,
+                    uid: firebaseUser.uid
+                });
+                
+                $.ajax({
+                    url: tostiShopAjax.ajaxurl,
+                    type: 'POST',
+                    data: registrationData,
+                    timeout: 30000,
+                    success: function(response) {
+                        hideLoading();
+                        googleLoginAttempts = 0; // Reset attempts on completion
+                        
+                        console.log('📥 Google registration response:', response);
+                        
+                        if (response.success) {
+                            showSuccess(response.data.message || 'Welcome to TostiShop! Account created successfully.');
+                            
+                            setTimeout(function() {
+                                window.location.href = response.data.redirect_url || tostiShopAjax.redirectUrl;
+                            }, 2000);
+                            
+                        } else {
+                            const errorCode = response.data.code || '';
+                            let errorMessage = response.data.message || 'Account creation failed. Please try again.';
+                            
+                            if (errorCode === 'email_exists') {
+                                // Email exists - this shouldn't happen if backend is working correctly
+                                // Don't retry, just show error and let user manually retry
+                                errorMessage = 'An account with this email already exists. Please refresh the page and try logging in again.';
+                            }
+                            
+                            showError(errorMessage);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        hideLoading();
+                        googleLoginAttempts = 0; // Reset attempts on error
+                        console.error('❌ Google registration error:', xhr.responseText, status, error);
+                        showError('Account creation failed. Please try again or contact support.');
+                    }
+                });
+            })
+            .catch(function(error) {
+                hideLoading();
+                googleLoginAttempts = 0; // Reset attempts on token error
+                console.error('❌ Google registration token error:', error);
+                showError('Authentication error during registration. Please try again.');
             });
     }
 
