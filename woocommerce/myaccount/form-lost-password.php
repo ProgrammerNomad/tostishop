@@ -41,8 +41,85 @@ do_action( 'woocommerce_before_lost_password_form' );
                         <!-- Card Body -->
                         <div class="p-8">
                             
+                            <?php
+                            // Check if reset link was sent
+                            if (isset($_GET['reset-link-sent']) && $_GET['reset-link-sent'] === 'true'): ?>
+                                <!-- Success Message for Reset Link Sent -->
+                                <div class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+                                    <div class="flex items-start">
+                                        <svg class="w-5 h-5 text-green-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <div>
+                                            <h3 class="text-sm font-medium text-green-800 mb-1">
+                                                Password Reset Link Sent!
+                                            </h3>
+                                            <p class="text-sm text-green-700">
+                                                We've sent a password reset link to your email address. Please check your inbox and follow the instructions to reset your password.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Additional Success Instructions -->
+                                <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                    <div class="flex items-start">
+                                        <svg class="w-5 h-5 text-blue-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <div>
+                                            <h4 class="text-sm font-medium text-blue-800 mb-1">What to do next:</h4>
+                                            <ul class="text-sm text-blue-700 space-y-1">
+                                                <li>• Check your email inbox (including spam/junk folder)</li>
+                                                <li>• Click on the reset link in the email</li>
+                                                <li>• Create a new secure password</li>
+                                                <li>• Log in with your new password</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Timer for Resend -->
+                                <div id="resend-timer" class="mb-6 text-center">
+                                    <p class="text-sm text-gray-600">
+                                        Didn't receive the email? You can request a new one in <span id="countdown" class="font-semibold text-navy-900">60</span> seconds.
+                                    </p>
+                                    <button id="resend-button" 
+                                            class="hidden mt-3 text-navy-900 hover:text-navy-800 font-medium text-sm underline"
+                                            onclick="window.location.reload();">
+                                        Send Another Reset Link
+                                    </button>
+                                </div>
+                                
+                                <script>
+                                // Countdown timer for resend option
+                                let countdown = 60;
+                                const countdownElement = document.getElementById('countdown');
+                                const resendButton = document.getElementById('resend-button');
+                                const timerDiv = document.getElementById('resend-timer');
+                                
+                                const timer = setInterval(() => {
+                                    countdown--;
+                                    if (countdownElement) {
+                                        countdownElement.textContent = countdown;
+                                    }
+                                    
+                                    if (countdown <= 0) {
+                                        clearInterval(timer);
+                                        if (timerDiv) {
+                                            timerDiv.innerHTML = '<p class="text-sm text-gray-600 mb-3">Didn\'t receive the email?</p>';
+                                        }
+                                        if (resendButton) {
+                                            resendButton.classList.remove('hidden');
+                                        }
+                                    }
+                                }, 1000);
+                                </script>
+                            <?php endif; ?>
+                            
                             <?php wc_print_notices(); ?>
 
+                            <?php if (!isset($_GET['reset-link-sent']) || $_GET['reset-link-sent'] !== 'true'): ?>
                             <form method="post" class="woocommerce-ResetPassword lost_reset_password space-y-6 px-1">
                                 <div>
                                     <label for="user_login" class="block text-sm font-medium text-gray-700 mb-2">
@@ -73,6 +150,7 @@ do_action( 'woocommerce_before_lost_password_form' );
                                 <input type="hidden" name="wc_reset_password" value="true" />
                                 <?php wp_nonce_field( 'lost_password', 'woocommerce-lost-password-nonce' ); ?>
                             </form>
+                            <?php endif; ?>
                             
                             <!-- Back to Login Link -->
                             <div class="text-center mt-6">
@@ -88,16 +166,32 @@ do_action( 'woocommerce_before_lost_password_form' );
                     </div>
 
                     <!-- Info Message -->
+                    <?php if (!isset($_GET['reset-link-sent']) || $_GET['reset-link-sent'] !== 'true'): ?>
                     <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <div class="flex items-start">
                             <svg class="w-5 h-5 text-blue-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                             <p class="text-sm text-blue-700">
-                                Check your spam folder if you don't receive the password reset email within a few minutes.
+                                We'll send you a secure link to reset your password. Check your spam folder if you don't receive it within a few minutes.
                             </p>
                         </div>
                     </div>
+                    <?php else: ?>
+                    <div class="mt-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-amber-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                            <div>
+                                <p class="text-sm text-amber-700 font-medium mb-1">Reset link expires in 24 hours</p>
+                                <p class="text-sm text-amber-600">
+                                    For security reasons, password reset links are valid for 24 hours only. If your link expires, you can request a new one.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
 
                     <!-- Footer -->
                     <div class="text-center mt-8">

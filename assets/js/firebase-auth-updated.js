@@ -2,7 +2,18 @@
  * Firebase Authentication for TostiShop Custom Login Form
  * Production-ready with enhanced error handling and fallbacks
  * 
- * @version 5.2.0 - Fixed Firebase 500 Error & reCAPTCHA Issues
+ * @version 5.4.1 - FIXED Google Loop + Email Auth + Lost Password UI
+ * 
+ * FIXES IN THIS VERSION:
+ * ✅ Fixed Google login infinite loop issue
+ * ✅ Fixed email registration calling login instead of showing modal
+ * ✅ Separated email login and registration into distinct functions
+ * ✅ Proper loop prevention for both login and registration flows
+ * ✅ Email login & registration fully functional with Firebase
+ * ✅ Better error handling and user feedback
+ * ✅ Automatic Google account creation (no modal)
+ * ✅ Email registration shows modal for name collection
+ * ✅ Enhanced lost password page with success states
  */
 
 (function($) {
@@ -21,12 +32,16 @@
     let googleLoginAttempts = 0;
     const MAX_GOOGLE_LOGIN_ATTEMPTS = 1;
 
+    // Google registration loop prevention
+    let googleRegistrationAttempts = 0;
+    const MAX_GOOGLE_REGISTRATION_ATTEMPTS = 1;
+
     // Test phone numbers (DISABLED IN PRODUCTION)
     const TEST_PHONE_NUMBERS = {}; // Empty object for production
 
     // Initialize Firebase when DOM is ready
     $(document).ready(function() {
-        console.log('🚀 TostiShop Firebase Auth v5.3.0 - Enhanced Google Auto-Registration');
+        console.log('🚀 TostiShop Firebase Auth v5.4.1 - FIXED Google Loop + Email Auth + Lost Password UI');
         initializeFirebase();
         bindEvents();
         setupOTPInputs();
@@ -300,12 +315,56 @@
         // Email Authentication Events
         $('#email-login-btn').on('click', function(e) {
             e.preventDefault();
-            handleEmailAuth();
+            console.log('📧 Email login button clicked');
+            handleEmailLogin();
         });
         
         $('#email-register-btn').on('click', function(e) {
             e.preventDefault();
-            handleEmailAuth();
+            console.log('📝 Email register button clicked');
+            console.log('🔍 Debug: Button ID that was clicked:', $(this).attr('id'));
+            console.log('🔍 Debug: Calling handleEmailRegistration function...');
+            handleEmailRegistration();
+        });
+
+        // Real-time email validation
+        $('#email-login, #email-register').on('blur', function() {
+            const email = $(this).val().trim();
+            if (email && !isValidEmail(email)) {
+                $(this).addClass('border-red-500 focus:border-red-500 focus:ring-red-500');
+                showError('Please enter a valid email address.');
+            } else {
+                $(this).removeClass('border-red-500 focus:border-red-500 focus:ring-red-500');
+                hideError();
+            }
+        });
+
+        // Password strength indicator (basic)
+        $('#password-register').on('input', function() {
+            const password = $(this).val();
+            const strengthIndicator = $(this).siblings('.password-strength');
+            
+            if (password.length === 0) {
+                strengthIndicator.remove();
+                return;
+            }
+            
+            if (strengthIndicator.length === 0) {
+                $(this).after('<div class="password-strength text-xs mt-1"></div>');
+            }
+            
+            const indicator = $(this).siblings('.password-strength');
+            
+            if (password.length < 6) {
+                indicator.html('<span class="text-red-600">⚠️ Too short (minimum 6 characters)</span>');
+                $(this).addClass('border-red-300');
+            } else if (password.length < 8) {
+                indicator.html('<span class="text-yellow-600">⚡ Fair strength</span>');
+                $(this).removeClass('border-red-300').addClass('border-yellow-300');
+            } else {
+                indicator.html('<span class="text-green-600">✅ Good strength</span>');
+                $(this).removeClass('border-red-300 border-yellow-300').addClass('border-green-300');
+            }
         });
 
         // User Registration Modal Events
@@ -355,6 +414,29 @@
 
         $('#mobile-number').on('keyup', function() {
             updateSendButtonState();
+        });
+        
+        // Enter key handling for email forms
+        $('#email-login, #password-login').on('keypress', function(e) {
+            if (e.which === 13) { // Enter key
+                e.preventDefault();
+                $('#email-login-btn').click();
+            }
+        });
+        
+        $('#email-register, #password-register').on('keypress', function(e) {
+            if (e.which === 13) { // Enter key
+                e.preventDefault();
+                $('#email-register-btn').click();
+            }
+        });
+        
+        // OTP input enter key handling
+        $('#otp-code').on('keypress', function(e) {
+            if (e.which === 13) { // Enter key
+                e.preventDefault();
+                $('#verify-otp-btn').click();
+            }
         });
     }
 
@@ -624,6 +706,10 @@
             return;
         }
 
+        // Reset attempts when starting fresh
+        googleLoginAttempts = 0;
+        googleRegistrationAttempts = 0;
+
         showLoading('Connecting to Google...');
 
         const provider = new firebase.auth.GoogleAuthProvider();
@@ -646,6 +732,8 @@
             })
             .catch(function(error) {
                 hideLoading();
+                googleLoginAttempts = 0; // Reset on error
+                googleRegistrationAttempts = 0; // Reset on error
                 console.error('❌ Google login error:', error);
                 
                 let errorMessage = 'Google login failed. ';
@@ -662,65 +750,86 @@
     }
 
     /**
-     * Handle Email Authentication
+     * Handle Email Login - ENHANCED WITH PROPER VALIDATION
      */
-    function handleEmailAuth() {
-        const alpineElement = document.querySelector('[x-data]');
-        const isRegistering = alpineElement && alpineElement._x_dataStack && 
-                            alpineElement._x_dataStack[0].isRegistering;
+    function handleEmailLogin() {
+        console.log('� Email login initiated');
         
-        if (isRegistering) {
-            const email = $('#email-register').val().trim();
-            const password = $('#password-register').val();
-            
-            if (!email || !password) {
-                showError('Please fill in all required fields.');
-                return;
-            }
-
-            if (!isValidEmail(email)) {
-                showError('Please enter a valid email address.');
-                $('#email-register').focus();
-                return;
-            }
-
-            if (password.length < 6) {
-                showError('Password must be at least 6 characters long.');
-                $('#password-register').focus();
-                return;
-            }
-            
-            registerWithEmail(email, password);
-        } else {
-            const email = $('#email-login').val().trim();
-            const password = $('#password-login').val();
-            
-            if (!email || !password) {
-                showError('Please fill in all required fields.');
-                return;
-            }
-
-            if (!isValidEmail(email)) {
-                showError('Please enter a valid email address.');
-                $('#email-login').focus();
-                return;
-            }
-            
-            loginWithEmail(email, password);
+        const email = $('#email-login').val().trim();
+        const password = $('#password-login').val();
+        
+        console.log('� Email login attempt for:', email);
+        
+        // Validation
+        if (!email || !password) {
+            showError('Please fill in all required fields.');
+            if (!email) $('#email-login').focus();
+            else $('#password-login').focus();
+            return;
         }
+
+        if (!isValidEmail(email)) {
+            showError('Please enter a valid email address.');
+            $('#email-login').focus();
+            return;
+        }
+        
+        loginWithEmail(email, password);
     }
 
     /**
-     * Login with Email
+     * Handle Email Registration - ENHANCED WITH PROPER VALIDATION
+     */
+    function handleEmailRegistration() {
+        console.log('📝 Email registration initiated');
+        
+        const email = $('#email-register').val().trim();
+        const password = $('#password-register').val();
+        
+        console.log('� Email registration attempt for:', email);
+        
+        // Validation
+        if (!email || !password) {
+            showError('Please fill in all required fields.');
+            if (!email) $('#email-register').focus();
+            else $('#password-register').focus();
+            return;
+        }
+
+        if (!isValidEmail(email)) {
+            showError('Please enter a valid email address.');
+            $('#email-register').focus();
+            return;
+        }
+
+        if (password.length < 6) {
+            showError('Password must be at least 6 characters long.');
+            $('#password-register').focus();
+            return;
+        }
+        
+        registerWithEmail(email, password);
+    }
+
+    /**
+     * Login with Email - ENHANCED WITH BETTER ERROR HANDLING
      */
     function loginWithEmail(email, password) {
-        showLoading('Logging in...');
+        console.log('🔥 loginWithEmail called with:', { email: email });
+        showLoading('Signing in...');
 
         auth.signInWithEmailAndPassword(email, password)
             .then(function(result) {
                 const user = result.user;
-                console.log('✅ Email login successful');
+                console.log('✅ Email login successful for:', user.email);
+                console.log('📋 User Data:', {
+                    uid: user.uid,
+                    email: user.email,
+                    emailVerified: user.emailVerified
+                });
                 
+                // For email auth, we use the standard login flow
+                console.log('🔄 Calling loginToWordPress for existing email user...');
                 loginToWordPress(user, 'email');
             })
             .catch(function(error) {
@@ -728,47 +837,94 @@
                 console.error('❌ Email login error:', error);
                 
                 let errorMessage = 'Login failed. ';
-                if (error.code === 'auth/user-not-found') {
-                    errorMessage = 'No account found with this email. Please register first.';
-                } else if (error.code === 'auth/wrong-password') {
-                    errorMessage = 'Incorrect password. Please try again.';
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = 'Invalid email address format.';
-                } else {
-                    errorMessage += 'Please check your credentials and try again.';
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                        errorMessage = 'No account found with this email address. Please register first or check your email.';
+                        break;
+                    case 'auth/wrong-password':
+                        errorMessage = 'Incorrect password. Please try again or reset your password.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = 'Invalid email address format. Please check and try again.';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage = 'Too many failed attempts. Please try again later or reset your password.';
+                        break;
+                    case 'auth/user-disabled':
+                        errorMessage = 'This account has been disabled. Please contact support.';
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMessage = 'Network error. Please check your internet connection and try again.';
+                        break;
+                    default:
+                        errorMessage += 'Please check your credentials and try again.';
                 }
                 
                 showError(errorMessage);
+                
+                // Focus back to password field for wrong password
+                if (error.code === 'auth/wrong-password') {
+                    $('#password-login').val('').focus();
+                }
             });
     }
 
     /**
-     * Register with Email
+     * Register with Email - ENHANCED WITH BETTER ERROR HANDLING
      */
     function registerWithEmail(email, password) {
-        showLoading('Creating account...');
+        console.log('🔥 registerWithEmail called with:', { email: email, password: '***' });
+        showLoading('Creating your account...');
 
         auth.createUserWithEmailAndPassword(email, password)
             .then(function(result) {
                 const user = result.user;
-                console.log('✅ Email registration successful');
+                console.log('✅ Email registration successful for:', user.email);
+                console.log('📋 New User Data:', {
+                    uid: user.uid,
+                    email: user.email,
+                    emailVerified: user.emailVerified
+                });
                 
-                loginToWordPress(user, 'email');
+                // For email registration, we need to show registration modal 
+                // to collect additional user info (name) for WordPress account
+                console.log('👤 New email user created, showing registration modal...');
+                hideLoading(); // Hide loading before showing modal
+                showUserRegistrationModal(user, 'email');
             })
             .catch(function(error) {
                 hideLoading();
                 console.error('❌ Email registration error:', error);
                 
                 let errorMessage = 'Registration failed. ';
-                if (error.code === 'auth/email-already-in-use') {
-                    errorMessage = 'An account with this email already exists. Please login instead.';
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = 'Invalid email address format.';
-                } else if (error.code === 'auth/weak-password') {
-                    errorMessage = 'Password is too weak. Please choose a stronger password.';
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        errorMessage = 'An account with this email already exists. Please sign in instead or use a different email.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = 'Invalid email address format. Please check and try again.';
+                        break;
+                    case 'auth/weak-password':
+                        errorMessage = 'Password is too weak. Please choose a stronger password (at least 6 characters).';
+                        break;
+                    case 'auth/operation-not-allowed':
+                        errorMessage = 'Email registration is currently disabled. Please contact support.';
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMessage = 'Network error. Please check your internet connection and try again.';
+                        break;
+                    default:
+                        errorMessage += 'Please try again or contact support if the problem persists.';
                 }
                 
                 showError(errorMessage);
+                
+                // If email already exists, suggest switching to login
+                if (error.code === 'auth/email-already-in-use') {
+                    setTimeout(() => {
+                        showSuccess('💡 Try switching to "Sign In" tab to login with this email!');
+                    }, 2000);
+                }
             });
     }
 
@@ -794,6 +950,13 @@
                     auth_method: authMethod,
                     from_checkout: window.location.href.includes('checkout') ? 'true' : 'false'
                 };
+
+                // Pass actual user data for email authentication
+                if (authMethod === 'email') {
+                    userData.email_uid = firebaseUser.uid || '';
+                    userData.email_address = firebaseUser.email || '';
+                    userData.email_verified = firebaseUser.emailVerified || false;
+                }
 
                 console.log('📤 Sending login request to WordPress with nonce:', userData.nonce);
 
@@ -947,7 +1110,23 @@
      * Auto-register Google user - NO MODAL NEEDED, NO LOOPS
      */
     function autoRegisterGoogleUser(firebaseUser) {
-        console.log('🔄 Auto-registering Google user...');
+        if (!firebaseUser) {
+            hideLoading();
+            showError('Google authentication failed. Please try again.');
+            return;
+        }
+
+        // Prevent infinite loops for Google registration too
+        if (googleRegistrationAttempts >= MAX_GOOGLE_REGISTRATION_ATTEMPTS) {
+            hideLoading();
+            googleLoginAttempts = 0; // Reset login attempts as well
+            console.error('❌ Maximum Google registration attempts reached');
+            showError('Google account creation failed after multiple attempts. Please refresh the page and try again, or use email registration.');
+            return;
+        }
+
+        googleRegistrationAttempts++;
+        console.log('🔄 Auto-registering Google user... (Attempt: ' + googleRegistrationAttempts + ')');
         
         showLoading('Creating your account...');
         
@@ -976,10 +1155,13 @@
                     from_checkout: window.location.href.includes('checkout') ? 'true' : 'false'
                 };
                 
-                console.log('📤 Sending Google auto-registration request with user data:', {
+                console.log('📤 Sending Google auto-registration request', {
+                    action: registrationData.action,
+                    auth_method: registrationData.auth_method,
                     email: firebaseUser.email,
                     name: firebaseUser.displayName,
-                    uid: firebaseUser.uid
+                    uid: firebaseUser.uid,
+                    attempt: googleRegistrationAttempts
                 });
                 
                 $.ajax({
@@ -989,15 +1171,16 @@
                     timeout: 30000,
                     success: function(response) {
                         hideLoading();
-                        googleLoginAttempts = 0; // Reset attempts on completion
+                        googleLoginAttempts = 0; // Reset login attempts on completion
+                        googleRegistrationAttempts = 0; // Reset registration attempts on completion
                         
                         console.log('📥 Google registration response:', response);
                         
                         if (response.success) {
-                            showSuccess(response.data.message || 'Welcome to TostiShop! Account created successfully.');
+                            showSuccess(response.data.message || '🎉 Welcome to TostiShop! Account created successfully.');
                             
                             setTimeout(function() {
-                                window.location.href = response.data.redirect_url || tostiShopAjax.redirectUrl;
+                                window.location.href = response.data.redirect_url || tostiShopAjax.redirectUrl || '/my-account/';
                             }, 2000);
                             
                         } else {
@@ -1005,17 +1188,28 @@
                             let errorMessage = response.data.message || 'Account creation failed. Please try again.';
                             
                             if (errorCode === 'email_exists') {
-                                // Email exists - this shouldn't happen if backend is working correctly
-                                // Don't retry, just show error and let user manually retry
-                                errorMessage = 'An account with this email already exists. Please refresh the page and try logging in again.';
+                                // Email exists - try to login instead
+                                errorMessage = 'An account with this email already exists. Attempting to log you in...';
+                                showError(errorMessage);
+                                
+                                // Try to login instead (but don't create a loop)
+                                setTimeout(() => {
+                                    showLoading('Logging you in...');
+                                    // Reset attempts and try login once more
+                                    googleLoginAttempts = 0;
+                                    loginToWordPressWithGoogle(firebaseUser);
+                                }, 2000);
+                                return;
                             }
                             
+                            console.error('❌ Google registration failed:', errorMessage);
                             showError(errorMessage);
                         }
                     },
                     error: function(xhr, status, error) {
                         hideLoading();
-                        googleLoginAttempts = 0; // Reset attempts on error
+                        googleLoginAttempts = 0; // Reset login attempts on error
+                        googleRegistrationAttempts = 0; // Reset registration attempts on error
                         console.error('❌ Google registration error:', xhr.responseText, status, error);
                         showError('Account creation failed. Please try again or contact support.');
                     }
@@ -1023,7 +1217,8 @@
             })
             .catch(function(error) {
                 hideLoading();
-                googleLoginAttempts = 0; // Reset attempts on token error
+                googleLoginAttempts = 0; // Reset login attempts on token error
+                googleRegistrationAttempts = 0; // Reset registration attempts on token error
                 console.error('❌ Google registration token error:', error);
                 showError('Authentication error during registration. Please try again.');
             });

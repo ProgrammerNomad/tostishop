@@ -44,12 +44,18 @@ function tostishop_handle_firebase_login() {
     $google_name = isset($_POST['google_name']) ? sanitize_text_field($_POST['google_name']) : '';
     $google_uid = isset($_POST['google_uid']) ? sanitize_text_field($_POST['google_uid']) : '';
     
+    // Get Email user data if available (from frontend)
+    $email_uid = isset($_POST['email_uid']) ? sanitize_text_field($_POST['email_uid']) : '';
+    $email_address = isset($_POST['email_address']) ? sanitize_email($_POST['email_address']) : '';
+    $email_verified = isset($_POST['email_verified']) && $_POST['email_verified'] === 'true';
+    
     try {
-        // Get Firebase user data - now with real Google data
+        // Get Firebase user data - now with real Google and Email data
         $firebase_user_data = tostishop_get_firebase_user($firebase_token, $auth_method, array(
-            'email' => $google_email,
+            'uid' => $google_uid ?: $email_uid,
+            'email' => $google_email ?: $email_address,
             'name' => $google_name,
-            'uid' => $google_uid
+            'email_verified' => $email_verified
         ));
         
         if (!$firebase_user_data) {
@@ -286,6 +292,15 @@ function tostishop_get_firebase_user($token, $auth_method, $real_user_data = arr
         
         error_log('🎯 Using real Google user data: ' . print_r($user_data, true));
         
+    } elseif ($auth_method === 'email' && !empty($real_user_data)) {
+        // Use real email data from frontend
+        $user_data['uid'] = $real_user_data['uid'] ?: 'email_' . time() . '_' . rand(1000, 9999);
+        $user_data['email'] = $real_user_data['email'] ?: '';
+        $user_data['name'] = $real_user_data['name'] ?: '';
+        $user_data['email_verified'] = $real_user_data['email_verified'] ?: false;
+        
+        error_log('📧 Using real email user data: ' . print_r($user_data, true));
+        
     } else {
         // Fallback to simulation for other methods or when real data unavailable
         $user_data = tostishop_simulate_firebase_user($token, $auth_method);
@@ -315,8 +330,9 @@ function tostishop_simulate_firebase_user($token, $auth_method) {
         $user_data['name'] = 'Google User ' . rand(1, 100); // Replace with actual name from token
         $user_data['email_verified'] = true; // Google emails are pre-verified
     } elseif ($auth_method === 'email') {
-        // For email auth, we have email
+        // For email auth, we have email but no name initially
         $user_data['email'] = 'emailuser' . rand(100, 999) . '@example.com'; // Replace with actual data from token
+        $user_data['email_verified'] = false; // Email needs verification in production
     }
     
     return $user_data;
