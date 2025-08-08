@@ -42,12 +42,20 @@ if (!function_exists('tostishop_enqueue_firebase_scripts')) {
             true
         );
         
+        wp_enqueue_script(
+            'firebase-firestore', 
+            'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js', 
+            array('firebase-app'), 
+            '10.7.0', 
+            true
+        );
+        
         // Custom Firebase authentication script
         wp_enqueue_script(
             'tostishop-firebase-auth', 
-            get_template_directory_uri() . '/assets/js/firebase-auth-updated.js', 
-            array('jquery', 'firebase-auth'), 
-            '1.0.1', 
+            get_template_directory_uri() . '/assets/js/firebase-auth.js', 
+            array('jquery', 'firebase-auth', 'firebase-firestore'), 
+            '2.0.0', 
             true
         );
         

@@ -1,6 +1,6 @@
 /**
  * TostiShop Firebase Authentication
- * Clean implementation with Firestore integration
+ * Enhanced implementation with complete WooCommerce integration
  */
 
 class TostiShopAuth {
@@ -32,7 +32,7 @@ class TostiShopAuth {
             this.setupEventListeners();
             this.setupRecaptcha();
             
-            console.log('TostiShop Auth initialized');
+            console.log('✅ TostiShop Firebase Auth v2.0.0 - Enhanced WooCommerce Integration');
         } catch (error) {
             console.error('Firebase initialization error:', error);
             this.showError('Authentication service unavailable');

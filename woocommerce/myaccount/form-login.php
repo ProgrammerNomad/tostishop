@@ -67,6 +67,11 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
                                         }
                                     });
                                 });
+                                
+                                // Listen for return to initial view
+                                document.addEventListener('switch-to-initial', () => {
+                                    this.currentView = 'initial';
+                                });
                             }
                         }">
                             
