@@ -435,6 +435,38 @@
             }
         });
 
+        // 🔗 Account Binding Modal Events - SECURE PASSWORD VERIFICATION
+        $('#verify-and-bind-btn').on('click', function(e) {
+            e.preventDefault();
+            verifyPasswordAndBindAccount();
+        });
+
+        $('#cancel-binding-btn').on('click', function(e) {
+            e.preventDefault();
+            closeAccountBindingModal();
+            showError('Account binding cancelled. Please try with a different email.');
+        });
+
+        $('#close-binding-modal').on('click', function(e) {
+            e.preventDefault();
+            closeAccountBindingModal();
+        });
+
+        // Close binding modal on backdrop click
+        $('#account-binding-modal').on('click', function(e) {
+            if (e.target === this) {
+                closeAccountBindingModal();
+            }
+        });
+
+        // Enter key handling for binding password
+        $('#binding-password').on('keypress', function(e) {
+            if (e.which === 13) { // Enter key
+                e.preventDefault();
+                $('#verify-and-bind-btn').click();
+            }
+        });
+
         $('#cancel-registration').on('click', function(e) {
             e.preventDefault();
             closeRegistrationModal();
@@ -2121,7 +2153,8 @@
     }
 
     /**
-     * 🚨 Handle Existing Account Sign In
+     * 🚨 Handle Existing Account Sign In - SECURITY FIX
+     * Instead of auto-login, we require password verification for account binding
      */
     function handleExistingAccountSignIn() {
         const context = window.existingEmailContext;
@@ -2131,9 +2164,11 @@
             return;
         }
         
-        console.log('👤 Proceeding with existing account login');
+        console.log('� Starting secure account binding process instead of auto-login');
         closeExistingEmailModal();
-        proceedWithExistingUserLogin(context.firebaseUser, context.email, context.name);
+        
+        // Show account binding modal with password verification instead of auto-login
+        showAccountBindingModal(context.email, context.phone, context.firebaseUser, context.name);
     }
 
     /**
@@ -2156,6 +2191,176 @@
         
         // Clean up context
         window.existingEmailContext = null;
+    }
+
+    /**
+     * 🔗 Show Account Binding Modal - SECURE PASSWORD VERIFICATION
+     * Requires password verification to bind phone to existing email account
+     */
+    function showAccountBindingModal(email, phone, firebaseUser, name) {
+        console.log('🔗 Showing secure account binding modal for:', email);
+        
+        // Update binding modal content
+        $('#binding-email-display').text(email);
+        $('#binding-phone-display').text(phone);
+        
+        // Clear password field
+        $('#binding-password').val('');
+        
+        // Store context for binding
+        window.accountBindingContext = {
+            email: email,
+            phone: phone,
+            firebaseUser: firebaseUser,
+            name: name
+        };
+        
+        // Show binding modal
+        $('#account-binding-modal').removeClass('hidden');
+        
+        // Focus on password field
+        setTimeout(() => {
+            $('#binding-password').focus();
+        }, 300);
+    }
+
+    /**
+     * 🔗 Verify Password and Bind Account
+     */
+    function verifyPasswordAndBindAccount() {
+        const password = $('#binding-password').val().trim();
+        const context = window.accountBindingContext;
+        
+        if (!password) {
+            showError('Please enter your account password to verify ownership.');
+            $('#binding-password').focus();
+            return;
+        }
+        
+        if (!context) {
+            showError('Session expired. Please try again.');
+            closeAccountBindingModal();
+            return;
+        }
+        
+        console.log('🔐 Verifying password for account binding...');
+        showLoading('Verifying your password...');
+        
+        // Step 1: Verify password with WordPress backend
+        $.ajax({
+            url: tostiShopAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'tostishop_verify_password',
+                email: context.email,
+                password: password,
+                nonce: tostiShopAjax.nonce
+            },
+            timeout: 15000,
+            success: function(response) {
+                console.log('🔐 Password verification response:', response);
+                
+                if (response.success) {
+                    // Password is correct - proceed with account binding
+                    console.log('✅ Password verified, proceeding with account binding');
+                    bindPhoneToExistingAccount(context.firebaseUser, context.email, context.phone, context.name);
+                    
+                } else {
+                    hideLoading();
+                    const errorMessage = response.data?.message || 'Incorrect password. Please try again.';
+                    showError(errorMessage);
+                    $('#binding-password').val('').focus();
+                }
+            },
+            error: function(xhr, status, error) {
+                hideLoading();
+                console.error('❌ Password verification error:', xhr.responseText, status, error);
+                showError('Unable to verify password. Please check your connection and try again.');
+            }
+        });
+    }
+
+    /**
+     * 🔗 Bind Phone to Existing Account - SECURE PROCESS
+     */
+    function bindPhoneToExistingAccount(firebaseUser, email, phone, name) {
+        showLoading('Binding phone number to your account...');
+        
+        console.log('🔗 Binding phone to existing account:', { email, phone });
+        
+        firebaseUser.getIdToken()
+            .then(function(idToken) {
+                
+                const bindingData = {
+                    action: 'tostishop_bind_phone_to_account',
+                    firebase_token: idToken,
+                    nonce: tostiShopAjax.nonce,
+                    auth_method: 'phone_binding',
+                    
+                    // Account binding data
+                    existing_email: email,
+                    new_phone: phone,
+                    firebase_uid: firebaseUser.uid,
+                    user_name: name,
+                    from_checkout: window.location.href.includes('checkout') ? 'true' : 'false'
+                };
+
+                console.log('📤 Sending account binding request');
+
+                $.ajax({
+                    url: tostiShopAjax.ajaxurl,
+                    type: 'POST',
+                    data: bindingData,
+                    timeout: 30000,
+                    success: function(response) {
+                        hideLoading();
+                        closeAccountBindingModal();
+                        
+                        console.log('📥 Account binding response:', response);
+                        
+                        if (response.success) {
+                            showSuccess('🎉 Phone number successfully linked to your account! Logging you in...');
+                            
+                            // Clean up
+                            window.currentFirebaseUser = null;
+                            window.accountBindingContext = null;
+                            
+                            setTimeout(function() {
+                                window.location.href = response.data.redirect_url || tostiShopAjax.redirectUrl || '/my-account/';
+                            }, 2000);
+                            
+                        } else {
+                            const errorMessage = response.data?.message || 'Account binding failed. Please try again.';
+                            showError(errorMessage);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        hideLoading();
+                        closeAccountBindingModal();
+                        console.error('❌ Account binding error:', xhr.responseText, status, error);
+                        showError('Account binding failed. Please check your connection and try again.');
+                    }
+                });
+            })
+            .catch(function(error) {
+                hideLoading();
+                closeAccountBindingModal();
+                console.error('❌ Token retrieval error:', error);
+                showError('Authentication error. Please try again.');
+            });
+    }
+
+    /**
+     * 🔗 Close Account Binding Modal
+     */
+    function closeAccountBindingModal() {
+        $('#account-binding-modal').addClass('hidden');
+        
+        // Clean up context
+        window.accountBindingContext = null;
+        
+        // Clear password field for security
+        $('#binding-password').val('');
     }
 
     /**

@@ -567,3 +567,132 @@ function tostishop_handle_check_firebase_user() {
         'needs_email_update' => $user_check['exists'] ? tostishop_user_needs_email_update($user_check['user_id']) : false
     ));
 }
+
+/**
+ * Verify password for account binding - SECURITY FUNCTION
+ */
+function tostishop_verify_password() {
+    // Security check
+    if (!wp_verify_nonce($_POST['nonce'], 'tostishop_firebase_nonce')) {
+        wp_send_json_error(array(
+            'message' => 'Security verification failed.',
+            'code' => 'nonce_failed'
+        ));
+        return;
+    }
+    
+    $email = sanitize_email($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+    
+    if (empty($email) || empty($password)) {
+        wp_send_json_error(array(
+            'message' => 'Email and password are required.',
+            'code' => 'missing_data'
+        ));
+        return;
+    }
+    
+    // Verify password against WordPress user
+    $user = wp_authenticate($email, $password);
+    
+    if (is_wp_error($user)) {
+        wp_send_json_error(array(
+            'message' => 'Incorrect password. Please try again.',
+            'code' => 'invalid_credentials'
+        ));
+        return;
+    }
+    
+    // Password is correct
+    wp_send_json_success(array(
+        'message' => 'Password verified successfully.',
+        'user_id' => $user->ID
+    ));
+}
+
+/**
+ * Bind phone number to existing account - SECURE PROCESS
+ */
+function tostishop_bind_phone_to_account() {
+    // Security check
+    if (!wp_verify_nonce($_POST['nonce'], 'tostishop_firebase_nonce')) {
+        wp_send_json_error(array(
+            'message' => 'Security verification failed.',
+            'code' => 'nonce_failed'
+        ));
+        return;
+    }
+    
+    $firebase_token = sanitize_text_field($_POST['firebase_token'] ?? '');
+    $existing_email = sanitize_email($_POST['existing_email'] ?? '');
+    $new_phone = sanitize_text_field($_POST['new_phone'] ?? '');
+    $firebase_uid = sanitize_text_field($_POST['firebase_uid'] ?? '');
+    $from_checkout = ($_POST['from_checkout'] ?? '') === 'true';
+    
+    if (empty($firebase_token) || empty($existing_email) || empty($new_phone) || empty($firebase_uid)) {
+        wp_send_json_error(array(
+            'message' => 'Missing required data for account binding.',
+            'code' => 'missing_data'
+        ));
+        return;
+    }
+    
+    // Verify Firebase token
+    try {
+        $decoded_token = tostishop_verify_firebase_token($firebase_token);
+        if (!$decoded_token) {
+            wp_send_json_error(array(
+                'message' => 'Firebase authentication failed.',
+                'code' => 'firebase_auth_failed'
+            ));
+            return;
+        }
+    } catch (Exception $e) {
+        wp_send_json_error(array(
+            'message' => 'Firebase verification error: ' . $e->getMessage(),
+            'code' => 'firebase_verification_error'
+        ));
+        return;
+    }
+    
+    // Get existing WordPress user
+    $user = get_user_by('email', $existing_email);
+    if (!$user) {
+        wp_send_json_error(array(
+            'message' => 'User account not found.',
+            'code' => 'user_not_found'
+        ));
+        return;
+    }
+    
+    // Update user meta with phone number and Firebase UID
+    update_user_meta($user->ID, 'billing_phone', $new_phone);
+    update_user_meta($user->ID, 'firebase_uid', $firebase_uid);
+    update_user_meta($user->ID, 'phone_verified', true);
+    update_user_meta($user->ID, 'phone_verification_date', current_time('mysql'));
+    update_user_meta($user->ID, 'auth_method', 'phone_binding');
+    
+    // Log the user in
+    wp_set_current_user($user->ID);
+    wp_set_auth_cookie($user->ID, true);
+    
+    // Determine redirect URL
+    $redirect_url = home_url('/my-account/');
+    if ($from_checkout) {
+        $redirect_url = wc_get_checkout_url();
+    }
+    
+    wp_send_json_success(array(
+        'message' => 'Phone number successfully linked to your account!',
+        'redirect_url' => $redirect_url,
+        'user_id' => $user->ID,
+        'phone_linked' => true
+    ));
+}
+
+// Register the new AJAX actions
+add_action('wp_ajax_tostishop_verify_password', 'tostishop_verify_password');
+add_action('wp_ajax_nopriv_tostishop_verify_password', 'tostishop_verify_password');
+
+add_action('wp_ajax_tostishop_bind_phone_to_account', 'tostishop_bind_phone_to_account');
+add_action('wp_ajax_nopriv_tostishop_bind_phone_to_account', 'tostishop_bind_phone_to_account');

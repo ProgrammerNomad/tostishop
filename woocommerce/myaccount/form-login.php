@@ -750,7 +750,7 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
             <!-- User Options -->
             <div class="space-y-4">
                 <div class="text-center">
-                    <p class="text-gray-700 mb-4">What would you like to do?</p>
+                    <p class="text-gray-700 mb-4">🔐 To link your phone to this account, password verification is required.</p>
                 </div>
 
                 <!-- Primary Action: Sign In -->
@@ -760,7 +760,7 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
                         </svg>
-                        <span>Sign In to Existing Account</span>
+                        <span>Link Phone to Account</span>
                     </span>
                 </button>
 
@@ -787,6 +787,91 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
                     </p>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- 🔗 ACCOUNT BINDING MODAL - SECURE PASSWORD VERIFICATION -->
+<div id="account-binding-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-200">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Verify Account Ownership</h3>
+                    <p class="text-sm text-gray-600">Link phone number to existing account</p>
+                </div>
+            </div>
+            <button id="close-binding-modal" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Modal Content -->
+        <div class="px-6 py-6">
+            <!-- Security Notice -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <div class="flex items-start space-x-3">
+                    <svg class="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                    <div>
+                        <h4 class="font-medium text-yellow-800 mb-1">Security Verification Required</h4>
+                        <p class="text-sm text-yellow-700">
+                            To link your phone number to this existing account, please verify your password.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Details -->
+            <div class="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-200">
+                <div class="space-y-2">
+                    <p class="text-sm">
+                        <span class="font-medium text-blue-900">📧 Email:</span> 
+                        <span id="binding-email-display" class="text-blue-800"></span>
+                    </p>
+                    <p class="text-sm">
+                        <span class="font-medium text-blue-900">📱 Phone:</span> 
+                        <span id="binding-phone-display" class="text-blue-800 font-mono"></span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Password Verification -->
+            <div class="space-y-4">
+                <div>
+                    <label for="binding-password" class="block text-sm font-medium text-gray-700 mb-2">
+                        Enter Your Account Password
+                    </label>
+                    <input type="password" 
+                           id="binding-password" 
+                           name="binding-password" 
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all"
+                           placeholder="Enter your password"
+                           required>
+                    <p class="text-xs text-gray-500 mt-1">This verifies that you own the email account</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Actions -->
+        <div class="px-6 py-4 bg-gray-50 rounded-b-lg flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-3 space-y-3 space-y-reverse sm:space-y-0">
+            <button id="cancel-binding-btn" 
+                    class="w-full sm:w-auto px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                Cancel
+            </button>
+            <button id="verify-and-bind-btn" 
+                    class="w-full sm:w-auto bg-accent text-white px-6 py-2 rounded-lg font-medium hover:bg-red-600 transition-colors">
+                Verify & Link Account
+            </button>
         </div>
     </div>
 </div>
@@ -915,6 +1000,67 @@ body.modal-open {
     #existing-email-modal .max-w-md {
         max-width: calc(100vw - 2rem);
         margin: 1rem;
+    }
+}
+
+/* 🔗 Account Binding Modal Styling - SECURE PASSWORD VERIFICATION */
+#account-binding-modal {
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+#account-binding-modal .bg-white {
+    animation: modalSlideIn 0.3s ease-out;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+}
+
+/* Enhanced focus states for binding modal */
+#account-binding-modal button:focus {
+    outline: 2px solid #e42029;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(228, 32, 41, 0.1);
+}
+
+#account-binding-modal input:focus {
+    ring-color: #e42029;
+    border-color: #e42029;
+}
+
+/* Smooth hover transitions for binding modal buttons */
+#verify-and-bind-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(228, 32, 41, 0.3);
+}
+
+#cancel-binding-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Security notice styling */
+#account-binding-modal .bg-yellow-50 {
+    background: linear-gradient(135deg, rgb(254 252 232) 0%, rgb(254 240 138) 100%);
+}
+
+/* Account info styling for binding modal */
+#account-binding-modal .bg-blue-50 {
+    background: linear-gradient(135deg, rgb(239 246 255) 0%, rgb(219 234 254) 100%);
+}
+
+/* Better mobile responsiveness for binding modal */
+@media (max-width: 640px) {
+    #account-binding-modal .max-w-md {
+        max-width: calc(100vw - 2rem);
+        margin: 1rem;
+    }
+    
+    #account-binding-modal .sm\\:flex-row {
+        flex-direction: column-reverse;
+    }
+    
+    #account-binding-modal .sm\\:space-x-3 {
+        space-x: 0;
     }
 }
 </style>
