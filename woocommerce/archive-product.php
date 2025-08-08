@@ -19,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
 
 get_header(); ?>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
     
     <!-- Breadcrumbs -->
     <?php tostishop_breadcrumbs(); ?>
@@ -50,7 +50,7 @@ get_header(); ?>
         </div>
     </div>
     
-    <div class="lg:grid lg:grid-cols-4 lg:gap-8">
+    <div class="lg:grid lg:grid-cols-6 lg:gap-8">
         
         <!-- Filters Sidebar (Desktop) -->
         <aside class="hidden lg:block">
@@ -129,7 +129,7 @@ get_header(); ?>
         </div>
         
         <!-- Main Content -->
-        <div class="lg:col-span-3">
+        <div class="lg:col-span-5">
             
             <!-- Toolbar -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 p-4 bg-gray-50 rounded-lg">
@@ -149,7 +149,7 @@ get_header(); ?>
             <!-- Products Grid -->
             <?php if (woocommerce_product_loop()) : ?>
                 
-                <div id="productGrid" class="grid grid-cols-2 md:grid-cols-3 gap-6">
+                <div id="productGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6">
                     <?php
                     if (wc_get_loop_prop('is_shortcode')) {
                         woocommerce_product_loop_start();
