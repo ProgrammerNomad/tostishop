@@ -566,24 +566,24 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                     <?php endif; ?>
                     
                     <!-- Add to Cart Button -->
-                    <div class="space-y-3">
+                    <div class="space-y-3 lg:space-y-0 lg:flex lg:gap-4">
                         <?php if ($product->is_in_stock()) : ?>
                             <button type="submit" 
                                     name="add-to-cart" 
                                     value="<?php echo esc_attr($product->get_id()); ?>"
-                                    class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors duration-200">
+                                    class="w-full lg:flex-1 bg-blue-600 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors duration-200">
                                 <?php echo esc_html($product->single_add_to_cart_text()); ?>
                             </button>
                         <?php else : ?>
                             <button type="button" disabled 
-                                    class="w-full bg-gray-300 text-gray-500 py-4 px-6 rounded-lg text-lg font-semibold cursor-not-allowed">
+                                    class="w-full lg:flex-1 bg-gray-300 text-gray-500 py-4 px-6 rounded-lg text-lg font-semibold cursor-not-allowed">
                                 <?php _e('Out of Stock', 'tostishop'); ?>
                             </button>
                         <?php endif; ?>
                         
                         <!-- Wishlist Button -->
                         <button type="button" 
-                                class="w-full border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:border-gray-400 transition-colors duration-200">
+                                class="w-full lg:flex-1 border-2 border-gray-300 text-gray-700 py-4 px-6 rounded-lg text-lg font-semibold hover:border-gray-400 transition-colors duration-200">
                             <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                             </svg>
