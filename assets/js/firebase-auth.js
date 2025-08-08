@@ -4,23 +4,6 @@
  * 
  * @version 5.4.2 - CONSOLIDATED VERSION WITH COMPLETE PHONE FLOW
  * 
- * LATEST FIXES IN THIS VERSION:
- * ✅ Complete Phone Authentication Flow with Firestore Check
- * ✅ Phone Registration Modal for Name + Email Collection
- * ✅ Firestore User Profile Check for All Auth Methods
- * ✅ Enhanced WordPress + Firebase User Sync
- * ✅ Fixed Google login infinite loop issue
- * ✅ Fixed email registration calling login instead of showing modal
- * ✅ Separated email login and registration into distinct functions
- * ✅ Proper loop prevention for both login and registration flows
- * ✅ Email login & registration fully functional with Firebase
- * ✅ Better error handling and user feedback
- * ✅ Automatic Google account creation (no modal)
- * ✅ Email registration shows modal for name collection
- * ✅ Enhanced lost password page with success states
- * 
- * CONSOLIDATION: Combined firebase-auth.js and firebase-auth-updated.js
- * Old file backed up as firebase-auth-OLD-BACKUP.js
  */
 
 (function($) {
