@@ -171,14 +171,17 @@ class TostiShopAuth {
         this.hideLoading();
         this.currentUser = user;
         
-        // Update phone display in modal
+        // Update phone display in the inline view
         const phoneDisplay = document.getElementById('verified-phone-display');
         if (phoneDisplay) {
             phoneDisplay.textContent = user.phoneNumber;
         }
         
-        // Show modal
-        document.getElementById('phone-registration-modal').classList.remove('hidden');
+        // Switch to phone registration view instead of showing modal
+        const event = new CustomEvent('switch-to-phone-register', {
+            detail: { phone: user.phoneNumber }
+        });
+        document.dispatchEvent(event);
     }
 
     async completePhoneRegistration() {
@@ -227,7 +230,10 @@ class TostiShopAuth {
     }
 
     closePhoneModal() {
-        document.getElementById('phone-registration-modal')?.classList.add('hidden');
+        // Switch back to initial view since we're using inline registration now
+        const event = new CustomEvent('switch-to-initial');
+        document.dispatchEvent(event);
+        
         // Clear form
         document.getElementById('phone-register-name').value = '';
         document.getElementById('phone-register-email').value = '';
