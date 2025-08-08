@@ -67,7 +67,7 @@ if (!function_exists('tostishop_enqueue_firebase_scripts')) {
             '1.0.0'
         );
         
-        // Localize Firebase configuration and AJAX settings
+                // Localize Firebase configuration and AJAX settings
         wp_localize_script('tostishop-firebase-auth', 'tostiShopFirebaseConfig', $firebase_config);
         
         // FIX: Use array for dev mode to avoid script localization errors
@@ -89,6 +89,12 @@ if (!function_exists('tostishop_enqueue_firebase_scripts')) {
                 'emailRequired' => __('Please enter a valid email address.', 'tostishop'),
                 'passwordRequired' => __('Please enter a password.', 'tostishop'),
             )
+        ));
+        
+        // AJAX configuration for Firebase operations - MATCH JAVASCRIPT VARIABLE NAME
+        wp_localize_script('tostishop-firebase-auth', 'tostishop_firebase_ajax', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('tostishop_firebase_nonce')
         ));
     }
 }
