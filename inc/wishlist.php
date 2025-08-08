@@ -364,7 +364,7 @@ function tostishop_get_wishlist_button($product_id, $classes = '') {
             esc_attr($classes),
             intval($product_id),
             esc_attr__('Add to Wishlist', 'tostishop'),
-            esc_html__('Save', 'tostishop')
+            esc_html__('Wishlist', 'tostishop')
         );
     }
     
