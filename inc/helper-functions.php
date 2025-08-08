@@ -222,17 +222,6 @@ function tostishop_is_woocommerce_active() {
 }
 
 /**
- * Get cart item count
- */
-function tostishop_get_cart_count() {
-    if (!tostishop_is_woocommerce_active()) {
-        return 0;
-    }
-    
-    return WC()->cart->get_cart_contents_count();
-}
-
-/**
  * Get cart total
  */
 function tostishop_get_cart_total() {
