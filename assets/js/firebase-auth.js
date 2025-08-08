@@ -900,10 +900,11 @@
                         
                     } else {
                         // ❌ New user - Show registration modal for Name + Email
-                        console.log('🆕 New user detected, showing registration modal');
+                        console.log('🆕 New user detected, checking Firebase UID status first');
                         
                         if (authMethod === 'phone') {
-                            showPhoneRegistrationModal(firebaseUser);
+                            // For phone auth, check Firebase UID status first
+                            checkFirebaseUIDStatus(firebaseUser);
                         } else {
                             // For other methods, create basic profile and proceed
                             createFirestoreProfile(firebaseUser, authMethod)
@@ -919,10 +920,10 @@
                 .catch(function(error) {
                     console.error('❌ Firestore check error or timeout:', error);
                     
-                    // For phone auth without Firestore (including timeouts), we must collect user data
+                    // For phone auth without Firestore (including timeouts), check Firebase UID status first
                     if (authMethod === 'phone') {
-                        console.log('📱 Firestore unavailable or timed out, showing phone registration modal for:', firebaseUser.phoneNumber);
-                        showPhoneRegistrationModal(firebaseUser);
+                        console.log('📱 Firestore unavailable or timed out, checking Firebase UID status for:', firebaseUser.phoneNumber);
+                        checkFirebaseUIDStatus(firebaseUser);
                     } else {
                         // For other methods, fallback to direct WordPress sync
                         loginToWordPress(firebaseUser, authMethod);
@@ -932,10 +933,10 @@
         } catch (error) {
             console.error('❌ Firestore initialization error:', error);
             
-            // For phone auth without Firestore, we must collect user data
+            // For phone auth without Firestore, check Firebase UID status first
             if (authMethod === 'phone') {
-                console.log('📱 Firestore unavailable, showing phone registration modal for:', firebaseUser.phoneNumber);
-                showPhoneRegistrationModal(firebaseUser);
+                console.log('📱 Firestore unavailable, checking Firebase UID status for:', firebaseUser.phoneNumber);
+                checkFirebaseUIDStatus(firebaseUser);
             } else {
                 // For other methods, fallback to direct WordPress sync
                 loginToWordPress(firebaseUser, authMethod);
@@ -944,7 +945,76 @@
     }
 
     /**
-     * 📱 Show Phone Registration Modal
+     * � Check Firebase UID Status - PREVENTS DUPLICATE LINKING
+     * Uses Firebase UID only to determine account linking status
+     * This is the CORRECT approach - Firebase UID is the unique identifier
+     */
+    function checkFirebaseUIDStatus(firebaseUser) {
+        const firebaseUID = firebaseUser.uid || '';
+        const phoneNumber = firebaseUser.phoneNumber || '';
+        
+        if (!firebaseUID) {
+            console.error('❌ Missing Firebase UID');
+            showError('Authentication data incomplete. Please try again.');
+            return;
+        }
+        
+        console.log('🔍 Checking Firebase UID status for:', firebaseUID);
+        showLoading('Checking account status...');
+        
+        $.ajax({
+            url: tostiShopAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'tostishop_check_firebase_uid_status',
+                firebase_uid: firebaseUID,
+                phone_number: phoneNumber,
+                nonce: tostiShopAjax.nonce
+            },
+            timeout: 15000,
+            success: function(response) {
+                console.log('📥 Firebase UID status response:', response);
+                
+                if (response.success) {
+                    if (response.data.already_linked) {
+                        // ✅ Firebase UID already linked - user is logged in automatically by backend
+                        hideLoading();
+                        showSuccess('🎉 ' + response.data.message);
+                        
+                        setTimeout(function() {
+                            window.location.href = response.data.redirect_url || '/my-account/';
+                        }, 1500);
+                        
+                    } else if (response.data.phone_found && response.data.needs_password_verification) {
+                        // 🔐 Phone found but Firebase UID not linked - needs password verification
+                        hideLoading();
+                        console.log('🔐 Phone found in existing account, showing password verification');
+                        showAccountBindingModal(response.data.user_email, phoneNumber, firebaseUser, '');
+                        
+                    } else if (response.data.needs_registration) {
+                        // 🆕 Neither Firebase UID nor phone linked - show registration
+                        hideLoading();
+                        console.log('🆕 Firebase UID not linked, showing registration modal');
+                        showPhoneRegistrationModal(firebaseUser);
+                    }
+                } else {
+                    // ❌ Error checking Firebase UID status - fallback to registration
+                    hideLoading();
+                    console.error('❌ Error checking Firebase UID status:', response.data?.message);
+                    showPhoneRegistrationModal(firebaseUser);
+                }
+            },
+            error: function(xhr, status, error) {
+                hideLoading();
+                console.error('❌ Firebase UID status check failed:', xhr.responseText, status, error);
+                // Fallback to registration modal on error
+                showPhoneRegistrationModal(firebaseUser);
+            }
+        });
+    }
+
+    /**
+     * �📱 Show Phone Registration Modal
      * Collects Name + Email for new phone users
      */
     function showPhoneRegistrationModal(firebaseUser) {
@@ -1363,16 +1433,11 @@
             return;
         }
 
-        // For phone auth, check if we need to collect additional user data first
+        // For phone auth, check Firebase UID status first instead of collecting data immediately
         if (authMethod === 'phone') {
-            console.log('📱 Phone auth detected, checking if user data collection is needed');
-            
-            // If we don't have an email for phone auth, show registration modal
-            if (!firebaseUser.email || firebaseUser.email.includes('placeholder')) {
-                console.log('� Phone auth without email, showing registration modal');
-                showPhoneRegistrationModal(firebaseUser);
-                return;
-            }
+            console.log('📱 Phone auth detected, checking Firebase UID status first');
+            checkFirebaseUIDStatus(firebaseUser);
+            return;
         }
 
         console.log('�🔄 Logging into WordPress...');

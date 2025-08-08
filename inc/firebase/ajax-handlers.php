@@ -690,9 +690,116 @@ function tostishop_bind_phone_to_account() {
     ));
 }
 
+/**
+ * Check Firebase UID link status - PREVENTS DUPLICATE LINKING
+ * Uses Firebase UID only (not phone number) to check for existing links
+ */
+function tostishop_check_firebase_uid_status() {
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'tostishop_firebase_nonce')) {
+        wp_send_json_error(array(
+            'message' => 'Security verification failed.',
+            'code' => 'nonce_failed'
+        ));
+        return;
+    }
+    
+    $firebase_uid = isset($_POST['firebase_uid']) ? sanitize_text_field($_POST['firebase_uid']) : '';
+    $phone_number = isset($_POST['phone_number']) ? sanitize_text_field($_POST['phone_number']) : '';
+    
+    if (empty($firebase_uid)) {
+        wp_send_json_error(array(
+            'message' => 'Firebase UID is required.',
+            'code' => 'firebase_uid_missing'
+        ));
+        return;
+    }
+    
+    try {
+        // Check if this Firebase UID is already linked to a WordPress user
+        $existing_user = get_users(array(
+            'meta_key' => 'firebase_uid',
+            'meta_value' => $firebase_uid,
+            'number' => 1,
+            'fields' => 'all'
+        ));
+        
+        if (!empty($existing_user)) {
+            // Firebase UID already linked - auto-login user
+            $user = $existing_user[0];
+            
+            // Log the user in
+            wp_set_current_user($user->ID);
+            wp_set_auth_cookie($user->ID, true);
+            
+            // Update last login time
+            update_user_meta($user->ID, 'last_login_method', 'firebase_phone');
+            update_user_meta($user->ID, 'last_login_time', current_time('mysql'));
+            
+            // Determine redirect URL
+            $redirect_url = '/my-account/';
+            if (function_exists('wc_get_account_endpoint_url')) {
+                $redirect_url = wc_get_account_endpoint_url('dashboard');
+            }
+            
+            wp_send_json_success(array(
+                'already_linked' => true,
+                'message' => 'Welcome back! You have been logged in automatically.',
+                'user_id' => $user->ID,
+                'user_email' => $user->user_email,
+                'redirect_url' => $redirect_url
+            ));
+            return;
+        }
+        
+        // Firebase UID not linked - check if phone is in billing_phone field
+        if (!empty($phone_number)) {
+            $users_with_phone = get_users(array(
+                'meta_key' => 'billing_phone',
+                'meta_value' => $phone_number,
+                'number' => 1,
+                'fields' => 'all'
+            ));
+            
+            if (!empty($users_with_phone)) {
+                // Phone found but not linked - needs password verification
+                $user = $users_with_phone[0];
+                
+                wp_send_json_success(array(
+                    'already_linked' => false,
+                    'phone_found' => true,
+                    'needs_password_verification' => true,
+                    'user_email' => $user->user_email,
+                    'user_id' => $user->ID
+                ));
+                return;
+            }
+        }
+        
+        // Neither Firebase UID nor phone found - new registration needed
+        wp_send_json_success(array(
+            'already_linked' => false,
+            'phone_found' => false,
+            'needs_registration' => true
+        ));
+        
+    } catch (Exception $e) {
+        error_log('Check Firebase UID status error: ' . $e->getMessage());
+        
+        wp_send_json_error(array(
+            'message' => 'Error checking account status.',
+            'code' => 'check_error',
+            'debug' => TOSTISHOP_DEV_MODE ? $e->getMessage() : null
+        ));
+    }
+}
+
 // Register the new AJAX actions
 add_action('wp_ajax_tostishop_verify_password', 'tostishop_verify_password');
 add_action('wp_ajax_nopriv_tostishop_verify_password', 'tostishop_verify_password');
 
 add_action('wp_ajax_tostishop_bind_phone_to_account', 'tostishop_bind_phone_to_account');
 add_action('wp_ajax_nopriv_tostishop_bind_phone_to_account', 'tostishop_bind_phone_to_account');
+
+add_action('wp_ajax_tostishop_check_firebase_uid_status', 'tostishop_check_firebase_uid_status');
+add_action('wp_ajax_nopriv_tostishop_check_firebase_uid_status', 'tostishop_check_firebase_uid_status');
