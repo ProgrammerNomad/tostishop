@@ -39,6 +39,9 @@ function tostishop_handle_firebase_login() {
     $auth_method = isset($_POST['auth_method']) ? sanitize_text_field($_POST['auth_method']) : 'phone';
     $from_checkout = isset($_POST['from_checkout']) && $_POST['from_checkout'] === 'true';
     
+    // Get phone number if provided (for phone auth)
+    $phone_number = isset($_POST['phone_number']) ? sanitize_text_field($_POST['phone_number']) : '';
+    
     // Get Google user data if available (from frontend)
     $google_email = isset($_POST['google_email']) ? sanitize_email($_POST['google_email']) : '';
     $google_name = isset($_POST['google_name']) ? sanitize_text_field($_POST['google_name']) : '';
@@ -50,12 +53,13 @@ function tostishop_handle_firebase_login() {
     $email_verified = isset($_POST['email_verified']) && $_POST['email_verified'] === 'true';
     
     try {
-        // Get Firebase user data - now with real Google and Email data
+        // Get Firebase user data - now with real Google and Email data and phone number
         $firebase_user_data = tostishop_get_firebase_user($firebase_token, $auth_method, array(
             'uid' => $google_uid ?: $email_uid,
             'email' => $google_email ?: $email_address,
             'name' => $google_name,
-            'email_verified' => $email_verified
+            'email_verified' => $email_verified,
+            'phone_number' => $phone_number // Pass the actual phone number
         ));
         
         if (!$firebase_user_data) {
@@ -283,7 +287,14 @@ function tostishop_get_firebase_user($token, $auth_method, $real_user_data = arr
         'phone_number' => ''
     );
     
-    if ($auth_method === 'google' && !empty($real_user_data)) {
+    if ($auth_method === 'phone' && !empty($real_user_data['phone_number'])) {
+        // Use real phone number from frontend
+        $user_data['uid'] = 'phone_' . hash('md5', $real_user_data['phone_number']) . '_' . time();
+        $user_data['phone_number'] = $real_user_data['phone_number'];
+        
+        error_log('📱 Using real phone number: ' . $real_user_data['phone_number']);
+        
+    } elseif ($auth_method === 'google' && !empty($real_user_data)) {
         // Use real Google data from frontend
         $user_data['uid'] = $real_user_data['uid'] ?: 'google_' . time() . '_' . rand(1000, 9999);
         $user_data['email'] = $real_user_data['email'] ?: '';
@@ -322,8 +333,10 @@ function tostishop_simulate_firebase_user($token, $auth_method) {
     );
     
     if ($auth_method === 'phone') {
-        // For phone auth, we typically only have phone number
-        $user_data['phone_number'] = '+919450987150'; // Replace with actual phone from token
+        // For phone auth, generate a unique phone number based on token/time
+        // In real implementation, this would come from the Firebase token
+        $user_data['phone_number'] = '+91' . rand(7000000000, 9999999999);
+        error_log('⚠️ WARNING: Using simulated phone number for development: ' . $user_data['phone_number']);
     } elseif ($auth_method === 'google') {
         // For Google auth, we have email and name - simulate realistic data
         $user_data['email'] = 'googleuser' . rand(100, 999) . '@gmail.com'; // Replace with actual data from token

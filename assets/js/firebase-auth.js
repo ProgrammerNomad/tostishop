@@ -225,17 +225,60 @@ class TostiShopFirebaseAuth {
             // Get ID token for WordPress authentication
             const idToken = await user.getIdToken();
             
+            // Determine auth method and collect relevant data
+            let authMethod = 'email'; // default
+            let phoneNumber = '';
+            let emailAddress = '';
+            let displayName = '';
+            let userUID = user.uid;
+            
+            // Check if this is phone auth
+            if (user.phoneNumber) {
+                authMethod = 'phone';
+                phoneNumber = user.phoneNumber;
+            } else if (user.providerData && user.providerData.length > 0) {
+                // Check for Google provider
+                const googleProvider = user.providerData.find(provider => provider.providerId === 'google.com');
+                if (googleProvider) {
+                    authMethod = 'google';
+                    emailAddress = googleProvider.email || user.email;
+                    displayName = googleProvider.displayName || user.displayName;
+                } else {
+                    // Email/password auth
+                    authMethod = 'email';
+                    emailAddress = user.email;
+                    displayName = user.displayName;
+                }
+            }
+            
+            // Prepare request body with all relevant data
+            const requestBody = {
+                action: 'tostishop_firebase_login',
+                firebase_token: idToken,
+                auth_method: authMethod,
+                nonce: tostiShopAjax.nonce
+            };
+            
+            // Add method-specific data
+            if (authMethod === 'phone') {
+                requestBody.phone_number = phoneNumber;
+            } else if (authMethod === 'google') {
+                requestBody.google_email = emailAddress;
+                requestBody.google_name = displayName;
+                requestBody.google_uid = userUID;
+            } else if (authMethod === 'email') {
+                requestBody.email_address = emailAddress;
+                requestBody.email_uid = userUID;
+                requestBody.email_verified = user.emailVerified;
+            }
+            
             // Send to WordPress backend for user creation/login
             const response = await fetch(tostiShopAjax.ajaxurl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: new URLSearchParams({
-                    action: 'tostishop_firebase_login',
-                    firebase_token: idToken,
-                    nonce: tostiShopAjax.nonce
-                })
+                body: new URLSearchParams(requestBody)
             });
 
             const data = await response.json();

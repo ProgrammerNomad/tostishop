@@ -206,7 +206,7 @@ TostiShop uses a modular approach for better code maintainability and organizati
 - Page-specific asset management
 - Firebase authentication scripts
 - Development/production mode handling
-- CDN resources (Alpine.js, fonts)
+- Resources (Alpine.js, fonts)
 
 #### **woocommerce-customizations.php**
 - WooCommerce checkout modifications
@@ -426,7 +426,7 @@ TostiShop uses a modular approach for better code maintainability and organizati
 - Page-specific asset management
 - Firebase authentication scripts
 - Development/production mode handling
-- CDN resources (Alpine.js, fonts)
+- Resources (Alpine.js, fonts)
 
 #### **woocommerce-customizations.php**
 - WooCommerce checkout modifications
