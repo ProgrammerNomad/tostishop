@@ -43,11 +43,22 @@ function initializeTheme() {
 }
 
 /**
- * Initialize WooCommerce functionality
+ * Initialize WooCommerce functionality with accessibility
  */
 function initializeWooCommerce() {
     
-    // AJAX Add to Cart
+    // AJAX Add to Cart with better feedback
+    initializeAjaxAddToCart();
+    
+    // Form validation
+    initializeFormValidation();
+    
+    // Quantity controls
+    initializeQuantityControls();
+    
+    // Mobile-specific enhancements
+    initializeMobileEnhancements();
+}
     initializeAjaxAddToCart();
     
     // Quantity controls
@@ -97,27 +108,103 @@ function updateCartCount(count) {
  */
 function initializeQuantityControls() {
     
-    // Quantity increase/decrease buttons
-    window.increaseQuantity = function() {
-        const quantityInput = document.getElementById('quantity');
+    // Quantity increase/decrease buttons with accessibility
+    window.increaseQuantity = function(inputId = 'quantity') {
+        const quantityInput = document.getElementById(inputId);
         if (quantityInput) {
             const currentValue = parseInt(quantityInput.value) || 1;
             const maxValue = parseInt(quantityInput.getAttribute('max')) || 999;
             if (currentValue < maxValue) {
                 quantityInput.value = currentValue + 1;
+                // Announce change to screen readers
+                announceToScreenReader(`Quantity increased to ${quantityInput.value}`);
+                // Trigger change event
+                quantityInput.dispatchEvent(new Event('change'));
             }
         }
     };
     
-    window.decreaseQuantity = function() {
-        const quantityInput = document.getElementById('quantity');
+    window.decreaseQuantity = function(inputId = 'quantity') {
+        const quantityInput = document.getElementById(inputId);
         if (quantityInput) {
             const currentValue = parseInt(quantityInput.value) || 1;
             const minValue = parseInt(quantityInput.getAttribute('min')) || 1;
             if (currentValue > minValue) {
                 quantityInput.value = currentValue - 1;
+                // Announce change to screen readers
+                announceToScreenReader(`Quantity decreased to ${quantityInput.value}`);
+                // Trigger change event
+                quantityInput.dispatchEvent(new Event('change'));
             }
         }
+    };
+    
+    // Gallery navigation with accessibility
+    window.showGalleryImage = function(index) {
+        const mainImage = document.getElementById('main-product-image');
+        const galleryImages = document.querySelectorAll('.gallery-image');
+        const thumbnails = document.querySelectorAll('.thumbnail-btn');
+        
+        if (!mainImage) return;
+        
+        // Hide all gallery images
+        galleryImages.forEach(img => img.style.display = 'none');
+        
+        // Update thumbnail states and ARIA attributes
+        thumbnails.forEach((thumb, i) => {
+            thumb.classList.remove('border-blue-500');
+            thumb.classList.add('border-gray-200');
+            thumb.setAttribute('aria-selected', 'false');
+            thumb.setAttribute('tabindex', '-1');
+        });
+        
+        if (index === 0) {
+            // Show main image
+            mainImage.style.display = 'block';
+            mainImage.focus();
+            // Update main thumbnail
+            const mainThumb = document.querySelector('[data-thumbnail="main"]');
+            if (mainThumb) {
+                mainThumb.classList.remove('border-gray-200');
+                mainThumb.classList.add('border-blue-500');
+                mainThumb.setAttribute('aria-selected', 'true');
+                mainThumb.setAttribute('tabindex', '0');
+            }
+            announceToScreenReader('Viewing main product image');
+        } else {
+            // Show gallery image
+            mainImage.style.display = 'none';
+            const targetGalleryImage = document.querySelector(`[data-gallery-index="${index}"]`);
+            if (targetGalleryImage) {
+                targetGalleryImage.style.display = 'block';
+                targetGalleryImage.focus();
+                announceToScreenReader(`Viewing product image ${index + 1}`);
+            }
+            
+            // Update corresponding thumbnail
+            const targetThumb = document.querySelector(`[data-thumbnail="${index}"]`);
+            if (targetThumb) {
+                targetThumb.classList.remove('border-gray-200');
+                targetThumb.classList.add('border-blue-500');
+                targetThumb.setAttribute('aria-selected', 'true');
+                targetThumb.setAttribute('tabindex', '0');
+            }
+        }
+    };
+    
+    // Screen reader announcement helper
+    window.announceToScreenReader = function(message) {
+        const announcement = document.createElement('div');
+        announcement.setAttribute('aria-live', 'polite');
+        announcement.setAttribute('aria-atomic', 'true');
+        announcement.setAttribute('class', 'sr-only');
+        announcement.textContent = message;
+        document.body.appendChild(announcement);
+        
+        // Remove after announcement
+        setTimeout(() => {
+            document.body.removeChild(announcement);
+        }, 1000);
     };
 }
 
@@ -174,14 +261,100 @@ function hideSearchResults() {
 }
 
 /**
- * Initialize product gallery
+ * Initialize product gallery with accessibility
  */
 function initializeProductGallery() {
     
-    // Removed image zoom on hover effects
+    const gallery = document.querySelector('.product-gallery');
+    const thumbnails = document.querySelectorAll('.thumbnail-btn');
     
-    // Touch/swipe support for mobile gallery
-    initializeTouchGallery();
+    if (!gallery) return;
+    
+    // Keyboard navigation for thumbnails
+    thumbnails.forEach((thumbnail, index) => {
+        thumbnail.addEventListener('keydown', function(e) {
+            let targetIndex = index;
+            
+            switch(e.key) {
+                case 'ArrowRight':
+                case 'ArrowDown':
+                    e.preventDefault();
+                    targetIndex = (index + 1) % thumbnails.length;
+                    break;
+                case 'ArrowLeft':
+                case 'ArrowUp':
+                    e.preventDefault();
+                    targetIndex = (index - 1 + thumbnails.length) % thumbnails.length;
+                    break;
+                case 'Home':
+                    e.preventDefault();
+                    targetIndex = 0;
+                    break;
+                case 'End':
+                    e.preventDefault();
+                    targetIndex = thumbnails.length - 1;
+                    break;
+                case 'Enter':
+                case ' ':
+                    e.preventDefault();
+                    thumbnail.click();
+                    return;
+                default:
+                    return;
+            }
+            
+            // Focus and activate target thumbnail
+            thumbnails[targetIndex].focus();
+            thumbnails[targetIndex].click();
+        });
+    });
+    
+    // Touch swipe support for mobile
+    let startX = 0;
+    let currentX = 0;
+    let isDragging = false;
+    
+    gallery.addEventListener('touchstart', function(e) {
+        startX = e.touches[0].clientX;
+        isDragging = true;
+    });
+    
+    gallery.addEventListener('touchmove', function(e) {
+        if (!isDragging) return;
+        currentX = e.touches[0].clientX;
+        e.preventDefault(); // Prevent scrolling while swiping
+    });
+    
+    gallery.addEventListener('touchend', function() {
+        if (!isDragging) return;
+        
+        const diffX = startX - currentX;
+        const threshold = 50;
+        
+        if (Math.abs(diffX) > threshold) {
+            const currentActive = document.querySelector('.thumbnail-btn[aria-selected="true"]');
+            const currentIndex = Array.from(thumbnails).indexOf(currentActive);
+            
+            if (diffX > 0 && currentIndex < thumbnails.length - 1) {
+                // Swipe left - next image
+                thumbnails[currentIndex + 1].click();
+            } else if (diffX < 0 && currentIndex > 0) {
+                // Swipe right - previous image
+                thumbnails[currentIndex - 1].click();
+            }
+        }
+        
+        isDragging = false;
+    });
+    
+    // Initialize first image as active
+    if (thumbnails.length > 0) {
+        const mainThumb = document.querySelector('[data-thumbnail="main"]');
+        if (mainThumb) {
+            mainThumb.setAttribute('aria-selected', 'true');
+            mainThumb.setAttribute('tabindex', '0');
+        }
+    }
 }
 
 /**
@@ -469,3 +642,238 @@ window.addToCart = addToCartAjax;
 window.increaseQuantity = function() { /* defined above */ };
 window.decreaseQuantity = function() { /* defined above */ };
 window.showNotification = showNotification;
+
+/**
+ * Initialize AJAX Add to Cart with better feedback
+ */
+function initializeAjaxAddToCart() {
+    const forms = document.querySelectorAll('form.cart');
+    
+    forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (!submitBtn) return;
+            
+            // Show loading state
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="inline-flex items-center"><svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Adding...</span>';
+            
+            // Get form data
+            const formData = new FormData(form);
+            formData.append('action', 'woocommerce_add_to_cart');
+            
+            // Submit via AJAX
+            fetch(wc_add_to_cart_params?.ajax_url || '/wp-admin/admin-ajax.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    announceToScreenReader('Product added to cart successfully');
+                    showNotification('Product added to cart!', 'success');
+                    // Update cart count if element exists
+                    updateCartCount();
+                } else {
+                    announceToScreenReader('Failed to add product to cart');
+                    showNotification(data.data || 'Failed to add to cart', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Add to cart error:', error);
+                announceToScreenReader('An error occurred while adding to cart');
+                showNotification('An error occurred. Please try again.', 'error');
+            })
+            .finally(() => {
+                // Restore button state
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            });
+        });
+    });
+}
+
+/**
+ * Initialize form validation
+ */
+function initializeFormValidation() {
+    const quantityInputs = document.querySelectorAll('input[type="number"][name="quantity"]');
+    
+    quantityInputs.forEach(input => {
+        input.addEventListener('invalid', function(e) {
+            e.preventDefault();
+            const message = getValidationMessage(this);
+            showNotification(message, 'error');
+            announceToScreenReader(message);
+        });
+        
+        input.addEventListener('input', function() {
+            this.setCustomValidity('');
+            validateQuantityInput(this);
+        });
+    });
+}
+
+/**
+ * Get appropriate validation message
+ */
+function getValidationMessage(input) {
+    if (input.validity.valueMissing) {
+        return 'Please enter a quantity';
+    } else if (input.validity.rangeUnderflow) {
+        return `Minimum quantity is ${input.min}`;
+    } else if (input.validity.rangeOverflow) {
+        return `Maximum quantity is ${input.max}`;
+    } else if (input.validity.stepMismatch) {
+        return 'Please enter a valid quantity';
+    }
+    return 'Please enter a valid quantity';
+}
+
+/**
+ * Validate quantity input
+ */
+function validateQuantityInput(input) {
+    const value = parseInt(input.value);
+    const min = parseInt(input.min) || 1;
+    const max = parseInt(input.max) || 999;
+    
+    if (value < min) {
+        input.setCustomValidity(`Minimum quantity is ${min}`);
+    } else if (value > max) {
+        input.setCustomValidity(`Maximum quantity is ${max}`);
+    } else {
+        input.setCustomValidity('');
+    }
+}
+
+/**
+ * Initialize quantity controls with accessibility
+ */
+function initializeQuantityControls() {
+    const quantityInputs = document.querySelectorAll('input[type="number"][name="quantity"]');
+    
+    quantityInputs.forEach(input => {
+        // Add ARIA attributes
+        input.setAttribute('role', 'spinbutton');
+        input.setAttribute('aria-label', 'Product quantity');
+        
+        // Keyboard support
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const id = this.id || 'quantity';
+                increaseQuantity(id);
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const id = this.id || 'quantity';
+                decreaseQuantity(id);
+            }
+        });
+    });
+}
+
+/**
+ * Initialize mobile-specific enhancements
+ */
+function initializeMobileEnhancements() {
+    // Sticky add to cart visibility
+    initializeStickyAddToCart();
+    
+    // Touch-friendly interactions
+    initializeTouchEnhancements();
+    
+    // Mobile keyboard optimizations
+    initializeMobileKeyboard();
+}
+
+/**
+ * Initialize sticky add to cart behavior
+ */
+function initializeStickyAddToCart() {
+    const stickyCart = document.querySelector('.fixed.bottom-0[role="complementary"]');
+    const mainAddToCart = document.querySelector('form.cart');
+    
+    if (!stickyCart || !mainAddToCart) return;
+    
+    const observer = new IntersectionObserver(
+        (entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    stickyCart.style.transform = 'translateY(100%)';
+                    stickyCart.setAttribute('aria-hidden', 'true');
+                } else {
+                    stickyCart.style.transform = 'translateY(0)';
+                    stickyCart.setAttribute('aria-hidden', 'false');
+                }
+            });
+        },
+        { threshold: 0.1 }
+    );
+    
+    observer.observe(mainAddToCart);
+}
+
+/**
+ * Initialize touch enhancements
+ */
+function initializeTouchEnhancements() {
+    // Add touch feedback to buttons
+    const buttons = document.querySelectorAll('button, .btn, [role="button"]');
+    
+    buttons.forEach(button => {
+        button.addEventListener('touchstart', function() {
+            this.style.transform = 'scale(0.98)';
+        });
+        
+        button.addEventListener('touchend', function() {
+            this.style.transform = 'scale(1)';
+        });
+        
+        button.addEventListener('touchcancel', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+}
+
+/**
+ * Initialize mobile keyboard optimizations
+ */
+function initializeMobileKeyboard() {
+    const numberInputs = document.querySelectorAll('input[type="number"]');
+    
+    numberInputs.forEach(input => {
+        // Set inputmode for better mobile keyboards
+        input.setAttribute('inputmode', 'numeric');
+        input.setAttribute('pattern', '[0-9]*');
+    });
+}
+
+/**
+ * Update cart count in header
+ */
+function updateCartCount() {
+    const cartCount = document.querySelector('.cart-count, [data-cart-count]');
+    if (!cartCount) return;
+    
+    fetch('/wp-admin/admin-ajax.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'action=get_cart_count'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            cartCount.textContent = data.data;
+            cartCount.setAttribute('aria-label', `${data.data} items in cart`);
+        }
+    })
+    .catch(error => {
+        console.error('Cart count update failed:', error);
+    });
+}

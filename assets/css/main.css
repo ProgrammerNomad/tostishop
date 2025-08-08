@@ -5,15 +5,15 @@
 /* Custom Components */
 @layer components {
   .btn-primary {
-    @apply bg-navy-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-navy-700 transition-colors duration-200;
+    @apply bg-navy-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-navy-700 focus:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 transition-colors duration-200;
   }
   
   .btn-secondary {
-    @apply bg-silver-100 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-silver-200 transition-colors duration-200;
+    @apply bg-silver-100 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-silver-200 focus:bg-silver-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200;
   }
   
   .btn-accent {
-    @apply bg-accent text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors duration-200;
+    @apply bg-accent text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 focus:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors duration-200;
   }
   
   .card {
@@ -21,11 +21,63 @@
   }
   
   .input {
-    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent;
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent transition-colors duration-200;
   }
   
   .select {
-    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent bg-white;
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent bg-white transition-colors duration-200;
+  }
+  
+  /* Accessibility Helpers */
+  .sr-only {
+    @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+    clip: rect(0, 0, 0, 0);
+  }
+  
+  .focus-visible {
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+  
+  /* Mobile Touch Targets */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* High Contrast Mode Support */
+  @media (prefers-contrast: high) {
+    .btn-primary, .btn-accent {
+      @apply border-2 border-current;
+    }
+  }
+  
+  /* Reduced Motion Support */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  
+  /* Product Gallery Accessibility */
+  .gallery-image:focus,
+  .thumbnail-btn:focus {
+    @apply outline-none ring-2 ring-blue-500 ring-offset-2;
+  }
+  
+  .thumbnail-btn[aria-selected="true"] {
+    @apply border-blue-500 ring-2 ring-blue-200;
+  }
+  
+  /* Mobile-Optimized Form Elements */
+  @media (max-width: 768px) {
+    .input, .select, .btn-primary, .btn-secondary, .btn-accent {
+      @apply text-base; /* Prevent zoom on iOS */
+    }
+    
+    .quantity-controls button {
+      @apply touch-target p-3;
+    }
   }
 }
 

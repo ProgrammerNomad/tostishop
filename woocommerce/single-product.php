@@ -283,15 +283,25 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
         <div class="lg:hidden">
             <!-- Product Images -->
             <div class="mb-8">
-                <div class="product-gallery" x-data="{ currentImage: 0, images: [] }">
+                <div class="product-gallery" 
+                     x-data="{ currentImage: 0, images: [] }"
+                     role="region" 
+                     aria-label="<?php esc_attr_e('Product Images', 'tostishop'); ?>">
                     
                     <!-- Main Image -->
                     <div class="mb-4">
-                        <div class="bg-gray-100 rounded-lg overflow-hidden aspect-square">
+                        <div class="bg-gray-100 rounded-lg overflow-hidden aspect-square focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
                             <?php if (has_post_thumbnail()) : ?>
+                                <?php 
+                                $main_image_alt = get_post_meta(get_post_thumbnail_id(), '_wp_attachment_image_alt', true);
+                                $main_image_alt = $main_image_alt ?: sprintf(__('%s main product image', 'tostishop'), get_the_title());
+                                ?>
                                 <?php the_post_thumbnail('large', array(
                                     'class' => 'w-full h-full object-cover main-product-image',
-                                    'id' => 'main-product-image'
+                                    'id' => 'main-product-image',
+                                    'alt' => $main_image_alt,
+                                    'loading' => 'eager',
+                                    'tabindex' => '0'
                                 )); ?>
                             <?php endif; ?>
                             
@@ -300,32 +310,54 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                             $attachment_ids = $product->get_gallery_image_ids();
                             foreach ($attachment_ids as $index => $attachment_id) :
                                 $image_url = wp_get_attachment_image_url($attachment_id, 'large');
+                                $image_alt = get_post_meta($attachment_id, '_wp_attachment_image_alt', true);
+                                $image_alt = $image_alt ?: sprintf(__('%s product image %d', 'tostishop'), get_the_title(), $index + 2);
                             ?>
                                 <img src="<?php echo esc_url($image_url); ?>" 
-                                     alt="<?php echo esc_attr(get_post_meta($attachment_id, '_wp_attachment_image_alt', true)); ?>"
+                                     alt="<?php echo esc_attr($image_alt); ?>"
                                      class="w-full h-full object-cover gallery-image"
                                      style="display: none;"
-                                     data-gallery-index="<?php echo $index + 1; ?>">
+                                     data-gallery-index="<?php echo $index + 1; ?>"
+                                     loading="lazy"
+                                     tabindex="0">
                             <?php endforeach; ?>
                         </div>
                     </div>
                     
                     <!-- Thumbnail Navigation -->
                     <?php if ($attachment_ids) : ?>
-                    <div class="flex space-x-2 overflow-x-auto">
+                    <div class="flex space-x-2 overflow-x-auto pb-2" role="tablist" aria-label="<?php esc_attr_e('Product image thumbnails', 'tostishop'); ?>">
                         <!-- Main thumbnail -->
                         <button onclick="showGalleryImage(0)" 
-                                class="flex-none w-16 h-16 bg-gray-100 rounded border-2 border-blue-500 overflow-hidden thumbnail-btn"
-                                data-thumbnail="main">
-                            <?php the_post_thumbnail('thumbnail', array('class' => 'w-full h-full object-cover')); ?>
+                                class="flex-none w-16 h-16 bg-gray-100 rounded border-2 border-blue-500 overflow-hidden thumbnail-btn focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                data-thumbnail="main"
+                                role="tab"
+                                aria-selected="true"
+                                aria-controls="main-product-image"
+                                aria-label="<?php esc_attr_e('View main product image', 'tostishop'); ?>"
+                                tabindex="0">
+                            <?php the_post_thumbnail('thumbnail', array(
+                                'class' => 'w-full h-full object-cover',
+                                'alt' => '',
+                                'role' => 'presentation'
+                            )); ?>
                         </button>
                         
                         <!-- Gallery thumbnails -->
                         <?php foreach ($attachment_ids as $index => $attachment_id) : ?>
                             <button onclick="showGalleryImage(<?php echo $index + 1; ?>)" 
-                                    class="flex-none w-16 h-16 bg-gray-100 rounded border-2 border-gray-200 overflow-hidden thumbnail-btn"
-                                    data-thumbnail="<?php echo $index + 1; ?>">
-                                <?php echo wp_get_attachment_image($attachment_id, 'thumbnail', false, array('class' => 'w-full h-full object-cover')); ?>
+                                    class="flex-none w-16 h-16 bg-gray-100 rounded border-2 border-gray-200 overflow-hidden thumbnail-btn focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                    data-thumbnail="<?php echo $index + 1; ?>"
+                                    role="tab"
+                                    aria-selected="false"
+                                    aria-controls="main-product-image"
+                                    aria-label="<?php echo esc_attr(sprintf(__('View product image %d', 'tostishop'), $index + 2)); ?>"
+                                    tabindex="-1">
+                                <?php echo wp_get_attachment_image($attachment_id, 'thumbnail', false, array(
+                                    'class' => 'w-full h-full object-cover',
+                                    'alt' => '',
+                                    'role' => 'presentation'
+                                )); ?>
                             </button>
                         <?php endforeach; ?>
                     </div>
@@ -337,38 +369,46 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
             <div class="mt-8 lg:hidden">
                 <!-- Category -->
                 <?php if ($categories): ?>
-                    <p class="text-sm text-blue-600 font-medium uppercase tracking-wide mb-2">
-                        <a href="<?php echo esc_url(get_term_link($categories[0])); ?>"><?php echo esc_html($categories[0]->name); ?></a>
-                    </p>
+                    <nav aria-label="<?php esc_attr_e('Product category', 'tostishop'); ?>" class="mb-2">
+                        <a href="<?php echo esc_url(get_term_link($categories[0])); ?>" 
+                           class="text-sm text-blue-600 font-medium uppercase tracking-wide hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded">
+                            <?php echo esc_html($categories[0]->name); ?>
+                        </a>
+                    </nav>
                 <?php endif; ?>
                 
                 <!-- Title -->
-                <h1 class="text-2xl font-bold text-gray-900 mb-4"><?php the_title(); ?></h1>
+                <header>
+                    <h1 class="text-2xl font-bold text-gray-900 mb-4 leading-tight"><?php the_title(); ?></h1>
+                </header>
                 
                 <!-- Rating -->
                 <?php if ($product->get_average_rating()) : ?>
-                    <div class="flex items-center space-x-2 mb-4">
-                        <div class="flex text-yellow-400">
+                    <div class="flex items-center space-x-2 mb-4" role="group" aria-label="<?php echo esc_attr(sprintf(__('Product rating: %s out of 5 stars based on %d reviews', 'tostishop'), $product->get_average_rating(), $product->get_review_count())); ?>">
+                        <div class="flex text-yellow-400" aria-hidden="true">
                             <?php
                             $rating = $product->get_average_rating();
                             for ($i = 1; $i <= 5; $i++) :
                                 if ($i <= $rating) : ?>
-                                    <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20">
+                                    <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20" aria-hidden="true">
                                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                     </svg>
                                 <?php else : ?>
-                                    <svg class="w-5 h-5 text-gray-300 fill-current" viewBox="0 0 20 20">
+                                    <svg class="w-5 h-5 text-gray-300 fill-current" viewBox="0 0 20 20" aria-hidden="true">
                                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                                     </svg>
                                 <?php endif;
                             endfor; ?>
                         </div>
-                        <span class="text-sm text-gray-600"><?php echo $product->get_review_count(); ?> <?php _e('reviews', 'tostishop'); ?></span>
+                        <span class="text-sm text-gray-600">
+                            <span class="sr-only"><?php echo esc_html(sprintf(__('%s out of 5 stars, ', 'tostishop'), $rating)); ?></span>
+                            <?php echo $product->get_review_count(); ?> <?php _e('reviews', 'tostishop'); ?>
+                        </span>
                     </div>
                 <?php endif; ?>
                 
                 <!-- Price -->
-                <div class="text-2xl font-bold text-gray-900 mb-4 product-price">
+                <div class="text-2xl font-bold text-gray-900 mb-4 product-price" role="text" aria-label="<?php echo esc_attr(sprintf(__('Price: %s', 'tostishop'), strip_tags($product->get_price_html()))); ?>">
                     <?php echo $product->get_price_html(); ?>
                 </div>
                 
@@ -380,17 +420,17 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                 <?php endif; ?>
                 
                 <!-- Stock Status -->
-                <div class="flex items-center space-x-2 stock-status mb-6">
+                <div class="flex items-center space-x-2 stock-status mb-6" role="status" aria-live="polite">
                     <?php if ($product->is_in_stock()) : ?>
                         <div class="flex items-center text-green-600">
-                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                             </svg>
                             <span class="font-medium"><?php _e('In Stock', 'tostishop'); ?></span>
                         </div>
                     <?php else : ?>
                         <div class="flex items-center text-red-600">
-                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                             </svg>
                             <span class="font-medium"><?php _e('Out of Stock', 'tostishop'); ?></span>
@@ -404,14 +444,53 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                 </div>
                 
                 <!-- Add to Cart Form for Mobile -->
-                <form class="cart space-y-4 mb-6" action="<?php echo esc_url(apply_filters('woocommerce_add_to_cart_form_action', $product->get_permalink())); ?>" method="post" enctype='multipart/form-data'>
+                <form class="cart space-y-4 mb-6" 
+                      action="<?php echo esc_url(apply_filters('woocommerce_add_to_cart_form_action', $product->get_permalink())); ?>" 
+                      method="post" 
+                      enctype='multipart/form-data'
+                      role="form"
+                      aria-label="<?php esc_attr_e('Add product to cart', 'tostishop'); ?>">
                     
                     <!-- Variable Product Options -->
                     <?php do_action('woocommerce_before_add_to_cart_button'); ?>
                     
                     <!-- Quantity -->
                     <?php if (!$product->is_sold_individually()): ?>
-                        <?php woocommerce_quantity_input(array('min_value' => apply_filters('woocommerce_quantity_input_min', $product->get_min_purchase_quantity(), $product), 'max_value' => apply_filters('woocommerce_quantity_input_max', $product->get_max_purchase_quantity(), $product), 'input_value' => isset($_POST['quantity']) ? wc_stock_amount($_POST['quantity']) : $product->get_min_purchase_quantity())); ?>
+                        <div class="quantity-selector">
+                            <label for="quantity-mobile" class="block text-sm font-medium text-gray-700 mb-2">
+                                <?php _e('Quantity:', 'tostishop'); ?>
+                            </label>
+                            <div class="flex items-center border border-gray-300 rounded-lg w-32">
+                                <button type="button" 
+                                        class="p-3 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+                                        onclick="decreaseQuantity('quantity-mobile')"
+                                        aria-label="<?php esc_attr_e('Decrease quantity', 'tostishop'); ?>"
+                                        tabindex="0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                    </svg>
+                                </button>
+                                <input type="number" 
+                                       id="quantity-mobile"
+                                       name="quantity" 
+                                       value="<?php echo esc_attr(isset($_POST['quantity']) ? wc_stock_amount($_POST['quantity']) : $product->get_min_purchase_quantity()); ?>" 
+                                       min="<?php echo esc_attr(apply_filters('woocommerce_quantity_input_min', $product->get_min_purchase_quantity(), $product)); ?>" 
+                                       max="<?php echo esc_attr(apply_filters('woocommerce_quantity_input_max', $product->get_max_purchase_quantity(), $product)); ?>"
+                                       step="1"
+                                       class="w-full text-center border-0 focus:ring-0 focus:outline-none text-base py-2" 
+                                       aria-label="<?php esc_attr_e('Product quantity', 'tostishop'); ?>"
+                                       inputmode="numeric">
+                                <button type="button" 
+                                        class="p-3 text-gray-600 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+                                        onclick="increaseQuantity('quantity-mobile')"
+                                        aria-label="<?php esc_attr_e('Increase quantity', 'tostishop'); ?>"
+                                        tabindex="0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
                     <?php else: ?>
                         <input type="hidden" name="quantity" value="1" />
                     <?php endif; ?>
@@ -422,21 +501,32 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                             <button type="submit" 
                                     name="add-to-cart" 
                                     value="<?php echo esc_attr($product->get_id()); ?>"
-                                    class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors duration-200">
-                                <?php echo esc_html($product->single_add_to_cart_text()); ?>
+                                    class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:bg-blue-700 focus:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+                                    aria-describedby="add-to-cart-description">
+                                <span class="flex items-center justify-center">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 2.5M7 13l2.5 2.5m6 0L19 18H7"></path>
+                                    </svg>
+                                    <?php echo esc_html($product->single_add_to_cart_text()); ?>
+                                </span>
                             </button>
+                            <div id="add-to-cart-description" class="sr-only">
+                                <?php echo esc_html(sprintf(__('Add %s to your shopping cart', 'tostishop'), get_the_title())); ?>
+                            </div>
                         <?php else: ?>
                             <button type="button" 
                                     disabled
-                                    class="w-full bg-gray-400 text-white py-4 px-6 rounded-lg text-lg font-semibold cursor-not-allowed">
-                                <?php echo $product->is_in_stock() ? 'Not Available' : 'Out of Stock'; ?>
+                                    class="w-full bg-gray-400 text-white py-4 px-6 rounded-lg text-lg font-semibold cursor-not-allowed"
+                                    aria-label="<?php echo $product->is_in_stock() ? esc_attr__('Product not available for purchase', 'tostishop') : esc_attr__('Product is out of stock', 'tostishop'); ?>">
+                                <?php echo $product->is_in_stock() ? esc_html__('Not Available', 'tostishop') : esc_html__('Out of Stock', 'tostishop'); ?>
                             </button>
                         <?php endif; ?>
                         
                         <!-- Wishlist Button -->
                         <button type="button" 
-                                class="w-full border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:border-gray-400 transition-colors duration-200">
-                            <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                class="w-full border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:border-gray-400 focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200"
+                                aria-label="<?php echo esc_attr(sprintf(__('Add %s to wishlist', 'tostishop'), get_the_title())); ?>">
+                            <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                             </svg>
                             <?php _e('Add to Wishlist', 'tostishop'); ?>
@@ -537,15 +627,22 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
         <!-- Desktop Layout (60/40 split with image grid) -->
         <div class="hidden lg:flex lg:gap-8">
             <!-- Product Images Section (60% width) -->
-            <div class="w-3/5">
+            <section class="w-3/5" role="region" aria-label="<?php esc_attr_e('Product Images', 'tostishop'); ?>">
                 <div class="product-gallery-grid">
                     <!-- All Images Grid (2 images per row like Myntra) -->
                     <div class="grid grid-cols-2 gap-4">
                         <!-- Main Product Image -->
                         <?php if (has_post_thumbnail()) : ?>
-                            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
+                                <?php 
+                                $main_image_alt = get_post_meta(get_post_thumbnail_id(), '_wp_attachment_image_alt', true);
+                                $main_image_alt = $main_image_alt ?: sprintf(__('%s main product image', 'tostishop'), get_the_title());
+                                ?>
                                 <?php the_post_thumbnail('large', array(
-                                    'class' => 'w-full h-full object-cover hover:scale-105 transition-transform duration-300'
+                                    'class' => 'w-full h-full object-cover hover:scale-105 transition-transform duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                                    'alt' => $main_image_alt,
+                                    'loading' => 'eager',
+                                    'tabindex' => '0'
                                 )); ?>
                             </div>
                         <?php endif; ?>
@@ -554,13 +651,17 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                         <?php
                         $attachment_ids = $product->get_gallery_image_ids();
                         if ($attachment_ids) :
-                            foreach ($attachment_ids as $attachment_id) :
+                            foreach ($attachment_ids as $index => $attachment_id) :
                                 $image_url = wp_get_attachment_image_url($attachment_id, 'large');
+                                $image_alt = get_post_meta($attachment_id, '_wp_attachment_image_alt', true);
+                                $image_alt = $image_alt ?: sprintf(__('%s product image %d', 'tostishop'), get_the_title(), $index + 2);
                         ?>
-                            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
                                 <img src="<?php echo esc_url($image_url); ?>" 
-                                     alt="<?php echo esc_attr(get_post_meta($attachment_id, '_wp_attachment_image_alt', true)); ?>"
-                                     class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                                     alt="<?php echo esc_attr($image_alt); ?>"
+                                     class="w-full h-full object-cover hover:scale-105 transition-transform duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                     loading="lazy"
+                                     tabindex="0">
                             </div>
                         <?php 
                             endforeach;
@@ -569,7 +670,7 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                             for ($i = 1; $i <= 3; $i++) :
                         ?>
                             <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
-                                <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                 </svg>
                             </div>
@@ -577,10 +678,10 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                         <?php endif; ?>
                     </div>
                 </div>
-            </div>
+            </section>
             
             <!-- Product Info Section (40% width) -->
-            <div class="w-2/5 space-y-6">
+            <section class="w-2/5 space-y-6" role="main" aria-label="<?php esc_attr_e('Product Information', 'tostishop'); ?>">
                 
                 <!-- Category -->
                 <?php
@@ -588,13 +689,18 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                 if ($categories && !is_wp_error($categories)) :
                     $category = $categories[0];
                 ?>
-                    <p class="text-sm text-blue-600 font-medium uppercase tracking-wide">
-                        <a href="<?php echo esc_url(get_term_link($category)); ?>"><?php echo esc_html($category->name); ?></a>
-                    </p>
+                    <nav aria-label="<?php esc_attr_e('Product category', 'tostishop'); ?>">
+                        <a href="<?php echo esc_url(get_term_link($category)); ?>" 
+                           class="text-sm text-blue-600 font-medium uppercase tracking-wide hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded">
+                            <?php echo esc_html($category->name); ?>
+                        </a>
+                    </nav>
                 <?php endif; ?>
                 
                 <!-- Title -->
-                <h1 class="text-3xl font-bold text-gray-900"><?php the_title(); ?></h1>
+                <header>
+                    <h1 class="text-3xl font-bold text-gray-900 leading-tight"><?php the_title(); ?></h1>
+                </header>
                 
                 <!-- Rating -->
                 <?php if ($product->get_average_rating()) : ?>
@@ -1098,16 +1204,30 @@ if ( ! empty( $related_products ) ) :
 <?php endif; ?>
 
 <!-- Sticky Add to Cart (Mobile) -->
-<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 lg:hidden z-20">
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 lg:hidden z-20 shadow-lg" 
+     role="complementary" 
+     aria-label="<?php esc_attr_e('Quick add to cart', 'tostishop'); ?>">
     <div class="flex items-center space-x-4">
         <div class="flex-1">
-            <div class="text-lg font-bold text-gray-900"><?php echo $product->get_price_html(); ?></div>
+            <div class="text-lg font-bold text-gray-900" 
+                 role="text" 
+                 aria-label="<?php echo esc_attr(sprintf(__('Price: %s', 'tostishop'), strip_tags($product->get_price_html()))); ?>">
+                <?php echo $product->get_price_html(); ?>
+            </div>
         </div>
-        <button type="button" onclick="document.querySelector('form.cart').submit()" 
-                class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200"
+        <button type="button" 
+                onclick="document.querySelector('form.cart').submit()" 
+                class="<?php echo $product->is_in_stock() ? 'bg-blue-600 hover:bg-blue-700 focus:bg-blue-700' : 'bg-gray-300 cursor-not-allowed'; ?> text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 <?php echo (!$product->is_in_stock() ? 'disabled' : ''); ?>
-                <?php echo (!$product->is_in_stock() ? 'class="bg-gray-300 text-gray-500 cursor-not-allowed"' : ''); ?>>
-            <?php echo $product->is_in_stock() ? esc_html($product->single_add_to_cart_text()) : esc_html__('Out of Stock', 'tostishop'); ?>
+                aria-label="<?php echo $product->is_in_stock() ? esc_attr(sprintf(__('Add %s to cart', 'tostishop'), get_the_title())) : esc_attr__('Product is out of stock', 'tostishop'); ?>">
+            <span class="flex items-center">
+                <?php if ($product->is_in_stock()) : ?>
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 2.5M7 13l2.5 2.5m6 0L19 18H7"></path>
+                    </svg>
+                <?php endif; ?>
+                <?php echo $product->is_in_stock() ? esc_html($product->single_add_to_cart_text()) : esc_html__('Out of Stock', 'tostishop'); ?>
+            </span>
         </button>
     </div>
 </div>
