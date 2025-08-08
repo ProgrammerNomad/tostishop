@@ -13,22 +13,46 @@ if (!defined('ABSPATH')) {
  * Add to cart via AJAX
  */
 function tostishop_ajax_add_to_cart() {
-    if (!wp_verify_nonce($_POST['nonce'], 'tostishop_nonce')) {
-        wp_die('Security check failed');
+    // Check nonce for security
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'tostishop_nonce')) {
+        wp_send_json_error('Security check failed');
+        return;
+    }
+    
+    // Check if required fields are present
+    if (!isset($_POST['product_id']) || !isset($_POST['quantity'])) {
+        wp_send_json_error('Missing required fields');
+        return;
     }
     
     $product_id = absint($_POST['product_id']);
     $quantity = absint($_POST['quantity']);
     
-    $result = WC()->cart->add_to_cart($product_id, $quantity);
+    // Validate product ID
+    if ($product_id <= 0) {
+        wp_send_json_error('Invalid product ID');
+        return;
+    }
     
-    if ($result) {
-        wp_send_json_success(array(
-            'cart_count' => WC()->cart->get_cart_contents_count(),
-            'cart_total' => WC()->cart->get_cart_total(),
-        ));
-    } else {
-        wp_send_json_error();
+    // Validate quantity
+    if ($quantity <= 0) {
+        $quantity = 1;
+    }
+    
+    try {
+        $result = WC()->cart->add_to_cart($product_id, $quantity);
+        
+        if ($result) {
+            wp_send_json_success(array(
+                'message' => 'Product added to cart successfully',
+                'cart_count' => WC()->cart->get_cart_contents_count(),
+                'cart_total' => WC()->cart->get_cart_total(),
+            ));
+        } else {
+            wp_send_json_error('Failed to add product to cart');
+        }
+    } catch (Exception $e) {
+        wp_send_json_error('Error: ' . $e->getMessage());
     }
 }
 add_action('wp_ajax_tostishop_add_to_cart', 'tostishop_ajax_add_to_cart');
