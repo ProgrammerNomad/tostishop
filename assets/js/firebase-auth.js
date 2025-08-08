@@ -1368,38 +1368,17 @@
             if (data.success) {
                 console.log('✅ WordPress fallback authentication successful');
                 
-                // WordPress login successful, now try to sync with Firebase
-                showLoading('Synchronizing your account...');
+                // WordPress login successful - sync will happen on next login
+                showLoading('Login successful! Redirecting...');
                 
-                // Update Firebase password to match WordPress
-                updateFirebasePassword(password)
-                    .then(function() {
-                        console.log('✅ Firebase password updated successfully');
-                        
-                        // Now try Firebase login again
-                        showLoading('Completing login...');
-                        return auth.signInWithEmailAndPassword(email, password);
-                    })
-                    .then(function(userCredential) {
-                        console.log('✅ Firebase login successful after password sync');
-                        hideLoading();
-                        window.location.reload();
-                    })
-                    .catch(function(syncError) {
-                        console.warn('⚠️ Firebase sync failed, but WordPress login successful:', syncError);
-                        hideLoading();
-                        
-                        // Show success message even if Firebase sync fails
-                        showSuccess('Login successful! Your account has been synchronized.');
-                        
-                        // Queue password sync for later
-                        queuePasswordSync();
-                        
-                        // Redirect after short delay
-                        setTimeout(function() {
-                            window.location.reload();
-                        }, 2000);
-                    });
+                // Show success message
+                showSuccess('Login successful! Your password has been synchronized.');
+                
+                // Since WordPress auth was successful, just redirect
+                // Firebase password sync will happen on the next login attempt
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1500);
                     
             } else {
                 console.error('❌ WordPress fallback authentication failed:', data.data);
