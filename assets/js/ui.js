@@ -4,6 +4,23 @@
  * Fixed syntax error - Version 1.0.1
  */
 
+// Screen reader announcement helper - Global function
+window.announceToScreenReader = function(message) {
+    const announcement = document.createElement('div');
+    announcement.setAttribute('aria-live', 'polite');
+    announcement.setAttribute('aria-atomic', 'true');
+    announcement.setAttribute('class', 'sr-only');
+    announcement.textContent = message;
+    document.body.appendChild(announcement);
+    
+    // Remove after announcement
+    setTimeout(() => {
+        if (announcement && announcement.parentNode) {
+            document.body.removeChild(announcement);
+        }
+    }, 1000);
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize theme components
@@ -180,21 +197,6 @@ function initializeQuantityControls() {
                 targetThumb.setAttribute('tabindex', '0');
             }
         }
-    };
-    
-    // Screen reader announcement helper
-    window.announceToScreenReader = function(message) {
-        const announcement = document.createElement('div');
-        announcement.setAttribute('aria-live', 'polite');
-        announcement.setAttribute('aria-atomic', 'true');
-        announcement.setAttribute('class', 'sr-only');
-        announcement.textContent = message;
-        document.body.appendChild(announcement);
-        
-        // Remove after announcement
-        setTimeout(() => {
-            document.body.removeChild(announcement);
-        }, 1000);
     };
 }
 
