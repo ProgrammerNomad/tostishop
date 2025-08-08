@@ -628,6 +628,57 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                     </div>
                     <?php endif; ?>
                 </div>
+                
+                <!-- Shipping Information & Returns -->
+                <div class="border-t pt-6 space-y-6">
+                    <!-- Shipping Information -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4-8-4m16 0v10l-8 4-8-4V7"></path>
+                            </svg>
+                            <?php _e('Shipping Information', 'tostishop'); ?>
+                        </h3>
+                        <div class="space-y-2 text-sm text-gray-600">
+                            <div class="flex items-start">
+                                <span class="text-blue-600 mr-2">•</span>
+                                <span><?php _e('Free shipping on orders over ₹500', 'tostishop'); ?></span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-blue-600 mr-2">•</span>
+                                <span><?php _e('Standard delivery: 3-5 business days', 'tostishop'); ?></span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-blue-600 mr-2">•</span>
+                                <span><?php _e('Express delivery: 1-2 business days', 'tostishop'); ?></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Returns & Exchanges -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            <?php _e('Returns & Exchanges', 'tostishop'); ?>
+                        </h3>
+                        <div class="space-y-2 text-sm text-gray-600">
+                            <div class="flex items-start">
+                                <span class="text-green-600 mr-2">•</span>
+                                <span><?php _e('10-day return policy', 'tostishop'); ?></span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-green-600 mr-2">•</span>
+                                <span><?php _e('Items must be in original condition', 'tostishop'); ?></span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-green-600 mr-2">•</span>
+                                <span><?php _e('Free returns on defective items', 'tostishop'); ?></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         
