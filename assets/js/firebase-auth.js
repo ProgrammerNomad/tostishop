@@ -1297,8 +1297,8 @@
                 console.error('❌ Email login error:', error);
                 
                 // Check if this might be a password sync issue
-                if (error.code === 'auth/wrong-password') {
-                    console.log('🔄 Firebase auth failed, checking if WordPress account exists with sync issue...');
+                if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                    console.log('🔄 Firebase auth failed (' + error.code + '), checking if WordPress account exists with sync issue...');
                     attemptWordPressLoginFallback(email, password);
                     return;
                 }
@@ -1309,6 +1309,7 @@
                         errorMessage = 'No account found with this email address. Please register first or check your email.';
                         break;
                     case 'auth/wrong-password':
+                    case 'auth/invalid-credential':
                         errorMessage = 'Incorrect password. Please try again or reset your password.';
                         break;
                     case 'auth/invalid-email':
@@ -1329,8 +1330,8 @@
                 
                 showError(errorMessage);
                 
-                // Focus back to password field for wrong password
-                if (error.code === 'auth/wrong-password') {
+                // Focus back to password field for credential errors
+                if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
                     $('#password-login').val('').focus();
                 }
             });
