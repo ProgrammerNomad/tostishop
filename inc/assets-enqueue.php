@@ -27,8 +27,8 @@ function tostishop_scripts() {
     wp_script_add_data('alpinejs', 'defer', true);
     
     // Custom JS
-    wp_enqueue_script('tostishop-ui', get_template_directory_uri() . '/assets/js/ui.js', array('jquery'), '1.0.0', true);
-    wp_enqueue_script('tostishop-theme', get_template_directory_uri() . '/assets/js/theme.js', array('jquery', 'tostishop-ui'), '1.0.0', true);
+    wp_enqueue_script('tostishop-ui', get_template_directory_uri() . '/assets/js/ui.js', array('jquery'), '1.0.1', true);
+    wp_enqueue_script('tostishop-theme', get_template_directory_uri() . '/assets/js/theme.js', array('jquery', 'tostishop-ui'), '1.0.1', true);
     
     // Page-specific assets
     tostishop_enqueue_page_specific_assets();

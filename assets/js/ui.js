@@ -1,6 +1,7 @@
 /**
  * TostiShop Theme JavaScript
  * Mobile-first interactivity with Alpine.js
+ * Fixed syntax error - Version 1.0.1
  */
 
 document.addEventListener('DOMContentLoaded', function() {
