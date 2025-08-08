@@ -27,7 +27,12 @@ class TostiShopFirebaseAuth {
             this.auth = firebase.auth();
             this.setupAuthStateListener();
             this.setupEventListeners();
-            this.setupReCaptcha();
+            
+            // Setup reCAPTCHA only if container exists and not already setup
+            const recaptchaContainer = document.getElementById('recaptcha-container');
+            if (recaptchaContainer && !this.recaptchaVerifier) {
+                this.setupReCaptcha();
+            }
 
             console.log('TostiShop Firebase Auth initialized');
         } catch (error) {
@@ -74,6 +79,22 @@ class TostiShopFirebaseAuth {
 
     setupReCaptcha() {
         try {
+            // Clear existing reCAPTCHA container
+            const recaptchaContainer = document.getElementById('recaptcha-container');
+            if (recaptchaContainer) {
+                recaptchaContainer.innerHTML = '';
+            }
+
+            // Destroy existing verifier if it exists
+            if (this.recaptchaVerifier) {
+                try {
+                    this.recaptchaVerifier.clear();
+                } catch (e) {
+                    // Ignore clear errors
+                }
+                this.recaptchaVerifier = null;
+            }
+
             this.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
                 'size': 'normal',
                 'callback': (response) => {
@@ -86,10 +107,40 @@ class TostiShopFirebaseAuth {
                 'theme': 'light'
             });
 
-            this.recaptchaVerifier.render();
+            return this.recaptchaVerifier.render();
         } catch (error) {
             console.error('reCAPTCHA setup error:', error);
-            this.showError('Security verification unavailable. Please try email login.');
+            
+            // If it's already rendered error, try to clear and retry once
+            if (error.message && error.message.includes('already been rendered')) {
+                console.log('Attempting to recover from reCAPTCHA already rendered error...');
+                const recaptchaContainer = document.getElementById('recaptcha-container');
+                if (recaptchaContainer) {
+                    recaptchaContainer.innerHTML = '';
+                    // Wait and try again
+                    setTimeout(() => {
+                        try {
+                            this.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                                'size': 'normal',
+                                'callback': (response) => {
+                                    console.log('reCAPTCHA solved');
+                                },
+                                'expired-callback': () => {
+                                    console.log('reCAPTCHA expired');
+                                    this.showError('Security verification expired. Please try again.');
+                                },
+                                'theme': 'light'
+                            });
+                            this.recaptchaVerifier.render();
+                        } catch (retryError) {
+                            console.error('reCAPTCHA retry failed:', retryError);
+                            this.showError('Please refresh the page and try again.');
+                        }
+                    }, 500);
+                }
+            } else {
+                this.showError('Security verification unavailable. Please try email login.');
+            }
         }
     }
 
@@ -106,6 +157,13 @@ class TostiShopFirebaseAuth {
             const fullPhoneNumber = countryCode + mobileNumber;
             
             this.showLoading();
+            
+            // Ensure reCAPTCHA is ready
+            if (!this.recaptchaVerifier) {
+                this.setupReCaptcha();
+                // Wait for reCAPTCHA to be ready
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
             
             this.confirmationResult = await this.auth.signInWithPhoneNumber(
                 fullPhoneNumber, 
@@ -129,6 +187,10 @@ class TostiShopFirebaseAuth {
                 errorMessage = 'Too many requests. Please try again later.';
             } else if (error.code === 'auth/captcha-check-failed') {
                 errorMessage = 'Security verification failed. Please refresh and try again.';
+            } else if (error.message && error.message.includes('reCAPTCHA')) {
+                errorMessage = 'Please refresh the page and try again.';
+                // Reset reCAPTCHA for next attempt
+                this.recaptchaVerifier = null;
             }
             
             this.showError(errorMessage);
@@ -174,18 +236,42 @@ class TostiShopFirebaseAuth {
 
     async resendOTP() {
         try {
-            // Reset reCAPTCHA
-            this.recaptchaVerifier.clear();
+            this.showLoading();
+            
+            // Properly clear and reset reCAPTCHA
+            if (this.recaptchaVerifier) {
+                try {
+                    this.recaptchaVerifier.clear();
+                } catch (clearError) {
+                    console.log('reCAPTCHA clear error (expected):', clearError.message);
+                }
+                this.recaptchaVerifier = null;
+            }
+            
+            // Clear the container and setup fresh reCAPTCHA
+            const recaptchaContainer = document.getElementById('recaptcha-container');
+            if (recaptchaContainer) {
+                recaptchaContainer.innerHTML = '';
+            }
+            
+            // Wait a moment for DOM to be ready
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Setup fresh reCAPTCHA
             this.setupReCaptcha();
             
-            // Wait a moment then resend
-            setTimeout(() => {
-                this.sendOTP();
-            }, 1000);
+            // Wait another moment for reCAPTCHA to be ready
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Send new OTP
+            await this.sendOTP();
+            
+            this.hideLoading();
 
         } catch (error) {
             console.error('Resend OTP error:', error);
-            this.showError('Failed to resend OTP. Please try again.');
+            this.hideLoading();
+            this.showError('Failed to resend OTP. Please refresh the page and try again.');
         }
     }
 
