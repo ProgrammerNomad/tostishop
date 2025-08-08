@@ -743,7 +743,19 @@
         try {
             const db = firebase.firestore();
             
-            db.collection('users').doc(firebaseUser.uid).get()
+            // Create timeout promise for Firestore operation
+            const firestoreTimeout = new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    console.log('⏰ Firestore operation timed out, treating as new user');
+                    reject(new Error('Firestore timeout'));
+                }, 8000); // 8 second timeout
+            });
+            
+            // Race Firestore operation against timeout
+            Promise.race([
+                db.collection('users').doc(firebaseUser.uid).get(),
+                firestoreTimeout
+            ])
                 .then(function(doc) {
                     if (doc.exists) {
                         // ✅ User exists in Firestore - proceed to WordPress sync
@@ -772,11 +784,11 @@
                     }
                 })
                 .catch(function(error) {
-                    console.error('❌ Firestore check error:', error);
+                    console.error('❌ Firestore check error or timeout:', error);
                     
-                    // For phone auth without Firestore, we must collect user data
+                    // For phone auth without Firestore (including timeouts), we must collect user data
                     if (authMethod === 'phone') {
-                        console.log('📱 Firestore unavailable, showing phone registration modal for:', firebaseUser.phoneNumber);
+                        console.log('📱 Firestore unavailable or timed out, showing phone registration modal for:', firebaseUser.phoneNumber);
                         showPhoneRegistrationModal(firebaseUser);
                     } else {
                         // For other methods, fallback to direct WordPress sync
@@ -913,13 +925,25 @@
                     userData.photoURL = firebaseUser.photoURL;
                 }
                 
-                db.collection('users').doc(firebaseUser.uid).set(userData)
+                // Create timeout promise for Firestore operation
+                const firestoreTimeout = new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        console.log('⏰ Firestore profile creation timed out');
+                        reject(new Error('Firestore profile creation timeout'));
+                    }, 8000); // 8 second timeout
+                });
+                
+                // Race Firestore operation against timeout
+                Promise.race([
+                    db.collection('users').doc(firebaseUser.uid).set(userData),
+                    firestoreTimeout
+                ])
                     .then(() => {
                         console.log('✅ Firestore profile created');
                         resolve(userData);
                     })
                     .catch((error) => {
-                        console.error('❌ Firestore profile creation error:', error);
+                        console.error('❌ Firestore profile creation error or timeout:', error);
                         reject(error);
                     });
                     
@@ -1135,12 +1159,25 @@
                 
                 if (typeof firebase.firestore !== 'undefined') {
                     const db = firebase.firestore();
-                    db.collection('users').doc(user.uid).set(userData)
+                    
+                    // Create timeout promise for Firestore operation
+                    const firestoreTimeout = new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            console.log('⏰ Firestore profile creation timed out (email user)');
+                            reject(new Error('Firestore profile creation timeout'));
+                        }, 8000); // 8 second timeout
+                    });
+                    
+                    // Race Firestore operation against timeout
+                    Promise.race([
+                        db.collection('users').doc(user.uid).set(userData),
+                        firestoreTimeout
+                    ])
                         .then(() => {
                             console.log('✅ Firestore profile created for email user');
                         })
                         .catch((error) => {
-                            console.error('❌ Firestore creation error (continuing anyway):', error);
+                            console.error('❌ Firestore creation error or timeout (continuing anyway):', error);
                         });
                 }
                 
@@ -1780,21 +1817,41 @@
             emailVerified: false
         };
         
-        // Step 2: Create Firestore profile (if available)
+        // Step 2: Create Firestore profile with timeout (if available)
         if (typeof firebase.firestore !== 'undefined') {
+            console.log('📱 Attempting to create Firestore profile...');
+            
             const db = firebase.firestore();
-            db.collection('users').doc(firebaseUser.uid).set(userData)
-                .then(() => {
-                    console.log('✅ Firestore profile created');
-                    // Step 3: Proceed to WordPress sync
+            
+            // Create a promise with timeout for Firestore operation
+            const firestoreTimeout = new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    console.log('⏰ Firestore operation timed out, proceeding without it');
+                    resolve('timeout');
+                }, 8000); // 8 second timeout
+            });
+            
+            const firestoreOperation = db.collection('users').doc(firebaseUser.uid).set(userData);
+            
+            // Race between Firestore operation and timeout
+            Promise.race([firestoreOperation, firestoreTimeout])
+                .then((result) => {
+                    if (result === 'timeout') {
+                        console.log('⏰ Firestore timed out, continuing with WordPress registration');
+                    } else {
+                        console.log('✅ Firestore profile created successfully');
+                    }
+                    // Proceed to WordPress sync regardless of Firestore result
                     proceedWithPhoneRegistration(firebaseUser, userData);
                 })
                 .catch((error) => {
                     console.error('❌ Firestore creation error:', error);
+                    console.log('📱 Continuing with WordPress registration without Firestore');
                     // Continue without Firestore
                     proceedWithPhoneRegistration(firebaseUser, userData);
                 });
         } else {
+            console.log('📱 No Firestore available, proceeding directly to WordPress');
             // No Firestore available, proceed directly
             proceedWithPhoneRegistration(firebaseUser, userData);
         }
