@@ -91,6 +91,30 @@
 }
 
 /* ========================================
+   WISHLIST BUTTONS
+   ======================================== */
+
+/* Wishlist button icon-only styling */
+.wishlist-btn svg {
+    transition: all 0.2s ease;
+}
+
+.wishlist-btn:hover svg {
+    transform: scale(1.1);
+}
+
+/* Icon-only wishlist buttons on product cards */
+.product-item .wishlist-btn {
+    backdrop-filter: blur(8px);
+}
+
+.product-item .wishlist-btn.in-wishlist {
+    background: rgba(239, 68, 68, 0.1) !important;
+    border-color: rgb(239, 68, 68) !important;
+    color: rgb(239, 68, 68) !important;
+}
+
+/* ========================================
    VIEW TOGGLE BUTTONS
    ======================================== */
 

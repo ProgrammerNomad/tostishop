@@ -59,7 +59,8 @@ if (empty($product) || !$product->is_visible()) {
         
         <!-- Wishlist Button -->
         <div class="absolute top-2 right-2">
-            <?php echo tostishop_get_wishlist_button($product->get_id(), 'p-2 bg-white/80 backdrop-blur-sm hover:bg-white rounded-full shadow-sm transition-all duration-200 text-gray-600 hover:text-red-500'); ?>
+            						<!-- Wishlist Icon -->
+						<?php echo tostishop_get_wishlist_button($product->get_id(), 'absolute top-3 right-3 w-10 h-10 bg-white/90 border border-gray-200 rounded-full text-gray-400 hover:text-red-500 hover:bg-white flex items-center justify-center shadow-sm z-10', true); ?>
         </div>
     </div>
     
