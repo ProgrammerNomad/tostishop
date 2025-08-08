@@ -59,17 +59,6 @@ function initializeWooCommerce() {
     // Mobile-specific enhancements
     initializeMobileEnhancements();
 }
-    initializeAjaxAddToCart();
-    
-    // Quantity controls
-    initializeQuantityControls();
-    
-    // Product filters
-    initializeProductFilters();
-    
-    // Cart functionality
-    initializeCartFunctionality();
-}
 
 /**
  * AJAX Add to Cart functionality 
