@@ -99,101 +99,148 @@ $notes = $order->get_customer_order_notes();
 		</div>
 	</div>
 
+	<!-- Order Status Progress Bar - Full Width -->
+	<div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-8">
+		<?php
+		$timeline_statuses = array(
+			'pending' => array(
+				'label' => __( 'Order Placed', 'tostishop' ),
+				'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+				'completed' => true,
+				'date' => $order->get_date_created()
+			),
+			'processing' => array(
+				'label' => __( 'Processing', 'tostishop' ),
+				'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+				'completed' => in_array( $order->get_status(), array( 'processing', 'on-hold', 'completed' ) ),
+				'date' => in_array( $order->get_status(), array( 'processing', 'on-hold', 'completed' ) ) ? $order->get_date_created() : null
+			),
+			'shipped' => array(
+				'label' => __( 'Shipped', 'tostishop' ),
+				'icon' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
+				'completed' => $order->get_status() === 'completed',
+				'date' => $order->get_status() === 'completed' ? $order->get_date_completed() : null
+			),
+			'completed' => array(
+				'label' => __( 'Delivered', 'tostishop' ),
+				'icon' => 'M5 13l4 4L19 7',
+				'completed' => $order->get_status() === 'completed',
+				'date' => $order->get_status() === 'completed' ? $order->get_date_completed() : null
+			)
+		);
+		
+		$total_steps = count( $timeline_statuses );
+		$current_step = 0;
+		
+		// Determine current step
+		foreach ( $timeline_statuses as $status_key => $status_data ) {
+			if ( $status_data['completed'] ) {
+				$current_step++;
+			} else {
+				break;
+			}
+		}
+		
+		$progress_percentage = ( $current_step / $total_steps ) * 100;
+		?>
+		
+		<!-- Progress Bar -->
+		<div class="mb-8">
+			<div class="flex items-center justify-between mb-4">
+				<h2 class="text-lg font-semibold text-gray-900 flex items-center">
+					<svg class="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+					</svg>
+					<?php _e( 'Order Progress', 'tostishop' ); ?>
+				</h2>
+				<span class="text-sm text-gray-600">
+					<?php printf( __( '%d of %d steps completed', 'tostishop' ), $current_step, $total_steps ); ?>
+				</span>
+			</div>
+			
+			<!-- Progress Track -->
+			<div class="relative">
+				<div class="overflow-hidden h-2 mb-6 text-xs flex rounded-lg bg-gray-200">
+					<div style="width: <?php echo $progress_percentage; ?>%;" 
+						 class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-primary to-blue-600 transition-all duration-500 ease-out"></div>
+				</div>
+			</div>
+		</div>
+		
+		<!-- Status Steps -->
+		<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+			<?php
+			$step_index = 0;
+			foreach ( $timeline_statuses as $status_key => $status_data ) :
+				$step_index++;
+				$is_completed = $status_data['completed'];
+				$is_current = ( $step_index === $current_step + 1 && !$is_completed );
+				$status_date = $status_data['date'];
+			?>
+				<div class="text-center">
+					<!-- Step Circle -->
+					<div class="flex justify-center mb-3">
+						<div class="relative">
+							<div class="w-12 h-12 rounded-full flex items-center justify-center border-2 transition-colors duration-200 <?php 
+								if ( $is_completed ) {
+									echo 'bg-primary border-primary text-white';
+								} elseif ( $is_current ) {
+									echo 'bg-white border-primary text-primary ring-4 ring-blue-100';
+								} else {
+									echo 'bg-gray-100 border-gray-300 text-gray-400';
+								}
+							?>">
+								<?php if ( $is_completed ) : ?>
+									<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+										<path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+									</svg>
+								<?php else : ?>
+									<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?php echo $status_data['icon']; ?>"></path>
+									</svg>
+								<?php endif; ?>
+							</div>
+							
+							<!-- Current Step Pulse -->
+							<?php if ( $is_current ) : ?>
+								<div class="absolute -inset-1 rounded-full animate-ping bg-primary opacity-25"></div>
+							<?php endif; ?>
+						</div>
+					</div>
+					
+					<!-- Step Label -->
+					<div class="space-y-1">
+						<p class="text-sm font-medium <?php echo $is_completed || $is_current ? 'text-gray-900' : 'text-gray-500'; ?>">
+							<?php echo esc_html( $status_data['label'] ); ?>
+						</p>
+						
+						<!-- Current Badge -->
+						<?php if ( $is_current ) : ?>
+							<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+								<?php _e( 'Current', 'tostishop' ); ?>
+							</span>
+						<?php endif; ?>
+						
+						<!-- Date -->
+						<?php if ( $status_date ) : ?>
+							<p class="text-xs text-gray-500">
+								<time datetime="<?php echo $status_date->format( 'c' ); ?>">
+									<?php echo wc_format_datetime( $status_date, get_option( 'date_format' ) ); ?>
+								</time>
+							</p>
+						<?php endif; ?>
+					</div>
+				</div>
+			<?php endforeach; ?>
+		</div>
+	</div>
+
 	<!-- Order Summary Grid -->
 	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mb-8">
 		
 		<!-- Order Items - Takes 2 columns on large screens -->
 		<div class="lg:col-span-2">
 			
-			<!-- Order Status Timeline -->
-			<div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-6">
-				<h2 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-					<svg class="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-					</svg>
-					<?php _e( 'Order Progress', 'tostishop' ); ?>
-				</h2>
-
-				<!-- Status Timeline -->
-				<div class="flow-root">
-					<ul class="-mb-8">
-						<?php
-						$timeline_statuses = array(
-							'pending' => array(
-								'label' => __( 'Order Placed', 'tostishop' ),
-								'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-								'completed' => true
-							),
-							'processing' => array(
-								'label' => __( 'Processing', 'tostishop' ),
-								'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
-								'completed' => in_array( $order->get_status(), array( 'processing', 'on-hold', 'completed' ) )
-							),
-							'shipped' => array(
-								'label' => __( 'Shipped', 'tostishop' ),
-								'icon' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
-								'completed' => $order->get_status() === 'completed'
-							),
-							'completed' => array(
-								'label' => __( 'Delivered', 'tostishop' ),
-								'icon' => 'M5 13l4 4L19 7',
-								'completed' => $order->get_status() === 'completed'
-							)
-						);
-						
-						$timeline_count = count( $timeline_statuses );
-						$current_index = 0;
-						
-						foreach ( $timeline_statuses as $status_key => $status_data ) :
-							$current_index++;
-							$is_last = ( $current_index === $timeline_count );
-							$is_completed = $status_data['completed'];
-							$is_current = ( $status_key === $order->get_status() || ( $status_key === 'shipped' && $order->get_status() === 'completed' ) );
-						?>
-							<li>
-								<div class="relative pb-8">
-									<?php if ( ! $is_last ) : ?>
-										<span class="absolute top-4 left-4 -ml-px h-full w-0.5 <?php echo $is_completed ? 'bg-primary' : 'bg-gray-200'; ?>" aria-hidden="true"></span>
-									<?php endif; ?>
-									<div class="relative flex space-x-3">
-										<div>
-											<span class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white <?php echo $is_completed ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'; ?>">
-												<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?php echo $status_data['icon']; ?>"></path>
-												</svg>
-											</span>
-										</div>
-										<div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-											<div>
-												<p class="text-sm font-medium text-gray-900 <?php echo $is_current ? 'font-semibold' : ''; ?>">
-													<?php echo esc_html( $status_data['label'] ); ?>
-													<?php if ( $is_current ) : ?>
-														<span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-															<?php _e( 'Current', 'tostishop' ); ?>
-														</span>
-													<?php endif; ?>
-												</p>
-											</div>
-											<div class="text-right text-sm whitespace-nowrap text-gray-500">
-												<?php if ( $is_completed && $status_key === 'pending' ) : ?>
-													<time datetime="<?php echo $order->get_date_created()->format( 'c' ); ?>">
-														<?php echo wc_format_datetime( $order->get_date_created(), get_option( 'date_format' ) ); ?>
-													</time>
-												<?php elseif ( $is_completed && $status_key === 'completed' && $order->get_date_completed() ) : ?>
-													<time datetime="<?php echo $order->get_date_completed()->format( 'c' ); ?>">
-														<?php echo wc_format_datetime( $order->get_date_completed(), get_option( 'date_format' ) ); ?>
-													</time>
-												<?php endif; ?>
-											</div>
-										</div>
-									</div>
-								</div>
-							</li>
-						<?php endforeach; ?>
-					</ul>
-				</div>
-			</div>
-
 			<!-- Order Items -->
 			<div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
 				<h2 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
