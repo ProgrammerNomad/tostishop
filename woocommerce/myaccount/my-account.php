@@ -29,11 +29,11 @@ get_header(); ?>
 		</div>
 		
 		<!-- Account Layout -->
-		<div class="lg:grid lg:grid-cols-12 lg:gap-8 xl:gap-12 2xl:gap-16">
+		<div class="lg:grid lg:grid-cols-12 lg:gap-6 xl:gap-8 2xl:gap-10">
 			
 			<!-- Sidebar Navigation -->
 			<div class="lg:col-span-3 xl:col-span-2 mb-8 lg:mb-0">
-				<div class="lg:sticky lg:top-8">
+				<div class="lg:top-8">
 					<?php
 					/**
 					 * My Account navigation.
