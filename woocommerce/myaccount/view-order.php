@@ -250,7 +250,7 @@ $notes = $order->get_customer_order_notes();
 					<?php _e( 'Order Items', 'tostishop' ); ?>
 				</h2>
 
-				<?php do_action( 'woocommerce_order_details_before_order_table', $order ); ?>
+				<?php // do_action( 'woocommerce_order_details_before_order_table', $order ); ?>
 
 				<div class="woocommerce-order-details">
 					<?php
@@ -347,7 +347,7 @@ $notes = $order->get_customer_order_notes();
 					</div>
 				</div>
 
-				<?php do_action( 'woocommerce_order_details_after_order_table', $order ); ?>
+				<?php // do_action( 'woocommerce_order_details_after_order_table', $order ); ?>
 			</div>
 		</div>
 
@@ -553,5 +553,6 @@ $notes = $order->get_customer_order_notes();
 <?php
 /**
  * Action hook fired after the order details.
+ * Note: Commented out to prevent duplicate order action buttons
  */
-do_action( 'woocommerce_view_order', $order_id );
+// do_action( 'woocommerce_view_order', $order_id );
