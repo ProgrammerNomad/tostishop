@@ -225,52 +225,27 @@ class TostiShopFirebaseAuth {
             // Get ID token for WordPress authentication
             const idToken = await user.getIdToken();
             
-            // Determine auth method and collect relevant data
-            let authMethod = 'email'; // default
-            let phoneNumber = '';
-            let emailAddress = '';
-            let displayName = '';
-            let userUID = user.uid;
-            
-            // Check if this is phone auth
-            if (user.phoneNumber) {
-                authMethod = 'phone';
-                phoneNumber = user.phoneNumber;
-            } else if (user.providerData && user.providerData.length > 0) {
-                // Check for Google provider
-                const googleProvider = user.providerData.find(provider => provider.providerId === 'google.com');
-                if (googleProvider) {
-                    authMethod = 'google';
-                    emailAddress = googleProvider.email || user.email;
-                    displayName = googleProvider.displayName || user.displayName;
-                } else {
-                    // Email/password auth
-                    authMethod = 'email';
-                    emailAddress = user.email;
-                    displayName = user.displayName;
-                }
-            }
-            
-            // Prepare request body with all relevant data
-            const requestBody = {
+            // Extract user information from Firebase user object
+            const userData = {
                 action: 'tostishop_firebase_login',
                 firebase_token: idToken,
-                auth_method: authMethod,
-                nonce: tostiShopAjax.nonce
+                nonce: tostiShopAjax.nonce,
+                
+                // Real user data from Firebase
+                user_uid: user.uid,
+                user_email: user.email || '',
+                user_name: user.displayName || '',
+                phone_number: user.phoneNumber || '',
+                email_verified: user.emailVerified || false,
+                
+                // Provider information
+                auth_method: this.getAuthMethod(user),
+                
+                // Additional context
+                from_checkout: window.location.pathname.includes('checkout')
             };
             
-            // Add method-specific data
-            if (authMethod === 'phone') {
-                requestBody.phone_number = phoneNumber;
-            } else if (authMethod === 'google') {
-                requestBody.google_email = emailAddress;
-                requestBody.google_name = displayName;
-                requestBody.google_uid = userUID;
-            } else if (authMethod === 'email') {
-                requestBody.email_address = emailAddress;
-                requestBody.email_uid = userUID;
-                requestBody.email_verified = user.emailVerified;
-            }
+            console.log('🔥 Sending user data to WordPress:', userData);
             
             // Send to WordPress backend for user creation/login
             const response = await fetch(tostiShopAjax.ajaxurl, {
@@ -278,8 +253,50 @@ class TostiShopFirebaseAuth {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: new URLSearchParams(requestBody)
+                body: new URLSearchParams(userData)
             });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                this.showSuccess('Login successful! Redirecting...');
+                
+                // Redirect after successful login
+                setTimeout(() => {
+                    window.location.href = data.data.redirect_url || '/my-account/';
+                }, 1500);
+                
+            } else {
+                throw new Error(data.data.message || 'Login failed');
+            }
+
+        } catch (error) {
+            console.error('WordPress login error:', error);
+            this.hideLoading();
+            this.showError('Login failed. Please try again or use email login.');
+            
+            // Sign out from Firebase since WordPress login failed
+            this.auth.signOut();
+        }
+    }
+
+    // Helper method to determine authentication method
+    getAuthMethod(user) {
+        if (user.phoneNumber) {
+            return 'phone';
+        }
+        
+        if (user.providerData && user.providerData.length > 0) {
+            const provider = user.providerData[0];
+            if (provider.providerId === 'google.com') {
+                return 'google';
+            } else if (provider.providerId === 'password') {
+                return 'email';
+            }
+        }
+        
+        return 'email'; // default
+    }
 
             const data = await response.json();
             

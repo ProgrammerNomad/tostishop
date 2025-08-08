@@ -1,7 +1,14 @@
 <?php
 /**
- * Firebase Authentication Integration
+ * Firebase Authentication Integration - PRODUCTION VERSION
  * Initialize Firebase authentication for TostiShop theme
+ * 
+ * PRODUCTION FEATURES:
+ * - Real Firebase token verification
+ * - No fake/simulated data
+ * - Proper JWT token parsing
+ * - Real user data extraction from Firebase
+ * - Production-ready security measures
  */
 
 // Prevent direct access
