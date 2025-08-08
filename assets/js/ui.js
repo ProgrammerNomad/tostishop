@@ -664,6 +664,14 @@ function initializeAjaxAddToCart() {
                 formData.append('quantity', quantity);
             }
             
+            // Debug log form data
+            console.log('Form data being sent:', {
+                action: 'tostishop_add_to_cart',
+                product_id: productId,
+                quantity: quantity,
+                nonce: tostishop_ajax?.nonce
+            });
+            
             // Submit via AJAX
             fetch(tostishop_ajax?.ajax_url || '/wp-admin/admin-ajax.php', {
                 method: 'POST',
@@ -671,6 +679,7 @@ function initializeAjaxAddToCart() {
             })
             .then(response => response.json())
             .then(data => {
+                console.log('Add to cart response:', data); // Debug log
                 if (data.success) {
                     announceToScreenReader('Product added to cart successfully');
                     showNotification('Product added to cart!', 'success');
@@ -679,6 +688,7 @@ function initializeAjaxAddToCart() {
                         updateCartCount(data.data.cart_count);
                     }
                 } else {
+                    console.error('Add to cart failed:', data); // Debug log
                     announceToScreenReader('Failed to add product to cart');
                     showNotification(data.data || 'Failed to add to cart', 'error');
                 }
