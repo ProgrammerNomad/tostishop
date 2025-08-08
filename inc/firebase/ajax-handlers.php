@@ -1025,3 +1025,105 @@ function tostishop_mark_password_sync_skipped() {
         ));
     }
 }
+
+/**
+ * WordPress authentication fallback for Firebase login failures
+ * Used when Firebase auth fails due to password sync issues
+ */
+function tostishop_wp_auth_fallback() {
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'tostishop_firebase_nonce')) {
+        wp_send_json_error(array(
+            'message' => 'Security verification failed.',
+            'code' => 'nonce_failed'
+        ));
+        return;
+    }
+    
+    $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
+    $password = isset($_POST['password']) ? $_POST['password'] : ''; // Don't sanitize password
+    
+    if (empty($email) || empty($password)) {
+        wp_send_json_error(array(
+            'message' => 'Email and password are required.',
+            'code' => 'missing_credentials'
+        ));
+        return;
+    }
+    
+    try {
+        // Attempt WordPress authentication
+        $user = wp_authenticate($email, $password);
+        
+        if (is_wp_error($user)) {
+            // Authentication failed
+            $error_message = 'Invalid email or password.';
+            
+            // Handle specific error codes
+            switch ($user->get_error_code()) {
+                case 'invalid_username':
+                    $error_message = 'No account found with this email address.';
+                    break;
+                case 'incorrect_password':
+                    $error_message = 'Incorrect password. Please try again.';
+                    break;
+                case 'empty_username':
+                case 'empty_password':
+                    $error_message = 'Please enter both email and password.';
+                    break;
+                case 'invalid_email':
+                    $error_message = 'Invalid email address format.';
+                    break;
+            }
+            
+            wp_send_json_error($error_message);
+            return;
+        }
+        
+        // Check if user has Firebase UID (should be a Firebase-linked account)
+        $firebase_uid = get_user_meta($user->ID, 'firebase_uid', true);
+        
+        if (empty($firebase_uid)) {
+            wp_send_json_error(array(
+                'message' => 'This account is not linked to Firebase authentication.',
+                'code' => 'not_firebase_account'
+            ));
+            return;
+        }
+        
+        // WordPress authentication successful
+        // Log the user in to WordPress
+        wp_clear_auth_cookie();
+        wp_set_current_user($user->ID);
+        wp_set_auth_cookie($user->ID, false, is_ssl());
+        
+        // Queue password sync to update Firebase password
+        update_user_meta($user->ID, 'firebase_password_sync_queued', current_time('mysql'));
+        update_user_meta($user->ID, 'firebase_password_sync_ready', current_time('mysql'));
+        update_user_meta($user->ID, 'firebase_password_sync_method', 'wp_fallback');
+        update_user_meta($user->ID, 'firebase_password_sync_hash', wp_hash_password($password));
+        
+        // Log the successful fallback
+        error_log("WordPress auth fallback successful for user: {$user->user_email} (ID: {$user->ID})");
+        
+        wp_send_json_success(array(
+            'message' => 'WordPress authentication successful.',
+            'user_id' => $user->ID,
+            'firebase_uid' => $firebase_uid,
+            'sync_required' => true
+        ));
+        
+    } catch (Exception $e) {
+        error_log('WordPress auth fallback error: ' . $e->getMessage());
+        
+        wp_send_json_error(array(
+            'message' => 'Authentication error occurred.',
+            'code' => 'auth_error',
+            'debug' => TOSTISHOP_DEV_MODE ? $e->getMessage() : null
+        ));
+    }
+}
+
+// Hook the WordPress auth fallback AJAX handler
+add_action('wp_ajax_tostishop_wp_auth_fallback', 'tostishop_wp_auth_fallback');
+add_action('wp_ajax_nopriv_tostishop_wp_auth_fallback', 'tostishop_wp_auth_fallback');

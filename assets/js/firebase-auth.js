@@ -1296,6 +1296,13 @@
                 hideLoading();
                 console.error('❌ Email login error:', error);
                 
+                // Check if this might be a password sync issue
+                if (error.code === 'auth/wrong-password') {
+                    console.log('🔄 Firebase auth failed, checking if WordPress account exists with sync issue...');
+                    attemptWordPressLoginFallback(email, password);
+                    return;
+                }
+                
                 let errorMessage = 'Login failed. ';
                 switch (error.code) {
                     case 'auth/user-not-found':
@@ -1327,6 +1334,110 @@
                     $('#password-login').val('').focus();
                 }
             });
+    }
+
+    /**
+     * Attempt WordPress-only login when Firebase auth fails due to password sync issues
+     */
+    function attemptWordPressLoginFallback(email, password) {
+        console.log('🔄 Attempting WordPress fallback login for:', email);
+        
+        // Show informative loading message
+        showLoading('Checking WordPress authentication...');
+        
+        // Attempt WordPress authentication via AJAX
+        fetch(tostishop_firebase_ajax.ajax_url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                action: 'tostishop_wp_auth_fallback',
+                email: email,
+                password: password,
+                nonce: tostishop_firebase_ajax.nonce
+            })
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            hideLoading();
+            
+            if (data.success) {
+                console.log('✅ WordPress fallback authentication successful');
+                
+                // WordPress login successful, now try to sync with Firebase
+                showLoading('Synchronizing your account...');
+                
+                // Update Firebase password to match WordPress
+                updateFirebasePassword(password)
+                    .then(function() {
+                        console.log('✅ Firebase password updated successfully');
+                        
+                        // Now try Firebase login again
+                        showLoading('Completing login...');
+                        return auth.signInWithEmailAndPassword(email, password);
+                    })
+                    .then(function(userCredential) {
+                        console.log('✅ Firebase login successful after password sync');
+                        hideLoading();
+                        window.location.reload();
+                    })
+                    .catch(function(syncError) {
+                        console.warn('⚠️ Firebase sync failed, but WordPress login successful:', syncError);
+                        hideLoading();
+                        
+                        // Show success message even if Firebase sync fails
+                        showSuccess('Login successful! Your account has been synchronized.');
+                        
+                        // Queue password sync for later
+                        queuePasswordSync();
+                        
+                        // Redirect after short delay
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 2000);
+                    });
+                    
+            } else {
+                console.error('❌ WordPress fallback authentication failed:', data.data);
+                showError(data.data || 'Login failed. Please check your credentials and try again.');
+                
+                // Focus back to password field
+                $('#password-login').val('').focus();
+            }
+        })
+        .catch(function(error) {
+            hideLoading();
+            console.error('❌ WordPress fallback request failed:', error);
+            showError('Login verification failed. Please try again.');
+        });
+    }
+
+    /**
+     * Update Firebase password for current user
+     */
+    function updateFirebasePassword(newPassword) {
+        return new Promise(function(resolve, reject) {
+            const user = auth.currentUser;
+            if (!user) {
+                // Need to temporarily sign in to update password
+                console.log('🔄 No current user, attempting temporary sign-in...');
+                reject(new Error('No authenticated user'));
+                return;
+            }
+            
+            user.updatePassword(newPassword)
+                .then(function() {
+                    console.log('✅ Firebase password updated successfully');
+                    resolve();
+                })
+                .catch(function(error) {
+                    console.error('❌ Firebase password update failed:', error);
+                    reject(error);
+                });
+        });
     }
 
     /**

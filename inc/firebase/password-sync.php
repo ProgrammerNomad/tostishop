@@ -17,19 +17,27 @@ if (!defined('ABSPATH')) {
  * Initialize password synchronization hooks
  */
 function tostishop_init_password_sync() {
-    // Hook into password reset process
+    // Hook into password reset process - Multiple hooks to catch different scenarios
     add_action('after_password_reset', 'tostishop_sync_password_reset', 10, 2);
     add_action('password_reset', 'tostishop_handle_password_reset', 10, 2);
+    
+    // Hook into WordPress core password changes (most reliable)
+    add_action('wp_set_password', 'tostishop_sync_wp_password_change', 10, 2);
+    
+    // Hook into WooCommerce password reset specifically
+    add_action('woocommerce_customer_reset_password', 'tostishop_sync_wc_password_reset', 10, 1);
     
     // Hook into profile/account updates
     add_action('profile_update', 'tostishop_sync_profile_password_change', 10, 2);
     add_action('woocommerce_save_account_details', 'tostishop_sync_wc_account_password_change', 10, 1);
     
-    // Hook into user password changes (admin or programmatic)
-    add_action('wp_set_password', 'tostishop_sync_wp_password_change', 10, 2);
-    
     // Hook into WooCommerce password validation
     add_action('woocommerce_save_account_details_errors', 'tostishop_validate_firebase_password_change', 10, 2);
+    
+    // Add debugging hooks if in development mode
+    if (defined('TOSTISHOP_DEV_MODE') && TOSTISHOP_DEV_MODE) {
+        add_action('wp_login', 'tostishop_debug_login_password_sync', 10, 2);
+    }
 }
 
 /**
@@ -201,6 +209,45 @@ function tostishop_sync_wp_password_change($password, $user_id) {
         // Store sync failure for retry
         update_user_meta($user_id, 'firebase_password_sync_failed', current_time('mysql'));
         update_user_meta($user_id, 'firebase_password_sync_error', $sync_result['error']);
+    }
+}
+
+/**
+ * Handle WooCommerce password reset
+ * 
+ * @param WP_User $user The user object
+ */
+function tostishop_sync_wc_password_reset($user) {
+    if (!$user || is_wp_error($user)) {
+        return;
+    }
+    
+    // Check if user has Firebase account
+    $firebase_uid = get_user_meta($user->ID, 'firebase_uid', true);
+    if (empty($firebase_uid)) {
+        return; // No Firebase account to sync
+    }
+    
+    error_log('TostiShop: WooCommerce password reset detected for user ' . $user->ID . ' with Firebase UID: ' . $firebase_uid);
+    
+    // Since we don't have the new password in this hook, we'll queue it for sync
+    update_user_meta($user->ID, 'firebase_password_sync_queued', current_time('mysql'));
+    update_user_meta($user->ID, 'firebase_password_sync_method', 'wc_reset');
+    
+    error_log('TostiShop: Queued Firebase password sync for WooCommerce reset - user ' . $user->ID);
+}
+
+/**
+ * Debug login to check password sync status
+ * 
+ * @param string $user_login User login name
+ * @param WP_User $user User object
+ */
+function tostishop_debug_login_password_sync($user_login, $user) {
+    $firebase_uid = get_user_meta($user->ID, 'firebase_uid', true);
+    if (!empty($firebase_uid)) {
+        $sync_status = tostishop_get_firebase_password_sync_status($user->ID);
+        error_log('TostiShop: Login detected for Firebase user ' . $user->ID . ' - Sync Status: ' . json_encode($sync_status));
     }
 }
 
