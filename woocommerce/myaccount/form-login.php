@@ -59,10 +59,13 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
                                 
                                 // Listen for phone registration event
                                 document.addEventListener('switch-to-phone-register', (e) => {
+                                    console.log('🎯 Alpine.js received switch-to-phone-register event:', e.detail);
                                     this.currentView = 'phone-register';
+                                    console.log('📱 Alpine.js currentView set to:', this.currentView);
                                     // Update phone display
                                     this.$nextTick(() => {
                                         if (e.detail.phone) {
+                                            console.log('📱 Updating verified phone display:', e.detail.phone);
                                             document.getElementById('verified-phone-display').textContent = e.detail.phone;
                                         }
                                     });

@@ -115,20 +115,22 @@ function tostishop_handle_firebase_login() {
         if ($force_registration || !$user_check_result['exists']) {
             // Create new user or force registration
             
-            // For phone auth without email, require email from form
+            // For phone auth without email, require additional user data collection
             if ($auth_method === 'phone' && empty($final_user_data['email'])) {
                 wp_send_json_error(array(
                     'message' => 'Email is required to create account.',
-                    'code' => 'email_required'
+                    'code' => 'email_required',
+                    'details' => 'Phone authentication requires email and name to complete registration.'
                 ));
                 return;
             }
             
-            // For phone auth with temporary email but force_registration = false, show registration form
-            if ($auth_method === 'phone' && !$force_registration && empty($user_email)) {
+            // For phone auth with incomplete data, require registration completion
+            if ($auth_method === 'phone' && !$force_registration && (empty($user_email) || empty($user_name))) {
                 wp_send_json_error(array(
                     'message' => 'Please complete registration.',
-                    'code' => 'registration_required'
+                    'code' => 'registration_required',
+                    'details' => 'Phone users must provide name and email to complete account creation.'
                 ));
                 return;
             }

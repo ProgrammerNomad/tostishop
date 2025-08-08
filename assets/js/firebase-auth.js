@@ -748,14 +748,28 @@
                 })
                 .catch(function(error) {
                     console.error('❌ Firestore check error:', error);
-                    // Fallback to direct WordPress sync
-                    loginToWordPress(firebaseUser, authMethod);
+                    
+                    // For phone auth without Firestore, we must collect user data
+                    if (authMethod === 'phone') {
+                        console.log('📱 Firestore unavailable, showing phone registration modal for:', firebaseUser.phoneNumber);
+                        showPhoneRegistrationModal(firebaseUser);
+                    } else {
+                        // For other methods, fallback to direct WordPress sync
+                        loginToWordPress(firebaseUser, authMethod);
+                    }
                 });
                 
         } catch (error) {
             console.error('❌ Firestore initialization error:', error);
-            // Fallback to direct WordPress sync
-            loginToWordPress(firebaseUser, authMethod);
+            
+            // For phone auth without Firestore, we must collect user data
+            if (authMethod === 'phone') {
+                console.log('📱 Firestore unavailable, showing phone registration modal for:', firebaseUser.phoneNumber);
+                showPhoneRegistrationModal(firebaseUser);
+            } else {
+                // For other methods, fallback to direct WordPress sync
+                loginToWordPress(firebaseUser, authMethod);
+            }
         }
     }
 
@@ -767,6 +781,7 @@
         hideLoading();
         
         console.log('📱 Showing phone registration modal for:', firebaseUser.phoneNumber);
+        console.log('📱 Firebase user object:', firebaseUser);
         
         // Switch to phone registration view
         const event = new CustomEvent('switch-to-phone-register', {
@@ -775,10 +790,14 @@
                 uid: firebaseUser.uid
             }
         });
+        
+        console.log('📱 Dispatching switch-to-phone-register event:', event.detail);
         document.dispatchEvent(event);
         
         // Store current Firebase user for later use
         window.currentFirebaseUser = firebaseUser;
+        
+        console.log('📱 Stored currentFirebaseUser:', window.currentFirebaseUser);
     }
 
     /**
@@ -1149,7 +1168,19 @@
             return;
         }
 
-        console.log('🔄 Logging into WordPress...');
+        // For phone auth, check if we need to collect additional user data first
+        if (authMethod === 'phone') {
+            console.log('📱 Phone auth detected, checking if user data collection is needed');
+            
+            // If we don't have an email for phone auth, show registration modal
+            if (!firebaseUser.email || firebaseUser.email.includes('placeholder')) {
+                console.log('� Phone auth without email, showing registration modal');
+                showPhoneRegistrationModal(firebaseUser);
+                return;
+            }
+        }
+
+        console.log('�🔄 Logging into WordPress...');
 
         firebaseUser.getIdToken()
             .then(function(idToken) {
@@ -1188,10 +1219,15 @@
                                 window.location.href = response.data.redirect_url || tostiShopAjax.redirectUrl;
                             }, 1500);
                             
-                        } else if (response.data.code === 'user_not_registered') {
+                        } else if (response.data.code === 'user_not_registered' || response.data.code === 'email_required') {
                             // 🆕 NEW USER - Show registration form
-                            console.log('👤 New user detected, showing registration form');
-                            showUserRegistrationModal(firebaseUser, authMethod);
+                            console.log('👤 New user detected or email required, showing registration form');
+                            
+                            if (authMethod === 'phone') {
+                                showPhoneRegistrationModal(firebaseUser);
+                            } else {
+                                showUserRegistrationModal(firebaseUser, authMethod);
+                            }
                             
                         } else {
                             const errorCode = response.data.code || '';
