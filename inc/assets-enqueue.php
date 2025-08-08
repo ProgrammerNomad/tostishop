@@ -30,10 +30,28 @@ function tostishop_scripts() {
     wp_enqueue_script('tostishop-ui', get_template_directory_uri() . '/assets/js/ui.js', array('jquery'), '1.0.1', true);
     wp_enqueue_script('tostishop-theme', get_template_directory_uri() . '/assets/js/theme.js', array('jquery', 'tostishop-ui'), '1.0.1', true);
     
+    // Wishlist JS
+    wp_enqueue_script('tostishop-wishlist', get_template_directory_uri() . '/assets/js/wishlist.js', array('jquery'), '1.0.0', true);
+    
     // Localize AJAX data for main UI script
     wp_localize_script('tostishop-ui', 'tostishop_ajax', array(
         'ajax_url' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('tostishop_nonce'),
+    ));
+    
+    // Localize AJAX data for wishlist script
+    wp_localize_script('tostishop-wishlist', 'tostishop_wishlist_ajax', array(
+        'ajax_url' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('tostishop_nonce'),
+        'login_url' => wp_login_url(get_permalink()),
+        'strings' => array(
+            'add_to_wishlist' => __('Add to Wishlist', 'tostishop'),
+            'remove_from_wishlist' => __('Remove from Wishlist', 'tostishop'),
+            'login_required' => __('Please login to add items to wishlist', 'tostishop'),
+            'added_to_wishlist' => __('Added to wishlist!', 'tostishop'),
+            'removed_from_wishlist' => __('Removed from wishlist!', 'tostishop'),
+            'error_occurred' => __('An error occurred. Please try again.', 'tostishop'),
+        )
     ));
     
     // Page-specific assets

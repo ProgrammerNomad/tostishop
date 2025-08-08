@@ -559,14 +559,8 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                         <?php endif; ?>
                         
                         <!-- Wishlist Button -->
-                        <button type="button" 
-                                class="w-full border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:border-gray-400 focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200"
-                                aria-label="<?php echo esc_attr(sprintf(__('Add %s to wishlist', 'tostishop'), get_the_title())); ?>">
-                            <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                            </svg>
-                            <?php _e('Add to Wishlist', 'tostishop'); ?>
-                        </button>
+                        <?php echo tostishop_get_wishlist_button($product->get_id(), 'w-full border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:border-gray-400 focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center'); ?>
+                        <span class="ml-2"><?php echo is_user_logged_in() && tostishop_is_product_in_wishlist($product->get_id()) ? __('Remove from Wishlist', 'tostishop') : __('Add to Wishlist', 'tostishop'); ?></span>
                     </div>
                 </form>
                 
@@ -940,13 +934,10 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                         <?php endif; ?>
                         
                         <!-- Wishlist Button -->
-                        <button type="button" 
-                                class="w-full lg:flex-1 border-2 border-gray-300 text-gray-700 py-4 px-6 rounded-lg text-lg font-semibold hover:border-gray-400 transition-colors duration-200">
-                            <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                            </svg>
-                            <?php _e('Add to Wishlist', 'tostishop'); ?>
-                        </button>
+                        <div class="w-full lg:flex-1">
+                            <?php echo tostishop_get_wishlist_button($product->get_id(), 'w-full border-2 border-gray-300 text-gray-700 py-4 px-6 rounded-lg text-lg font-semibold hover:border-gray-400 transition-colors duration-200 flex items-center justify-center'); ?>
+                            <span class="ml-2"><?php echo is_user_logged_in() && tostishop_is_product_in_wishlist($product->get_id()) ? __('Remove from Wishlist', 'tostishop') : __('Add to Wishlist', 'tostishop'); ?></span>
+                        </div>
                     </div>
                 </form>
                 

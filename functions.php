@@ -42,6 +42,9 @@ require_once get_template_directory() . '/inc/theme-customizer.php';
 // Helper functions and utilities
 require_once get_template_directory() . '/inc/helper-functions.php';
 
+// Wishlist functionality
+require_once get_template_directory() . '/inc/wishlist.php';
+
 // Firebase authentication integration (if exists)
 $firebase_init_file = get_template_directory() . '/inc/firebase/init.php';
 if (file_exists($firebase_init_file)) {
