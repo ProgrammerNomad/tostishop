@@ -694,6 +694,103 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
     </div>
 </div>
 
+<!-- 🚨 EXISTING EMAIL CONFIRMATION MODAL -->
+<div id="existing-email-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md mx-4 w-full max-h-[90vh] overflow-y-auto">
+        <!-- Modal Header -->
+        <div class="border-b border-gray-100 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-navy-900">Account Already Exists</h3>
+                        <p class="text-sm text-gray-600">We found an existing account</p>
+                    </div>
+                </div>
+                <button id="close-existing-email-modal" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Content -->
+        <div class="px-6 py-6">
+            <!-- Account Info Display -->
+            <div class="bg-blue-50 rounded-lg p-4 mb-6 border border-blue-200">
+                <div class="flex items-start space-x-3">
+                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-blue-900" id="existing-email-message">
+                            <!-- Dynamic message will be inserted here -->
+                        </p>
+                        <div class="mt-2 space-y-1">
+                            <p class="text-xs text-blue-700">
+                                <span class="font-medium">📧 Email:</span> 
+                                <span id="existing-email-display" class="font-mono"></span>
+                            </p>
+                            <p class="text-xs text-blue-700">
+                                <span class="font-medium">📱 Phone:</span> 
+                                <span id="existing-phone-display" class="font-mono"></span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Options -->
+            <div class="space-y-4">
+                <div class="text-center">
+                    <p class="text-gray-700 mb-4">What would you like to do?</p>
+                </div>
+
+                <!-- Primary Action: Sign In -->
+                <button id="sign-in-existing-btn" 
+                        class="w-full bg-accent text-white py-4 px-6 rounded-lg font-semibold hover:bg-red-600 transition-all duration-200 shadow-lg hover:shadow-xl">
+                    <span class="flex items-center justify-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                        </svg>
+                        <span>Sign In to Existing Account</span>
+                    </span>
+                </button>
+
+                <!-- Secondary Action: Use Different Email -->
+                <button id="use-different-email-btn" 
+                        class="w-full border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200">
+                    <span class="flex items-center justify-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                        </svg>
+                        <span>Use Different Email Address</span>
+                    </span>
+                </button>
+            </div>
+
+            <!-- Help Text -->
+            <div class="mt-6 pt-4 border-t border-gray-100">
+                <div class="flex items-start space-x-2">
+                    <svg class="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <p class="text-xs text-gray-500">
+                        💡 <strong>Tip:</strong> If you can't remember your password, you can reset it after signing in using the "Forgot Password" option.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php do_action( 'woocommerce_after_customer_login_form' ); ?>
 
 <!-- Enhanced Modal Styling for Desktop -->
@@ -776,6 +873,49 @@ body.modal-open {
 #complete-registration-btn:disabled:hover {
     background-color: #e42029;
     transform: none;
+}
+
+/* 🚨 Existing Email Modal Styling */
+#existing-email-modal {
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+#existing-email-modal .bg-white {
+    animation: modalSlideIn 0.3s ease-out;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+}
+
+/* Enhanced focus states for modal buttons */
+#existing-email-modal button:focus {
+    outline: 2px solid #e42029;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(228, 32, 41, 0.1);
+}
+
+/* Smooth hover transitions for modal buttons */
+#sign-in-existing-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(228, 32, 41, 0.3);
+}
+
+#use-different-email-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Account info styling */
+#existing-email-modal .bg-blue-50 {
+    background: linear-gradient(135deg, rgb(239 246 255) 0%, rgb(219 234 254) 100%);
+}
+
+/* Better mobile responsiveness for existing email modal */
+@media (max-width: 640px) {
+    #existing-email-modal .max-w-md {
+        max-width: calc(100vw - 2rem);
+        margin: 1rem;
+    }
 }
 </style>
 

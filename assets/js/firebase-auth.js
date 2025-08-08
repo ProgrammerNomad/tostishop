@@ -375,6 +375,31 @@
             completePhoneRegistration();
         });
 
+        // 🚨 Existing Email Modal Events
+        $('#sign-in-existing-btn').on('click', function(e) {
+            e.preventDefault();
+            console.log('👤 User chose to sign in to existing account');
+            handleExistingAccountSignIn();
+        });
+
+        $('#use-different-email-btn').on('click', function(e) {
+            e.preventDefault();
+            console.log('📧 User chose to use different email');
+            handleDifferentEmailChoice();
+        });
+
+        $('#close-existing-email-modal').on('click', function(e) {
+            e.preventDefault();
+            closeExistingEmailModal();
+        });
+
+        // Close existing email modal on backdrop click
+        $('#existing-email-modal').on('click', function(e) {
+            if (e.target === this) {
+                closeExistingEmailModal();
+            }
+        });
+
         $('#cancel-registration').on('click', function(e) {
             e.preventDefault();
             closeRegistrationModal();
@@ -1704,29 +1729,23 @@
                 console.log('📧 Email check response:', response);
                 
                 if (response.success && response.data.exists) {
-                    // Email already exists - handle existing user scenario
+                    // Email already exists - show custom modal instead of confirm dialog
                     hideLoading();
                     
                     const foundBy = response.data.found_by;
+                    
+                    // Prepare modal content
                     let message = '';
-                    
                     if (foundBy === 'email') {
-                        message = `An account with email "${email}" already exists. Would you like to sign in instead?`;
+                        message = `An account with this email address already exists in our system.`;
                     } else if (foundBy === 'phone_number') {
-                        message = `Your phone number is already registered with a different email. Would you like to update your email or sign in?`;
+                        message = `Your phone number is already registered with a different email address.`;
                     } else {
-                        message = `An account already exists with this information. Would you like to sign in instead?`;
+                        message = `An account already exists with this information.`;
                     }
                     
-                    // Show confirmation dialog
-                    if (confirm(message + '\n\nClick OK to sign in, or Cancel to try a different email.')) {
-                        // User wants to sign in - proceed with login instead of registration
-                        proceedWithExistingUserLogin(firebaseUser, email, name);
-                    } else {
-                        // User wants to try different email - clear the email field
-                        $('#phone-register-email').val('').focus();
-                        showError('Please try a different email address.');
-                    }
+                    // Show custom modal with proper styling
+                    showExistingEmailModal(email, firebaseUser.phoneNumber, message, firebaseUser, name);
                     
                 } else {
                     // Email doesn't exist - proceed with new account creation
@@ -1913,6 +1932,72 @@
                 console.error('❌ Token retrieval error:', error);
                 showError('Authentication error. Please try again.');
             });
+    }
+
+    /**
+     * 🚨 Show Existing Email Modal - CUSTOM TAILWIND DESIGN
+     */
+    function showExistingEmailModal(email, phone, message, firebaseUser, name) {
+        console.log('🚨 Showing existing email modal:', { email, phone, message });
+        
+        // Set modal content
+        $('#existing-email-message').text(message);
+        $('#existing-email-display').text(email);
+        $('#existing-phone-display').text(phone || 'Not provided');
+        
+        // Store context for button handlers
+        window.existingEmailContext = {
+            email: email,
+            phone: phone,
+            firebaseUser: firebaseUser,
+            name: name
+        };
+        
+        // Show modal with animation
+        $('#existing-email-modal').removeClass('hidden');
+        
+        // Focus on primary action
+        setTimeout(() => {
+            $('#sign-in-existing-btn').focus();
+        }, 300);
+    }
+
+    /**
+     * 🚨 Handle Existing Account Sign In
+     */
+    function handleExistingAccountSignIn() {
+        const context = window.existingEmailContext;
+        if (!context) {
+            showError('Session expired. Please try again.');
+            closeExistingEmailModal();
+            return;
+        }
+        
+        console.log('👤 Proceeding with existing account login');
+        closeExistingEmailModal();
+        proceedWithExistingUserLogin(context.firebaseUser, context.email, context.name);
+    }
+
+    /**
+     * 📧 Handle Different Email Choice
+     */
+    function handleDifferentEmailChoice() {
+        console.log('📧 User wants to use different email');
+        closeExistingEmailModal();
+        
+        // Clear the email field and focus on it
+        $('#phone-register-email').val('').focus();
+        showError('Please try a different email address.');
+    }
+
+    /**
+     * 🚨 Close Existing Email Modal
+     */
+    function closeExistingEmailModal() {
+        $('#existing-email-modal').addClass('hidden');
+        
+        // Clean up context
+        window.existingEmailContext = null;
     }
 
     /**
