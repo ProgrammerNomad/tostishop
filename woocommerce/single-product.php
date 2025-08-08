@@ -729,7 +729,7 @@ if ( count( $related_products ) < 10 ) {
 if ( ! empty( $related_products ) ) :
 ?>
 <section class="mt-16 mb-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div class="mb-8">
             <h2 class="text-2xl md:text-3xl font-bold text-navy-900 mb-2">
                 <?php _e( 'You may also like', 'tostishop' ); ?>
@@ -739,53 +739,53 @@ if ( ! empty( $related_products ) ) :
             </p>
         </div>
 
-        <!-- Products Grid (Simple Cards) -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <!-- Products Grid (6 items per row, full width) -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             <?php foreach ( $related_products as $related_product ) : ?>
                 <div class="product-card bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200 h-full flex flex-col">
                     
-                    <!-- Product Image -->
-                    <div class="product-image bg-gray-100 aspect-square">
-                        <a href="<?php echo esc_url( $related_product->get_permalink() ); ?>" class="block h-full">
+                    <!-- Product Image (Fixed aspect ratio for consistency) -->
+                    <div class="product-image bg-gray-100 aspect-square relative">
+                        <a href="<?php echo esc_url( $related_product->get_permalink() ); ?>" class="block h-full w-full">
                             <?php if ( $related_product->get_image_id() ) : ?>
-                                <?php echo $related_product->get_image( 'woocommerce_thumbnail', array(
-                                    'class' => 'w-full h-full object-cover',
+                                <?php echo $related_product->get_image( 'medium', array(
+                                    'class' => 'w-full h-full object-cover object-center',
                                     'alt' => $related_product->get_name()
                                 ) ); ?>
                             <?php else : ?>
                                 <img src="<?php echo esc_url( wc_placeholder_img_src() ); ?>" 
                                      alt="<?php echo esc_attr( $related_product->get_name() ); ?>" 
-                                     class="w-full h-full object-cover">
+                                     class="w-full h-full object-cover object-center">
                             <?php endif; ?>
                         </a>
                         
                         <!-- Sale Badge -->
                         <?php if ( $related_product->is_on_sale() ) : ?>
-                            <div class="absolute top-2 left-2 bg-accent text-white text-xs font-bold px-2 py-1 rounded">
+                            <div class="absolute top-2 left-2 bg-accent text-white text-xs font-bold px-2 py-1 rounded z-10">
                                 <?php _e( 'Sale', 'tostishop' ); ?>
                             </div>
                         <?php endif; ?>
                     </div>
                     
                     <!-- Product Info -->
-                    <div class="p-4 flex flex-col flex-grow">
+                    <div class="p-3 flex flex-col flex-grow">
                         <!-- Category -->
                         <?php
                         $categories = get_the_terms( $related_product->get_id(), 'product_cat' );
                         if ( $categories && ! is_wp_error( $categories ) ) :
                             $category = $categories[0];
                         ?>
-                            <p class="text-xs text-primary font-medium uppercase tracking-wide mb-2">
+                            <p class="text-xs text-primary font-medium uppercase tracking-wide mb-1">
                                 <a href="<?php echo esc_url( get_term_link( $category ) ); ?>" class="hover:text-accent transition-colors">
                                     <?php echo esc_html( $category->name ); ?>
                                 </a>
                             </p>
                         <?php else : ?>
-                            <div class="h-4 mb-2"></div> <!-- Placeholder for consistent height -->
+                            <div class="h-3 mb-1"></div> <!-- Placeholder for consistent height -->
                         <?php endif; ?>
                     
                     <!-- Product Title -->
-                    <h3 class="text-sm font-medium text-gray-900 mb-2 line-clamp-2 leading-tight flex-grow">
+                    <h3 class="text-xs font-medium text-gray-900 mb-2 line-clamp-2 leading-tight flex-grow">
                         <a href="<?php echo esc_url( $related_product->get_permalink() ); ?>" class="hover:text-primary transition-colors duration-200">
                             <?php echo esc_html( $related_product->get_name() ); ?>
                         </a>
@@ -793,7 +793,7 @@ if ( ! empty( $related_products ) ) :
                     
                     <!-- Rating -->
                     <?php if ( $related_product->get_average_rating() ) : ?>
-                    <div class="flex items-center space-x-1 mb-3">
+                    <div class="flex items-center space-x-1 mb-2">
                         <div class="flex text-yellow-400">
                             <?php
                             $rating = $related_product->get_average_rating();
@@ -812,19 +812,19 @@ if ( ! empty( $related_products ) ) :
                         <span class="text-xs text-gray-500">(<?php echo $related_product->get_review_count(); ?>)</span>
                     </div>
                     <?php else : ?>
-                    <div class="h-4 mb-3"></div> <!-- Placeholder to maintain consistent height -->
+                    <div class="h-3 mb-2"></div> <!-- Placeholder to maintain consistent height -->
                     <?php endif; ?>
                     
                     <!-- Price Section -->
                     <div class="mt-auto">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="text-sm font-bold text-gray-900">
+                        <div class="flex items-center justify-between mb-1">
+                            <div class="text-xs font-bold text-gray-900">
                                 <?php echo $related_product->get_price_html(); ?>
                             </div>
                             
                             <!-- Sale Badge -->
                             <?php if ( $related_product->is_on_sale() ) : ?>
-                                <span class="text-xs bg-accent text-white px-2 py-1 rounded-full font-medium">
+                                <span class="text-xs bg-accent text-white px-1 py-0.5 rounded-full font-medium">
                                     <?php _e( 'Sale', 'tostishop' ); ?>
                                 </span>
                             <?php endif; ?>
