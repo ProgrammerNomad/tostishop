@@ -2194,7 +2194,38 @@
     }
 
     /**
-     * 🔗 Show Account Binding Modal - SECURE PASSWORD VERIFICATION
+     * � Show Error in Account Binding Modal
+     */
+    function showBindingError(message) {
+        const errorDiv = $('#binding-error-message');
+        const errorText = $('#binding-error-text');
+        
+        if (errorDiv.length && errorText.length) {
+            errorText.text(message);
+            errorDiv.removeClass('hidden').addClass('block');
+            
+            // Scroll to error if needed
+            if (errorDiv[0].scrollIntoView) {
+                errorDiv[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        } else {
+            // Fallback to regular error display
+            showError(message);
+        }
+    }
+
+    /**
+     * ✅ Hide Error in Account Binding Modal
+     */
+    function hideBindingError() {
+        const errorDiv = $('#binding-error-message');
+        if (errorDiv.length) {
+            errorDiv.addClass('hidden').removeClass('block');
+        }
+    }
+
+    /**
+     * �🔗 Show Account Binding Modal - SECURE PASSWORD VERIFICATION
      * Requires password verification to bind phone to existing email account
      */
     function showAccountBindingModal(email, phone, firebaseUser, name) {
@@ -2204,8 +2235,9 @@
         $('#binding-email-display').text(email);
         $('#binding-phone-display').text(phone);
         
-        // Clear password field
+        // Clear password field and hide errors
         $('#binding-password').val('');
+        hideBindingError();
         
         // Store context for binding
         window.accountBindingContext = {
@@ -2225,26 +2257,30 @@
     }
 
     /**
-     * 🔗 Verify Password and Bind Account
+     * 🔗 Verify Password and Bind Account - ENHANCED ERROR HANDLING
      */
     function verifyPasswordAndBindAccount() {
         const password = $('#binding-password').val().trim();
         const context = window.accountBindingContext;
         
         if (!password) {
-            showError('Please enter your account password to verify ownership.');
+            showBindingError('Please enter your account password to verify ownership.');
             $('#binding-password').focus();
             return;
         }
         
         if (!context) {
-            showError('Session expired. Please try again.');
-            closeAccountBindingModal();
+            showBindingError('Session expired. Please try again.');
+            setTimeout(() => closeAccountBindingModal(), 2000);
             return;
         }
         
         console.log('🔐 Verifying password for account binding...');
+        hideBindingError();
         showLoading('Verifying your password...');
+        
+        // Disable verify button during processing
+        $('#verify-and-bind-btn').prop('disabled', true).text('Verifying...');
         
         // Step 1: Verify password with WordPress backend
         $.ajax({
@@ -2268,14 +2304,20 @@
                 } else {
                     hideLoading();
                     const errorMessage = response.data?.message || 'Incorrect password. Please try again.';
-                    showError(errorMessage);
+                    showBindingError(errorMessage);
                     $('#binding-password').val('').focus();
+                    
+                    // Re-enable button
+                    $('#verify-and-bind-btn').prop('disabled', false).text('Verify & Link Account');
                 }
             },
             error: function(xhr, status, error) {
                 hideLoading();
                 console.error('❌ Password verification error:', xhr.responseText, status, error);
-                showError('Unable to verify password. Please check your connection and try again.');
+                showBindingError('Unable to verify password. Please check your connection and try again.');
+                
+                // Re-enable button
+                $('#verify-and-bind-btn').prop('disabled', false).text('Verify & Link Account');
             }
         });
     }
@@ -2351,7 +2393,7 @@
     }
 
     /**
-     * 🔗 Close Account Binding Modal
+     * 🔗 Close Account Binding Modal - ENHANCED CLEANUP
      */
     function closeAccountBindingModal() {
         $('#account-binding-modal').addClass('hidden');
@@ -2361,6 +2403,15 @@
         
         // Clear password field for security
         $('#binding-password').val('');
+        
+        // Hide any error messages
+        hideBindingError();
+        
+        // Reset button state
+        $('#verify-and-bind-btn').prop('disabled', false).text('Verify & Link Account');
+        
+        // Hide loading if active
+        hideLoading();
     }
 
     /**
