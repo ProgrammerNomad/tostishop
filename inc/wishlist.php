@@ -364,13 +364,14 @@ function tostishop_get_wishlist_button($product_id, $classes = '') {
             esc_attr($classes),
             intval($product_id),
             esc_attr__('Add to Wishlist', 'tostishop'),
-            esc_html__('Add to Wishlist', 'tostishop')
+            esc_html__('Save', 'tostishop')
         );
     }
     
     $is_in_wishlist = tostishop_is_product_in_wishlist($product_id);
     $button_class = $is_in_wishlist ? 'wishlist-btn in-wishlist' : 'wishlist-btn';
     $title = $is_in_wishlist ? __('Remove from Wishlist', 'tostishop') : __('Add to Wishlist', 'tostishop');
+    $button_text = $is_in_wishlist ? __('Saved', 'tostishop') : __('Save', 'tostishop');
     $fill = $is_in_wishlist ? 'currentColor' : 'none';
     $text_color = $is_in_wishlist ? 'text-red-500' : '';
     
@@ -387,7 +388,7 @@ function tostishop_get_wishlist_button($product_id, $classes = '') {
         intval($product_id),
         esc_attr($title),
         esc_attr($fill),
-        esc_html($title)
+        esc_html($button_text)
     );
 }
 
