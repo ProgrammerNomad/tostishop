@@ -1218,7 +1218,7 @@ if ( ! empty( $related_products ) ) :
                                 <?php if ($discount) : ?>
                                     <span class="text-xs bg-accent text-white px-1 py-0.5 rounded-full font-medium"
                                           title="<?php echo esc_attr(sprintf(__('%d%% off', 'tostishop'), $discount)); ?>">
-                                        -<?php echo esc_html($discount); ?>%
+                                        -<?php echo esc_html($discount); ?>% OFF
                                     </span>
                                 <?php else : ?>
                                     <span class="text-xs bg-accent text-white px-1 py-0.5 rounded-full font-medium">
