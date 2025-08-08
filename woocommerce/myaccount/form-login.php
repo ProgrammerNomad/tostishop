@@ -39,7 +39,7 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
                     </div>
 
                     <!-- Main Authentication Card -->
-                    <div class="rounded-2xl overflow-hidden">
+                    <div id="firebase-auth-container" class="firebase-auth-container rounded-2xl overflow-hidden">
                         
                         <!-- Card Body -->
                         <div class="p-8" x-data="{ 
@@ -234,6 +234,79 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
                                 </div>
                                 <div id="otp-error" class="hidden text-center text-red-600 text-sm font-medium">
                                     ❌ Invalid number or wrong OTP
+                                </div>
+                            </div>
+
+                            <!-- 📝 PHONE REGISTRATION VIEW - NEW USER INFORMATION COLLECTION -->
+                            <div x-show="currentView === 'phone-register'" x-transition class="space-y-6 px-1 py-1">
+                                
+                                <!-- Success Icon & Message -->
+                                <div class="text-center mb-6">
+                                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-navy-900 mb-2">Phone Verified! 🎉</h3>
+                                    <p class="text-gray-600 mb-2">Your phone number <span class="font-medium" id="verified-phone-display">+91 XXXXXXXXXX</span> has been verified.</p>
+                                    <p class="text-gray-600">Please provide your details to complete registration:</p>
+                                </div>
+
+                                <!-- Registration Form for New Phone Users -->
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="phone-register-name" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Full Name *
+                                        </label>
+                                        <input type="text" 
+                                               id="phone-register-name" 
+                                               name="phone-register-name" 
+                                               class="w-full py-3 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-navy-500"
+                                               placeholder="Enter your full name"
+                                               required>
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="phone-register-email" class="block text-sm font-medium text-gray-700 mb-2">
+                                            Email Address *
+                                        </label>
+                                        <input type="email" 
+                                               id="phone-register-email" 
+                                               name="phone-register-email" 
+                                               class="w-full py-3 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-navy-500"
+                                               placeholder="your@email.com"
+                                               required>
+                                        <p class="text-xs text-gray-500 mt-1">We'll use this for order updates and receipts</p>
+                                    </div>
+                                    
+                                    <!-- Terms Acceptance -->
+                                    <div class="flex items-start">
+                                        <input id="phone-register-terms" 
+                                               name="phone-register-terms" 
+                                               type="checkbox" 
+                                               class="h-4 w-4 text-navy-900 focus:ring-navy-500 border-gray-300 rounded mt-1"
+                                               required>
+                                        <label for="phone-register-terms" class="ml-3 block text-sm text-gray-700">
+                                            I agree to TostiShop's <a href="#" class="text-navy-900 hover:text-navy-800 font-medium">Terms of Service</a> and <a href="#" class="text-navy-900 hover:text-navy-800 font-medium">Privacy Policy</a>
+                                        </label>
+                                    </div>
+                                    
+                                    <button id="complete-phone-registration-btn" 
+                                            class="w-full bg-accent text-white border-2 border-accent py-4 px-4 rounded-lg font-semibold hover:bg-red-600 hover:border-red-600 hover:shadow-md focus:ring-2 focus:ring-accent focus:ring-offset-2 transition-all duration-200 shadow-sm">
+                                        Create Account & Continue
+                                    </button>
+                                    
+                                    <!-- Info Message -->
+                                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                        <div class="flex items-start">
+                                            <svg class="w-5 h-5 text-blue-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            <p class="text-sm text-blue-700">
+                                                🔒 Your information is secure and will only be used for your TostiShop account.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -686,3 +759,44 @@ body.modal-open {
     transform: none;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Enable/disable Send OTP button based on mobile number input
+    const mobileInput = document.getElementById('mobile-number');
+    const sendOtpBtn = document.getElementById('send-otp-btn');
+    
+    if (mobileInput && sendOtpBtn) {
+        function validateAndUpdateButton() {
+            const value = mobileInput.value.trim();
+            const isValid = /^[6-9][0-9]{9}$/.test(value);
+            
+            if (isValid) {
+                sendOtpBtn.disabled = false;
+                sendOtpBtn.classList.remove('bg-gray-100', 'text-gray-600', 'border-gray-300', 'cursor-not-allowed');
+                sendOtpBtn.classList.add('bg-accent', 'text-white', 'border-accent', 'cursor-pointer', 'hover:bg-red-600', 'hover:border-red-600');
+            } else {
+                sendOtpBtn.disabled = true;
+                sendOtpBtn.classList.remove('bg-accent', 'text-white', 'border-accent', 'cursor-pointer', 'hover:bg-red-600', 'hover:border-red-600');
+                sendOtpBtn.classList.add('bg-gray-100', 'text-gray-600', 'border-gray-300', 'cursor-not-allowed');
+            }
+        }
+        
+        // Check on input and paste events
+        mobileInput.addEventListener('input', validateAndUpdateButton);
+        mobileInput.addEventListener('paste', function() {
+            setTimeout(validateAndUpdateButton, 10);
+        });
+        
+        // Initial check
+        validateAndUpdateButton();
+    }
+    
+    // Add country code input element
+    const countryCodeInput = document.createElement('input');
+    countryCodeInput.type = 'hidden';
+    countryCodeInput.id = 'country-code';
+    countryCodeInput.value = '+91';
+    document.body.appendChild(countryCodeInput);
+});
+</script>

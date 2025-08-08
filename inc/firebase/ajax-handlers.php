@@ -35,6 +35,8 @@ function tostishop_handle_firebase_login() {
     $firebase_token = sanitize_text_field($_POST['firebase_token']);
     $auth_method = isset($_POST['auth_method']) ? sanitize_text_field($_POST['auth_method']) : 'unknown';
     $from_checkout = isset($_POST['from_checkout']) && $_POST['from_checkout'] === 'true';
+    $check_user_exists = isset($_POST['check_user_exists']) && $_POST['check_user_exists'] === 'true';
+    $force_registration = isset($_POST['force_registration']) && $_POST['force_registration'] === 'true';
     
     // Get real user data from frontend (Firebase already verified these)
     $phone_number = isset($_POST['phone_number']) ? sanitize_text_field($_POST['phone_number']) : '';
@@ -69,8 +71,61 @@ function tostishop_handle_firebase_login() {
         // Check if user exists in WordPress
         $existing_user_id = tostishop_find_existing_user_production($final_user_data);
         
-        if (!$existing_user_id) {
-            // New user - create account with available data
+        // Handle different scenarios based on flags
+        if ($check_user_exists && !$force_registration) {
+            // Just checking if user exists
+            if (!$existing_user_id) {
+                wp_send_json_error(array(
+                    'message' => 'User not found.',
+                    'code' => 'user_not_found'
+                ));
+                return;
+            }
+            
+            // User exists, proceed with login
+            wp_set_current_user($existing_user_id);
+            wp_set_auth_cookie($existing_user_id, true);
+            
+            // Update last login
+            update_user_meta($existing_user_id, 'firebase_last_login', current_time('mysql'));
+            update_user_meta($existing_user_id, 'firebase_auth_method', $auth_method);
+            
+            // Determine redirect URL
+            $redirect_url = home_url('/my-account/');
+            if ($from_checkout) {
+                $redirect_url = wc_get_checkout_url();
+            }
+            
+            wp_send_json_success(array(
+                'message' => 'Welcome back!',
+                'redirect_url' => $redirect_url,
+                'user_id' => $existing_user_id,
+                'auth_method' => $auth_method
+            ));
+            return;
+        }
+        
+        if ($force_registration || !$existing_user_id) {
+            // Create new user or force registration
+            
+            // For phone auth without email, require email from form
+            if ($auth_method === 'phone' && empty($final_user_data['email'])) {
+                wp_send_json_error(array(
+                    'message' => 'Email is required to create account.',
+                    'code' => 'email_required'
+                ));
+                return;
+            }
+            
+            // For phone auth with temporary email but force_registration = false, show registration form
+            if ($auth_method === 'phone' && !$force_registration && empty($user_email)) {
+                wp_send_json_error(array(
+                    'message' => 'Please complete registration.',
+                    'code' => 'registration_required'
+                ));
+                return;
+            }
+            
             $new_user_id = tostishop_create_user_from_firebase($final_user_data);
             
             if (is_wp_error($new_user_id)) {
@@ -98,8 +153,10 @@ function tostishop_handle_firebase_login() {
             $redirect_url = wc_get_checkout_url();
         }
         
+        $welcome_message = $force_registration ? 'Welcome to TostiShop!' : 'Welcome back!';
+        
         wp_send_json_success(array(
-            'message' => 'Welcome to TostiShop!',
+            'message' => $welcome_message,
             'redirect_url' => $redirect_url,
             'user_id' => $existing_user_id,
             'auth_method' => $auth_method
