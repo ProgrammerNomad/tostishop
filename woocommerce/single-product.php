@@ -332,6 +332,206 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                     <?php endif; ?>
                 </div>
             </div>
+            
+            <!-- Mobile Product Information -->
+            <div class="mt-8 lg:hidden">
+                <!-- Category -->
+                <?php if ($categories): ?>
+                    <p class="text-sm text-blue-600 font-medium uppercase tracking-wide mb-2">
+                        <a href="<?php echo esc_url(get_term_link($categories[0])); ?>"><?php echo esc_html($categories[0]->name); ?></a>
+                    </p>
+                <?php endif; ?>
+                
+                <!-- Title -->
+                <h1 class="text-2xl font-bold text-gray-900 mb-4"><?php the_title(); ?></h1>
+                
+                <!-- Rating -->
+                <?php if ($product->get_average_rating()) : ?>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="flex text-yellow-400">
+                            <?php
+                            $rating = $product->get_average_rating();
+                            for ($i = 1; $i <= 5; $i++) :
+                                if ($i <= $rating) : ?>
+                                    <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                <?php else : ?>
+                                    <svg class="w-5 h-5 text-gray-300 fill-current" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                    </svg>
+                                <?php endif;
+                            endfor; ?>
+                        </div>
+                        <span class="text-sm text-gray-600"><?php echo $product->get_review_count(); ?> <?php _e('reviews', 'tostishop'); ?></span>
+                    </div>
+                <?php endif; ?>
+                
+                <!-- Price -->
+                <div class="text-2xl font-bold text-gray-900 mb-4 product-price">
+                    <?php echo $product->get_price_html(); ?>
+                </div>
+                
+                <!-- Short Description -->
+                <?php if ($product->get_short_description()) : ?>
+                    <div class="text-gray-600 leading-relaxed mb-6">
+                        <?php echo apply_filters('woocommerce_short_description', $product->get_short_description()); ?>
+                    </div>
+                <?php endif; ?>
+                
+                <!-- Stock Status -->
+                <div class="flex items-center space-x-2 stock-status mb-6">
+                    <?php if ($product->is_in_stock()) : ?>
+                        <div class="flex items-center text-green-600">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span class="font-medium"><?php _e('In Stock', 'tostishop'); ?></span>
+                        </div>
+                    <?php else : ?>
+                        <div class="flex items-center text-red-600">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                            <span class="font-medium"><?php _e('Out of Stock', 'tostishop'); ?></span>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <!-- Delivery ETA -->
+                    <div class="text-sm text-gray-500">
+                        <?php _e('Estimated delivery: 3-5 business days', 'tostishop'); ?>
+                    </div>
+                </div>
+                
+                <!-- Add to Cart Form for Mobile -->
+                <form class="cart space-y-4 mb-6" action="<?php echo esc_url(apply_filters('woocommerce_add_to_cart_form_action', $product->get_permalink())); ?>" method="post" enctype='multipart/form-data'>
+                    
+                    <!-- Variable Product Options -->
+                    <?php do_action('woocommerce_before_add_to_cart_button'); ?>
+                    
+                    <!-- Quantity -->
+                    <?php if (!$product->is_sold_individually()): ?>
+                        <?php woocommerce_quantity_input(array('min_value' => apply_filters('woocommerce_quantity_input_min', $product->get_min_purchase_quantity(), $product), 'max_value' => apply_filters('woocommerce_quantity_input_max', $product->get_max_purchase_quantity(), $product), 'input_value' => isset($_POST['quantity']) ? wc_stock_amount($_POST['quantity']) : $product->get_min_purchase_quantity())); ?>
+                    <?php else: ?>
+                        <input type="hidden" name="quantity" value="1" />
+                    <?php endif; ?>
+                    
+                    <!-- Mobile Buttons (Stacked) -->
+                    <div class="space-y-3">
+                        <?php if ($product->is_purchasable() && $product->is_in_stock()): ?>
+                            <button type="submit" 
+                                    name="add-to-cart" 
+                                    value="<?php echo esc_attr($product->get_id()); ?>"
+                                    class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors duration-200">
+                                <?php echo esc_html($product->single_add_to_cart_text()); ?>
+                            </button>
+                        <?php else: ?>
+                            <button type="button" 
+                                    disabled
+                                    class="w-full bg-gray-400 text-white py-4 px-6 rounded-lg text-lg font-semibold cursor-not-allowed">
+                                <?php echo $product->is_in_stock() ? 'Not Available' : 'Out of Stock'; ?>
+                            </button>
+                        <?php endif; ?>
+                        
+                        <!-- Wishlist Button -->
+                        <button type="button" 
+                                class="w-full border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:border-gray-400 transition-colors duration-200">
+                            <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                            </svg>
+                            <?php _e('Add to Wishlist', 'tostishop'); ?>
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Mobile Product Meta -->
+                <div class="border-t pt-6 space-y-3">
+                    <div class="flex items-center text-sm text-gray-600">
+                        <span class="font-medium mr-2"><?php _e('SKU:', 'tostishop'); ?></span>
+                        <span><?php echo $product->get_sku() ?: __('N/A', 'tostishop'); ?></span>
+                    </div>
+                    
+                    <?php if ($categories) : ?>
+                    <div class="flex items-center text-sm text-gray-600">
+                        <span class="font-medium mr-2"><?php _e('Categories:', 'tostishop'); ?></span>
+                        <div class="flex flex-wrap gap-1">
+                            <?php foreach ($categories as $category) : ?>
+                                <a href="<?php echo esc_url(get_term_link($category)); ?>" 
+                                   class="text-blue-600 hover:text-blue-700"><?php echo esc_html($category->name); ?></a>
+                                <?php if ($category !== end($categories)) echo ', '; ?>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <?php
+                    $tags = get_the_terms($product->get_id(), 'product_tag');
+                    if ($tags && !is_wp_error($tags)) :
+                    ?>
+                    <div class="flex items-center text-sm text-gray-600">
+                        <span class="font-medium mr-2"><?php _e('Tags:', 'tostishop'); ?></span>
+                        <div class="flex flex-wrap gap-1">
+                            <?php foreach ($tags as $tag) : ?>
+                                <a href="<?php echo esc_url(get_term_link($tag)); ?>" 
+                                   class="text-blue-600 hover:text-blue-700"><?php echo esc_html($tag->name); ?></a>
+                                <?php if ($tag !== end($tags)) echo ', '; ?>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                
+                <!-- Mobile Shipping Information & Returns -->
+                <div class="border-t pt-6 space-y-6">
+                    <!-- Shipping Information -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4-8-4m16 0v10l-8 4-8-4V7"></path>
+                            </svg>
+                            <?php _e('Shipping Information', 'tostishop'); ?>
+                        </h3>
+                        <div class="space-y-2 text-sm text-gray-600">
+                            <div class="flex items-start">
+                                <span class="text-blue-600 mr-2">•</span>
+                                <span><?php _e('Free shipping on orders over ₹500', 'tostishop'); ?></span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-blue-600 mr-2">•</span>
+                                <span><?php _e('Standard delivery: 3-5 business days', 'tostishop'); ?></span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-blue-600 mr-2">•</span>
+                                <span><?php _e('Express delivery: 1-2 business days', 'tostishop'); ?></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Returns & Exchanges -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            <?php _e('Returns & Exchanges', 'tostishop'); ?>
+                        </h3>
+                        <div class="space-y-2 text-sm text-gray-600">
+                            <div class="flex items-start">
+                                <span class="text-green-600 mr-2">•</span>
+                                <span><?php _e('10-day return policy', 'tostishop'); ?></span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-green-600 mr-2">•</span>
+                                <span><?php _e('Items must be in original condition', 'tostishop'); ?></span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="text-green-600 mr-2">•</span>
+                                <span><?php _e('Free returns on defective items', 'tostishop'); ?></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <!-- Desktop Layout (60/40 split with image grid) -->
