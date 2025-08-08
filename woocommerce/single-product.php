@@ -438,8 +438,8 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                         <?php if ($discount_percentage) : ?>
                             <span class="text-sm font-bold text-accent bg-red-50 px-3 py-1 rounded-full border border-red-200"
                                   title="<?php echo esc_attr(sprintf(__('You save %d%% on this product', 'tostishop'), $discount_percentage)); ?>"
-                                  role="text" aria-label="<?php echo esc_attr(sprintf(__('%d percent discount', 'tostishop'), $discount_percentage)); ?>">
-                                <?php echo esc_html(sprintf(__('Save %d%%', 'tostishop'), $discount_percentage)); ?>
+                                  role="text" aria-label="<?php echo esc_attr(sprintf(__('%d percent off', 'tostishop'), $discount_percentage)); ?>">
+                                <?php echo esc_html($discount_percentage); ?>% <?php _e('OFF', 'tostishop'); ?>
                             </span>
                         <?php endif; ?>
                     <?php endif; ?>
@@ -758,8 +758,22 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                 <?php endif; ?>
                 
                 <!-- Price -->
-                <div class="text-3xl font-bold text-gray-900 product-price">
-                    <?php echo $product->get_price_html(); ?>
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="text-3xl font-bold text-gray-900 product-price">
+                        <?php echo $product->get_price_html(); ?>
+                    </div>
+                    
+                    <!-- Discount Percentage Badge -->
+                    <?php if ($product->is_on_sale()) : ?>
+                        <?php $discount_percentage = tostishop_get_discount_percentage($product); ?>
+                        <?php if ($discount_percentage) : ?>
+                            <span class="text-lg font-bold text-accent bg-red-50 px-3 py-2 rounded-full border border-red-200 shadow-sm"
+                                  title="<?php echo esc_attr(sprintf(__('You save %d%% on this product', 'tostishop'), $discount_percentage)); ?>"
+                                  role="text" aria-label="<?php echo esc_attr(sprintf(__('%d percent off', 'tostishop'), $discount_percentage)); ?>">
+                                <?php echo esc_html($discount_percentage); ?>% <?php _e('OFF', 'tostishop'); ?>
+                            </span>
+                        <?php endif; ?>
+                    <?php endif; ?>
                 </div>
                 
                 <!-- Short Description -->
