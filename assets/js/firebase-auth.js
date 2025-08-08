@@ -17,6 +17,7 @@
     let recaptchaSolved = false;
     let retryAttempts = 0;
     const MAX_RETRY_ATTEMPTS = 2;
+    let resendInProgress = false; // Flag to prevent multiple rapid resend attempts
 
     // Google login loop prevention
     let googleLoginAttempts = 0;
@@ -91,15 +92,8 @@
      */
     function setupInvisibleRecaptchaWithFallback() {
         try {
-            // Clear any existing reCAPTCHA
-            if (recaptchaVerifier) {
-                try {
-                    recaptchaVerifier.clear();
-                } catch (e) {
-                    console.warn('Failed to clear existing reCAPTCHA:', e);
-                }
-                recaptchaVerifier = null;
-            }
+            // Use comprehensive clearing function
+            clearRecaptchaCompletely();
 
             // Check if the button exists
             const sendButton = document.getElementById('send-otp-btn');
@@ -136,6 +130,47 @@
         } catch (error) {
             console.error('❌ Invisible reCAPTCHA setup error:', error);
             handleRecaptchaSetupError(error);
+        }
+    }
+
+    /**
+     * Completely clear reCAPTCHA - Enhanced function
+     */
+    function clearRecaptchaCompletely() {
+        try {
+            // Clear Firebase reCAPTCHA verifier
+            if (recaptchaVerifier) {
+                recaptchaVerifier.clear();
+                recaptchaVerifier = null;
+                console.log('🗑️ Firebase reCAPTCHA verifier cleared');
+            }
+
+            // Clear DOM elements
+            const recaptchaElements = document.querySelectorAll(
+                '.grecaptcha-badge, [id^="g-recaptcha-"], .g-recaptcha, [data-sitekey]'
+            );
+            
+            recaptchaElements.forEach(element => {
+                if (element.parentNode) {
+                    element.parentNode.removeChild(element);
+                    console.log('🗑️ Removed reCAPTCHA DOM element');
+                }
+            });
+
+            // Clear any global grecaptcha widgets
+            if (window.grecaptcha && window.grecaptcha.reset) {
+                try {
+                    window.grecaptcha.reset();
+                    console.log('🗑️ Global grecaptcha reset');
+                } catch (e) {
+                    console.warn('Could not reset global grecaptcha:', e);
+                }
+            }
+
+            console.log('✅ reCAPTCHA completely cleared');
+            
+        } catch (error) {
+            console.warn('Error during reCAPTCHA clearing:', error);
         }
     }
 
@@ -661,9 +696,18 @@
             return;
         }
 
+        // Prevent multiple rapid resend attempts
+        if (resendInProgress) {
+            console.log('⏳ Resend already in progress, ignoring duplicate request');
+            return;
+        }
+
+        resendInProgress = true;
+
         // Check for test numbers
         if (window.tostiShopDevMode && TEST_PHONE_NUMBERS[currentPhoneNumber]) {
             simulateTestOTP(currentPhoneNumber);
+            resendInProgress = false;
             return;
         }
 
@@ -672,21 +716,80 @@
 
         confirmationResult = null;
         
-        // Reset and setup reCAPTCHA
-        setupInvisibleRecaptchaWithFallback();
+        // For resend, try to reuse existing reCAPTCHA verifier first
+        let verifierToUse = recaptchaVerifier;
+        
+        // If no valid verifier exists, create a new one
+        if (!verifierToUse) {
+            console.log('🔄 Creating new reCAPTCHA verifier for resend');
+            setupInvisibleRecaptchaWithFallback();
+            verifierToUse = recaptchaVerifier;
+        }
+        
+        // If still no verifier, show error
+        if (!verifierToUse) {
+            showError('Security verification not ready. Please refresh the page.');
+            resendBtn.prop('disabled', false).text('Resend OTP');
+            resendInProgress = false;
+            return;
+        }
         
         setTimeout(() => {
-            if (recaptchaVerifier) {
-                auth.signInWithPhoneNumber(currentPhoneNumber, recaptchaVerifier)
-                    .then(function(result) {
-                        confirmationResult = result;
-                        showSuccess('New OTP sent to ' + currentPhoneNumber);
-                        $('#otp-code').val('').focus();
-                        startResendCountdown(resendBtn);
-                    })
-                    .catch(function(error) {
-                        console.error('Resend OTP error:', error);
+            auth.signInWithPhoneNumber(currentPhoneNumber, verifierToUse)
+                .then(function(result) {
+                    confirmationResult = result;
+                    showSuccess('New OTP sent to ' + currentPhoneNumber);
+                    $('#otp-code').val('').focus();
+                    startResendCountdown(resendBtn);
+                    resendInProgress = false; // Reset flag on success
+                })
+                .catch(function(error) {
+                    console.error('Resend OTP error:', error);
+                    
+                    // If reCAPTCHA already rendered error, try to recreate verifier
+                    if (error.message && error.message.includes('reCAPTCHA has already been rendered')) {
+                        console.log('🔄 reCAPTCHA conflict detected, recreating verifier...');
                         
+                        // Force clear and recreate using comprehensive clearing
+                        try {
+                            clearRecaptchaCompletely();
+                            
+                            // Wait a bit then recreate
+                            setTimeout(() => {
+                                setupInvisibleRecaptchaWithFallback();
+                                
+                                // Try again with new verifier
+                                if (recaptchaVerifier) {
+                                    auth.signInWithPhoneNumber(currentPhoneNumber, recaptchaVerifier)
+                                        .then(function(result) {
+                                            confirmationResult = result;
+                                            showSuccess('New OTP sent to ' + currentPhoneNumber);
+                                            $('#otp-code').val('').focus();
+                                            startResendCountdown(resendBtn);
+                                            resendInProgress = false; // Reset flag on retry success
+                                        })
+                                        .catch(function(retryError) {
+                                            console.error('Retry resend error:', retryError);
+                                            showError('Failed to resend OTP. Please refresh the page and try again.');
+                                            resendBtn.prop('disabled', false).text('Resend OTP');
+                                            resendInProgress = false; // Reset flag on retry failure
+                                        });
+                                } else {
+                                    showError('Security verification failed. Please refresh the page.');
+                                    resendBtn.prop('disabled', false).text('Resend OTP');
+                                    resendInProgress = false; // Reset flag on verification failure
+                                }
+                            }, 1500); // Increased timeout to allow for complete clearing
+                            
+                        } catch (clearError) {
+                            console.error('Error recreating verifier:', clearError);
+                            showError('Please refresh the page and try again.');
+                            resendBtn.prop('disabled', false).text('Resend OTP');
+                            resendInProgress = false; // Reset flag on clear error
+                        }
+                        
+                    } else {
+                        // Handle other errors
                         if (error.code === 'auth/internal-error-encountered') {
                             showError('Service temporarily unavailable. Please try Google/Email login.');
                         } else {
@@ -694,12 +797,10 @@
                         }
                         
                         resendBtn.prop('disabled', false).text('Resend OTP');
-                    });
-            } else {
-                showError('Security verification not ready. Please try Google/Email login.');
-                resendBtn.prop('disabled', false).text('Resend OTP');
-            }
-        }, 1000);
+                        resendInProgress = false; // Reset flag on other errors
+                    }
+                });
+        }, 500);
     }
 
     /**
