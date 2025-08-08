@@ -989,10 +989,10 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
         </div>
         
         <!-- Product Tabs (Mobile-Optimized) -->
-        <div class="mt-16" x-data="{ activeTab: 'description' }">
+        <div class="mt-16 -mx-4 sm:-mx-6 lg:-mx-8" x-data="{ activeTab: 'description' }">
             
             <!-- Tab Navigation -->
-            <div class="flex border-b border-gray-200 overflow-x-auto">
+            <div class="flex border-b border-gray-200 overflow-x-auto px-4 sm:px-6 lg:px-8">
                 <button @click="activeTab = 'description'" 
                         :class="{ 'border-blue-500 text-blue-600': activeTab === 'description', 'border-transparent text-gray-500': activeTab !== 'description' }"
                         class="flex-none px-6 py-3 border-b-2 font-medium text-sm whitespace-nowrap">
@@ -1015,7 +1015,7 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
             </div>
             
             <!-- Tab Content -->
-            <div class="py-8">
+            <div class="py-8 px-4 sm:px-6 lg:px-8">
                 
                 <!-- Description Tab -->
                 <div x-show="activeTab === 'description'" class="prose max-w-none">
