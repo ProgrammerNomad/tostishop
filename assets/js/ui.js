@@ -83,15 +83,6 @@ function initializeWooCommerce() {
 }
 
 /**
- * AJAX Add to Cart functionality 
- * (Disabled - only allowing add to cart from single product page)
- */
-function initializeAjaxAddToCart() {
-    // Functionality removed - only allowing add to cart from single product page
-    return;
-}
-
-/**
  * Placeholder for addToCartAjax function
  */
 function addToCartAjax() {
@@ -659,10 +650,22 @@ function initializeAjaxAddToCart() {
             
             // Get form data
             const formData = new FormData(form);
-            formData.append('action', 'woocommerce_add_to_cart');
+            formData.append('action', 'tostishop_add_to_cart');
+            formData.append('nonce', tostishop_ajax?.nonce || '');
+            
+            // Get product ID and quantity
+            const productId = form.querySelector('input[name="add-to-cart"]')?.value || 
+                             form.querySelector('button[name="add-to-cart"]')?.value ||
+                             form.querySelector('[data-product-id]')?.dataset.productId;
+            const quantity = form.querySelector('input[name="quantity"]')?.value || 1;
+            
+            if (productId) {
+                formData.append('product_id', productId);
+                formData.append('quantity', quantity);
+            }
             
             // Submit via AJAX
-            fetch(wc_add_to_cart_params?.ajax_url || '/wp-admin/admin-ajax.php', {
+            fetch(tostishop_ajax?.ajax_url || '/wp-admin/admin-ajax.php', {
                 method: 'POST',
                 body: formData
             })
@@ -672,7 +675,9 @@ function initializeAjaxAddToCart() {
                     announceToScreenReader('Product added to cart successfully');
                     showNotification('Product added to cart!', 'success');
                     // Update cart count if element exists
-                    updateCartCount();
+                    if (data.data && data.data.cart_count !== undefined) {
+                        updateCartCount(data.data.cart_count);
+                    }
                 } else {
                     announceToScreenReader('Failed to add product to cart');
                     showNotification(data.data || 'Failed to add to cart', 'error');
