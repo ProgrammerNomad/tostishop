@@ -43,9 +43,18 @@ if (empty($product) || !$product->is_visible()) {
         
         <!-- Sale Badge -->
         <?php if ($product->is_on_sale()) : ?>
-            <div class="absolute top-2 left-2 bg-accent text-white text-xs font-bold px-2 py-1 rounded">
-                <?php _e('Sale', 'tostishop'); ?>
-            </div>
+            <?php 
+            $discount_percentage = tostishop_get_discount_percentage($product);
+            if ($discount_percentage) : ?>
+                <div class="absolute top-2 left-2 bg-accent text-white text-xs font-bold px-2 py-1 rounded" 
+                     title="<?php echo esc_attr(sprintf(__('%d%% discount', 'tostishop'), $discount_percentage)); ?>">
+                    -<?php echo esc_html($discount_percentage); ?>%
+                </div>
+            <?php else : ?>
+                <div class="absolute top-2 left-2 bg-accent text-white text-xs font-bold px-2 py-1 rounded">
+                    <?php _e('Sale', 'tostishop'); ?>
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
     
@@ -93,8 +102,21 @@ if (empty($product) || !$product->is_visible()) {
         
         <!-- Price and Stock -->
         <div class="flex items-center justify-between pt-2">
-            <div class="text-base font-bold text-navy-900">
-                <?php echo $product->get_price_html(); ?>
+            <div class="flex items-center space-x-2">
+                <div class="text-base font-bold text-navy-900">
+                    <?php echo $product->get_price_html(); ?>
+                </div>
+                
+                <!-- Discount Percentage Badge -->
+                <?php if ($product->is_on_sale()) : ?>
+                    <?php $discount_percentage = tostishop_get_discount_percentage($product); ?>
+                    <?php if ($discount_percentage) : ?>
+                        <span class="text-xs font-bold text-accent bg-red-50 px-2 py-1 rounded-full border border-red-200 shadow-sm hover:bg-red-100 hover:border-red-300 transition-all duration-200"
+                              title="<?php echo esc_attr(sprintf(__('Save %d%% on this product', 'tostishop'), $discount_percentage)); ?>">
+                            -<?php echo esc_html($discount_percentage); ?>%
+                        </span>
+                    <?php endif; ?>
+                <?php endif; ?>
             </div>
             
             <!-- Stock Status Badge - Only show if out of stock -->

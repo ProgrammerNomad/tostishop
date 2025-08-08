@@ -79,9 +79,28 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
             )
         );
         
-        // Add sale price if on sale
+        // Add sale price and discount information if on sale
         if ($product->is_on_sale() && $product->get_sale_price()) {
             $structured_data['offers']['price'] = $product->get_sale_price();
+            
+            // Add discount percentage for better SEO
+            $discount_percentage = tostishop_get_discount_percentage($product);
+            if ($discount_percentage) {
+                $structured_data['offers']['priceSpecification'] = array(
+                    '@type' => 'PriceSpecification',
+                    'price' => $product->get_sale_price(),
+                    'priceCurrency' => get_woocommerce_currency(),
+                    'valueAddedTaxIncluded' => wc_prices_include_tax() ? 'true' : 'false'
+                );
+                
+                // Add original price as additional property
+                $structured_data['offers']['eligibleTransactionVolume'] = array(
+                    '@type' => 'PriceSpecification',
+                    'price' => $product->get_regular_price(),
+                    'priceCurrency' => get_woocommerce_currency(),
+                    'name' => 'Original Price'
+                );
+            }
         }
     } else {
         $structured_data['offers'] = array(
@@ -408,8 +427,22 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                 <?php endif; ?>
                 
                 <!-- Price -->
-                <div class="text-2xl font-bold text-gray-900 mb-4 product-price" role="text" aria-label="<?php echo esc_attr(sprintf(__('Price: %s', 'tostishop'), strip_tags($product->get_price_html()))); ?>">
-                    <?php echo $product->get_price_html(); ?>
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="text-2xl font-bold text-gray-900 product-price" role="text" aria-label="<?php echo esc_attr(sprintf(__('Price: %s', 'tostishop'), strip_tags($product->get_price_html()))); ?>">
+                        <?php echo $product->get_price_html(); ?>
+                    </div>
+                    
+                    <!-- Discount Percentage Badge -->
+                    <?php if ($product->is_on_sale()) : ?>
+                        <?php $discount_percentage = tostishop_get_discount_percentage($product); ?>
+                        <?php if ($discount_percentage) : ?>
+                            <span class="text-sm font-bold text-accent bg-red-50 px-3 py-1 rounded-full border border-red-200"
+                                  title="<?php echo esc_attr(sprintf(__('You save %d%% on this product', 'tostishop'), $discount_percentage)); ?>"
+                                  role="text" aria-label="<?php echo esc_attr(sprintf(__('%d percent discount', 'tostishop'), $discount_percentage)); ?>">
+                                <?php echo esc_html(sprintf(__('Save %d%%', 'tostishop'), $discount_percentage)); ?>
+                            </span>
+                        <?php endif; ?>
+                    <?php endif; ?>
                 </div>
                 
                 <!-- Short Description -->
@@ -1175,15 +1208,23 @@ if ( ! empty( $related_products ) ) :
                     <!-- Price Section -->
                     <div class="mt-auto">
                         <div class="flex items-center justify-between mb-1">
-                            <div class="text-xs font-bold text-gray-900">
+                            <div class="text-xs font-bold text-gray-900 flex-1">
                                 <?php echo $related_product->get_price_html(); ?>
                             </div>
                             
-                            <!-- Sale Badge -->
+                            <!-- Sale Badge with Discount Percentage -->
                             <?php if ( $related_product->is_on_sale() ) : ?>
-                                <span class="text-xs bg-accent text-white px-1 py-0.5 rounded-full font-medium">
-                                    <?php _e( 'Sale', 'tostishop' ); ?>
-                                </span>
+                                <?php $discount = tostishop_get_discount_percentage($related_product); ?>
+                                <?php if ($discount) : ?>
+                                    <span class="text-xs bg-accent text-white px-1 py-0.5 rounded-full font-medium"
+                                          title="<?php echo esc_attr(sprintf(__('%d%% off', 'tostishop'), $discount)); ?>">
+                                        -<?php echo esc_html($discount); ?>%
+                                    </span>
+                                <?php else : ?>
+                                    <span class="text-xs bg-accent text-white px-1 py-0.5 rounded-full font-medium">
+                                        <?php _e( 'Sale', 'tostishop' ); ?>
+                                    </span>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                         

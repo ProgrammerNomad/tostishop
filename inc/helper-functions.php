@@ -277,6 +277,39 @@ function tostishop_setup_logo() {
 }
 
 /**
+ * Calculate discount percentage for products on sale
+ */
+function tostishop_get_discount_percentage($product) {
+    if (!$product || !$product->is_on_sale()) {
+        return false;
+    }
+    
+    $regular_price = (float) $product->get_regular_price();
+    $sale_price = (float) $product->get_sale_price();
+    
+    if ($regular_price <= 0 || $sale_price <= 0) {
+        return false;
+    }
+    
+    $discount = (($regular_price - $sale_price) / $regular_price) * 100;
+    return round($discount);
+}
+
+/**
+ * Get formatted discount percentage display
+ */
+function tostishop_get_discount_display($product, $show_text = true) {
+    $discount = tostishop_get_discount_percentage($product);
+    
+    if (!$discount) {
+        return '';
+    }
+    
+    $text = $show_text ? __(' Off', 'tostishop') : '';
+    return sprintf('-%d%%%s', $discount, $text);
+}
+
+/**
  * Debug function for development
  */
 function tostishop_debug($data, $label = '') {
