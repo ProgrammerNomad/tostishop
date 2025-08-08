@@ -11,6 +11,7 @@ if (!defined('ABSPATH')) {
 
 /**
  * Handle Firebase login AJAX request - PRODUCTION VERSION
+ * Enhanced with complete WooCommerce user sync workflow
  */
 function tostishop_handle_firebase_login() {
     // Verify nonce
@@ -68,27 +69,32 @@ function tostishop_handle_firebase_login() {
             'picture' => $firebase_user_data['picture'] ?? ''
         );
 
-        // Check if user exists in WordPress
-        $existing_user_id = tostishop_find_existing_user_production($final_user_data);
+        // Use enhanced user checking function
+        $user_check_result = tostishop_check_wc_user_exists($final_user_data);
+        $existing_user_id = $user_check_result['user_id'];
         
         // Handle different scenarios based on flags
         if ($check_user_exists && !$force_registration) {
             // Just checking if user exists
-            if (!$existing_user_id) {
+            if (!$user_check_result['exists']) {
                 wp_send_json_error(array(
                     'message' => 'User not found.',
-                    'code' => 'user_not_found'
+                    'code' => 'user_not_found',
+                    'details' => 'No account found for this ' . $auth_method . '. Please register first.'
                 ));
                 return;
             }
             
-            // User exists, proceed with login
-            wp_set_current_user($existing_user_id);
-            wp_set_auth_cookie($existing_user_id, true);
+            // User exists, proceed with enhanced login
+            $login_success = tostishop_wc_login_user_by_email($final_user_data['email'], $final_user_data);
             
-            // Update last login
-            update_user_meta($existing_user_id, 'firebase_last_login', current_time('mysql'));
-            update_user_meta($existing_user_id, 'firebase_auth_method', $auth_method);
+            if (!$login_success) {
+                wp_send_json_error(array(
+                    'message' => 'Login failed.',
+                    'code' => 'login_failed'
+                ));
+                return;
+            }
             
             // Determine redirect URL
             $redirect_url = home_url('/my-account/');
@@ -100,12 +106,13 @@ function tostishop_handle_firebase_login() {
                 'message' => 'Welcome back!',
                 'redirect_url' => $redirect_url,
                 'user_id' => $existing_user_id,
-                'auth_method' => $auth_method
+                'auth_method' => $auth_method,
+                'found_by' => $user_check_result['found_by']
             ));
             return;
         }
         
-        if ($force_registration || !$existing_user_id) {
+        if ($force_registration || !$user_check_result['exists']) {
             // Create new user or force registration
             
             // For phone auth without email, require email from form
@@ -126,7 +133,8 @@ function tostishop_handle_firebase_login() {
                 return;
             }
             
-            $new_user_id = tostishop_create_user_from_firebase($final_user_data);
+            // Use enhanced user creation function
+            $new_user_id = tostishop_create_wc_user_from_firebase($final_user_data);
             
             if (is_wp_error($new_user_id)) {
                 wp_send_json_error(array(
@@ -137,6 +145,9 @@ function tostishop_handle_firebase_login() {
             }
             
             $existing_user_id = $new_user_id;
+        } else {
+            // Update existing user with latest Firebase data
+            tostishop_update_user_from_firebase($existing_user_id, $final_user_data);
         }
 
         // Log in the user
@@ -349,6 +360,111 @@ function tostishop_create_user_from_firebase($firebase_user_data) {
 }
 
 /**
+ * Login WooCommerce user by email - Enhanced for Firebase integration
+ * @param string $email User email address
+ * @param array $user_data Additional user data from Firebase
+ * @return bool Success status
+ */
+function tostishop_wc_login_user_by_email($email, $user_data = array()) {
+    $user = get_user_by('email', $email);
+    if ($user) {
+        // Set current user and auth cookie
+        wp_set_current_user($user->ID);
+        wp_set_auth_cookie($user->ID, true);
+        
+        // Trigger WordPress login action
+        do_action('wp_login', $user->user_login, $user);
+        
+        // Update last login timestamp
+        update_user_meta($user->ID, 'last_login', current_time('mysql'));
+        
+        // Update Firebase-specific metadata if provided
+        if (!empty($user_data['firebase_uid'])) {
+            update_user_meta($user->ID, 'firebase_uid', $user_data['firebase_uid']);
+        }
+        if (!empty($user_data['auth_method'])) {
+            update_user_meta($user->ID, 'firebase_auth_method', $user_data['auth_method']);
+            update_user_meta($user->ID, 'firebase_last_login', current_time('mysql'));
+        }
+        if (!empty($user_data['phone_number'])) {
+            update_user_meta($user->ID, 'firebase_phone', $user_data['phone_number']);
+            // Also update billing phone for WooCommerce
+            update_user_meta($user->ID, 'billing_phone', $user_data['phone_number']);
+        }
+        
+        error_log('✅ User logged in successfully: ' . $email . ' (ID: ' . $user->ID . ')');
+        return true;
+    }
+    
+    error_log('❌ User not found for email: ' . $email);
+    return false;
+}
+
+/**
+ * Check if WooCommerce user exists and get comprehensive user info
+ * @param array $firebase_user_data Firebase user data
+ * @return array|false User info array or false if not found
+ */
+function tostishop_check_wc_user_exists($firebase_user_data) {
+    $user_info = array(
+        'exists' => false,
+        'user_id' => null,
+        'found_by' => null,
+        'user' => null
+    );
+    
+    // Try by email first (most reliable)
+    if (!empty($firebase_user_data['email'])) {
+        $user = get_user_by('email', $firebase_user_data['email']);
+        if ($user) {
+            $user_info['exists'] = true;
+            $user_info['user_id'] = $user->ID;
+            $user_info['found_by'] = 'email';
+            $user_info['user'] = $user;
+            return $user_info;
+        }
+    }
+    
+    // Try by Firebase UID
+    if (!empty($firebase_user_data['uid'])) {
+        $users = get_users(array(
+            'meta_key' => 'firebase_uid',
+            'meta_value' => $firebase_user_data['uid'],
+            'number' => 1
+        ));
+        
+        if (!empty($users)) {
+            $user = $users[0];
+            $user_info['exists'] = true;
+            $user_info['user_id'] = $user->ID;
+            $user_info['found_by'] = 'firebase_uid';
+            $user_info['user'] = $user;
+            return $user_info;
+        }
+    }
+    
+    // Try by phone number (for phone auth)
+    if (!empty($firebase_user_data['phone_number'])) {
+        $users = get_users(array(
+            'meta_key' => 'firebase_phone',
+            'meta_value' => $firebase_user_data['phone_number'],
+            'number' => 1
+        ));
+        
+        if (!empty($users)) {
+            $user = $users[0];
+            $user_info['exists'] = true;
+            $user_info['user_id'] = $user->ID;
+            $user_info['found_by'] = 'phone_number';
+            $user_info['user'] = $user;
+            return $user_info;
+        }
+    }
+    
+    return $user_info;
+}
+
+/**
  * Generate unique username for production
  */
 function tostishop_generate_unique_username_production($firebase_user_data, $email) {
@@ -404,3 +520,48 @@ function tostishop_send_welcome_email($user_id, $name, $email) {
 // Register AJAX handlers
 add_action('wp_ajax_nopriv_tostishop_firebase_login', 'tostishop_handle_firebase_login');
 add_action('wp_ajax_tostishop_firebase_login', 'tostishop_handle_firebase_login');
+
+// Additional helper endpoint for checking user existence
+add_action('wp_ajax_tostishop_check_firebase_user', 'tostishop_handle_check_firebase_user');
+add_action('wp_ajax_nopriv_tostishop_check_firebase_user', 'tostishop_handle_check_firebase_user');
+
+/**
+ * Handle checking if Firebase user exists in WooCommerce
+ */
+function tostishop_handle_check_firebase_user() {
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'tostishop_firebase_nonce')) {
+        wp_send_json_error(array(
+            'message' => 'Security verification failed.',
+            'code' => 'nonce_failed'
+        ));
+        return;
+    }
+    
+    // Get user identification data
+    $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
+    $phone = isset($_POST['phone']) ? sanitize_text_field($_POST['phone']) : '';
+    $firebase_uid = isset($_POST['firebase_uid']) ? sanitize_text_field($_POST['firebase_uid']) : '';
+    
+    if (empty($email) && empty($phone) && empty($firebase_uid)) {
+        wp_send_json_error(array(
+            'message' => 'At least one identifier is required.',
+            'code' => 'no_identifier'
+        ));
+        return;
+    }
+    
+    $user_data = array();
+    if (!empty($email)) $user_data['email'] = $email;
+    if (!empty($phone)) $user_data['phone_number'] = $phone;
+    if (!empty($firebase_uid)) $user_data['uid'] = $firebase_uid;
+    
+    $user_check = tostishop_check_wc_user_exists($user_data);
+    
+    wp_send_json_success(array(
+        'exists' => $user_check['exists'],
+        'user_id' => $user_check['user_id'],
+        'found_by' => $user_check['found_by'],
+        'needs_email_update' => $user_check['exists'] ? tostishop_user_needs_email_update($user_check['user_id']) : false
+    ));
+}

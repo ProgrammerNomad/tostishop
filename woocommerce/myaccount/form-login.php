@@ -677,6 +677,107 @@ do_action( 'woocommerce_before_customer_login_form' ); ?>
 
 <?php do_action( 'woocommerce_after_customer_login_form' ); ?>
 
+<!-- 📱 PHONE REGISTRATION MODAL - New User Information Collection -->
+<div id="phone-registration-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+        
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-navy-900 to-navy-800 text-white p-6 rounded-t-2xl">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Phone Verified!</h3>
+                        <p class="text-blue-100 text-sm">Complete your account setup</p>
+                    </div>
+                </div>
+                <button id="close-phone-modal-btn" class="text-blue-100 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6">
+            
+            <!-- Verified Phone Display -->
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                    </svg>
+                    <div>
+                        <p class="text-sm text-green-800 font-medium">Verified Phone Number</p>
+                        <p id="verified-phone-display" class="text-green-700 font-mono">+91 XXXXXXXXXX</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registration Form -->
+            <form class="space-y-4">
+                
+                <!-- Name Input -->
+                <div>
+                    <label for="phone-register-name" class="block text-sm font-medium text-gray-700 mb-2">
+                        Full Name <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" 
+                           id="phone-register-name" 
+                           name="phone-register-name" 
+                           class="w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-navy-500 transition-colors"
+                           placeholder="Enter your full name"
+                           required>
+                </div>
+
+                <!-- Email Input -->
+                <div>
+                    <label for="phone-register-email" class="block text-sm font-medium text-gray-700 mb-2">
+                        Email Address <span class="text-red-500">*</span>
+                    </label>
+                    <input type="email" 
+                           id="phone-register-email" 
+                           name="phone-register-email" 
+                           class="w-full py-3 px-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-navy-500 transition-colors"
+                           placeholder="Enter your email address"
+                           required>
+                </div>
+
+                <!-- Terms & Privacy -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="text-xs text-gray-600 leading-relaxed">
+                        <p>By creating an account, you agree to our 
+                        <a href="#" class="text-accent hover:text-red-600 font-medium">Terms of Service</a> and 
+                        <a href="#" class="text-accent hover:text-red-600 font-medium">Privacy Policy</a>.</p>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3 pt-4">
+                    <button type="button" id="close-phone-modal-btn-2" 
+                            class="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium">
+                        Cancel
+                    </button>
+                    <button type="button" id="complete-phone-registration-btn"
+                            class="flex-1 px-6 py-3 bg-accent text-white rounded-lg hover:bg-red-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl">
+                        <span class="flex items-center justify-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            <span>Create Account</span>
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- Enhanced Modal Styling for Desktop -->
 <style>
 /* Modal backdrop blur and improved animations */

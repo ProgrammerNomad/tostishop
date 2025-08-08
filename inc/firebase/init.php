@@ -21,6 +21,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/enqueue.php';
 require_once __DIR__ . '/ajax-handlers.php';
 require_once __DIR__ . '/token-verification.php';
+require_once __DIR__ . '/user-management.php';
 
 /**
  * Initialize Firebase Authentication System

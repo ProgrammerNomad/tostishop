@@ -1,21 +1,21 @@
 /**
- * Firebase Authentication for TostiShop WooCommerce Login
- * Mobile-First Authentication with OTP, Google, and Email fallback
- * Enhanced with Phone Registration Flow for New Users
+ * TostiShop Firebase Authentication
+ * Clean implementation with Firestore integration
  */
 
-class TostiShopFirebaseAuth {
+class TostiShopAuth {
     constructor() {
         this.firebaseConfig = window.tostiShopFirebaseConfig || {};
+        this.auth = null;
+        this.db = null;
         this.currentUser = null;
         this.confirmationResult = null;
-        this.pendingPhoneUser = null; // Store pending phone user for registration
+        this.recaptchaVerifier = null;
         this.init();
     }
 
     async init() {
         try {
-            // Wait for Firebase to load
             if (typeof firebase === 'undefined') {
                 console.error('Firebase SDK not loaded');
                 return;
@@ -27,218 +27,125 @@ class TostiShopFirebaseAuth {
             }
 
             this.auth = firebase.auth();
-            this.setupAuthStateListener();
-            this.setupEventListeners();
+            this.db = firebase.firestore();
             
-            // Setup reCAPTCHA only if container exists and not already setup
-            const recaptchaContainer = document.getElementById('recaptcha-container');
-            if (recaptchaContainer && !this.recaptchaVerifier) {
-                this.setupReCaptcha();
-            }
-
-            console.log('TostiShop Firebase Auth initialized');
+            this.setupEventListeners();
+            this.setupRecaptcha();
+            
+            console.log('TostiShop Auth initialized');
         } catch (error) {
             console.error('Firebase initialization error:', error);
-            this.showError('Authentication service unavailable. Please try email login.');
+            this.showError('Authentication service unavailable');
         }
     }
 
-    setupAuthStateListener() {
-        this.auth.onAuthStateChanged((user) => {
-            this.currentUser = user;
-            if (user) {
-                console.log('User signed in:', user.uid);
-                this.handleSuccessfulLogin(user);
-            } else {
-                console.log('User signed out');
-            }
-        });
-    }
-
     setupEventListeners() {
-        // Mobile OTP Events
+        // Phone authentication
         document.getElementById('send-otp-btn')?.addEventListener('click', () => this.sendOTP());
         document.getElementById('verify-otp-btn')?.addEventListener('click', () => this.verifyOTP());
         document.getElementById('resend-otp-btn')?.addEventListener('click', () => this.resendOTP());
 
-        // Google Login Event
-        document.getElementById('google-login-btn')?.addEventListener('click', () => this.signInWithGoogle());
+        // Google authentication
+        document.getElementById('google-login-btn')?.addEventListener('click', () => this.googleLogin());
 
-        // Phone Registration Events
-        document.getElementById('complete-phone-registration-btn')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.completePhoneRegistration();
-        });
+        // Email authentication
+        document.getElementById('email-login-btn')?.addEventListener('click', () => this.emailLogin());
+        document.getElementById('email-register-btn')?.addEventListener('click', () => this.emailRegister());
 
-        // Mobile number formatting
+        // Phone registration modal
+        document.getElementById('complete-phone-registration-btn')?.addEventListener('click', () => this.completePhoneRegistration());
+        document.getElementById('close-phone-modal-btn')?.addEventListener('click', () => this.closePhoneModal());
+
+        // Mobile number validation
         const mobileInput = document.getElementById('mobile-number');
         if (mobileInput) {
-            mobileInput.addEventListener('input', this.formatMobileNumber.bind(this));
-            mobileInput.addEventListener('keypress', this.onlyNumbers.bind(this));
-        }
-
-        // OTP input formatting
-        const otpInput = document.getElementById('otp-code');
-        if (otpInput) {
-            otpInput.addEventListener('input', this.formatOTPInput.bind(this));
-            otpInput.addEventListener('keypress', this.onlyNumbers.bind(this));
+            mobileInput.addEventListener('input', this.validateMobileNumber.bind(this));
         }
     }
 
-    setupReCaptcha() {
+    setupRecaptcha() {
         try {
-            // Clear existing reCAPTCHA container
-            const recaptchaContainer = document.getElementById('recaptcha-container');
-            if (recaptchaContainer) {
-                recaptchaContainer.innerHTML = '';
-            }
+            const container = document.getElementById('recaptcha-container');
+            if (!container) return;
 
-            // Destroy existing verifier if it exists
             if (this.recaptchaVerifier) {
-                try {
-                    this.recaptchaVerifier.clear();
-                } catch (e) {
-                    // Ignore clear errors
-                }
-                this.recaptchaVerifier = null;
+                this.recaptchaVerifier.clear();
             }
 
             this.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
                 'size': 'normal',
-                'callback': (response) => {
-                    console.log('reCAPTCHA solved');
-                },
-                'expired-callback': () => {
-                    console.log('reCAPTCHA expired');
-                    this.showError('Security verification expired. Please try again.');
-                },
-                'theme': 'light'
+                'callback': () => console.log('reCAPTCHA solved'),
+                'expired-callback': () => this.showError('reCAPTCHA expired. Please try again.')
             });
 
-            return this.recaptchaVerifier.render();
+            this.recaptchaVerifier.render();
         } catch (error) {
             console.error('reCAPTCHA setup error:', error);
-            
-            // If it's already rendered error, try to clear and retry once
-            if (error.message && error.message.includes('already been rendered')) {
-                console.log('Attempting to recover from reCAPTCHA already rendered error...');
-                const recaptchaContainer = document.getElementById('recaptcha-container');
-                if (recaptchaContainer) {
-                    recaptchaContainer.innerHTML = '';
-                    // Wait and try again
-                    setTimeout(() => {
-                        try {
-                            this.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-                                'size': 'normal',
-                                'callback': (response) => {
-                                    console.log('reCAPTCHA solved');
-                                },
-                                'expired-callback': () => {
-                                    console.log('reCAPTCHA expired');
-                                    this.showError('Security verification expired. Please try again.');
-                                },
-                                'theme': 'light'
-                            });
-                            this.recaptchaVerifier.render();
-                        } catch (retryError) {
-                            console.error('reCAPTCHA retry failed:', retryError);
-                            this.showError('Please refresh the page and try again.');
-                        }
-                    }, 500);
-                }
-            } else {
-                this.showError('Security verification unavailable. Please try email login.');
-            }
         }
     }
 
+    // ============================================
+    // 1. PHONE NUMBER AUTHENTICATION
+    // ============================================
+
     async sendOTP() {
         try {
-            const countryCode = document.getElementById('country-code').value;
-            const mobileNumber = document.getElementById('mobile-number').value;
+            const mobileNumber = document.getElementById('mobile-number').value.trim();
             
-            if (!this.validateMobileNumber(mobileNumber)) {
-                this.showError('Please enter a valid 10-digit mobile number.');
+            if (!this.isValidMobile(mobileNumber)) {
+                this.showError('Please enter a valid 10-digit mobile number');
                 return;
             }
 
-            const fullPhoneNumber = countryCode + mobileNumber;
-            
+            const fullPhoneNumber = '+91' + mobileNumber;
             this.showLoading();
-            
-            // Ensure reCAPTCHA is ready
-            if (!this.recaptchaVerifier) {
-                this.setupReCaptcha();
-                // Wait for reCAPTCHA to be ready
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-            
+
             this.confirmationResult = await this.auth.signInWithPhoneNumber(
                 fullPhoneNumber, 
                 this.recaptchaVerifier
             );
 
-            console.log('OTP sent successfully');
-            this.showOTPSection();
-            this.showSuccess('OTP sent to your mobile number. Please check your SMS.');
+            this.switchView('otp');
+            this.showSuccess('OTP sent to your mobile number');
             this.hideLoading();
 
         } catch (error) {
-            console.error('OTP send error:', error);
+            console.error('Send OTP error:', error);
             this.hideLoading();
-            
-            let errorMessage = 'Failed to send OTP. Please try again.';
-            
-            if (error.code === 'auth/invalid-phone-number') {
-                errorMessage = 'Invalid phone number format.';
-            } else if (error.code === 'auth/too-many-requests') {
-                errorMessage = 'Too many requests. Please try again later.';
-            } else if (error.code === 'auth/captcha-check-failed') {
-                errorMessage = 'Security verification failed. Please refresh and try again.';
-            } else if (error.message && error.message.includes('reCAPTCHA')) {
-                errorMessage = 'Please refresh the page and try again.';
-                // Reset reCAPTCHA for next attempt
-                this.recaptchaVerifier = null;
-            }
-            
-            this.showError(errorMessage);
+            this.showError('Failed to send OTP. Please try again.');
         }
     }
 
     async verifyOTP() {
         try {
-            const otpCode = document.getElementById('otp-code').value;
+            const otpCode = document.getElementById('otp-code').value.trim();
             
-            if (!this.validateOTP(otpCode)) {
-                this.showError('Please enter a valid 6-digit OTP.');
-                return;
-            }
-
-            if (!this.confirmationResult) {
-                this.showError('Please request OTP first.');
+            if (otpCode.length !== 6) {
+                this.showError('Please enter a valid 6-digit OTP');
                 return;
             }
 
             this.showLoading();
 
             const result = await this.confirmationResult.confirm(otpCode);
-            console.log('OTP verified successfully:', result.user.uid);
+            const user = result.user;
+
+            // Enhanced: Check if user exists in Firestore AND WooCommerce
+            const userDoc = await this.db.collection('users').doc(user.uid).get();
             
-            // User is automatically signed in, onAuthStateChanged will handle the rest
+            if (userDoc.exists) {
+                // User exists in Firestore - check WooCommerce user sync
+                const firestoreData = userDoc.data();
+                await this.syncFirebaseWithWooCommerce(user, firestoreData, 'phone');
+            } else {
+                // New user - show registration modal to collect name + email
+                this.showPhoneRegistrationModal(user);
+            }
 
         } catch (error) {
             console.error('OTP verification error:', error);
             this.hideLoading();
-            
-            let errorMessage = 'Invalid OTP. Please try again.';
-            
-            if (error.code === 'auth/invalid-verification-code') {
-                errorMessage = 'The OTP you entered is incorrect.';
-            } else if (error.code === 'auth/code-expired') {
-                errorMessage = 'OTP has expired. Please request a new one.';
-            }
-            
-            this.showError(errorMessage);
+            this.showError('Invalid OTP. Please try again.');
         }
     }
 
@@ -246,44 +153,91 @@ class TostiShopFirebaseAuth {
         try {
             this.showLoading();
             
-            // Properly clear and reset reCAPTCHA
+            // Reset reCAPTCHA
             if (this.recaptchaVerifier) {
-                try {
-                    this.recaptchaVerifier.clear();
-                } catch (clearError) {
-                    console.log('reCAPTCHA clear error (expected):', clearError.message);
-                }
-                this.recaptchaVerifier = null;
+                this.recaptchaVerifier.clear();
+                this.setupRecaptcha();
             }
-            
-            // Clear the container and setup fresh reCAPTCHA
-            const recaptchaContainer = document.getElementById('recaptcha-container');
-            if (recaptchaContainer) {
-                recaptchaContainer.innerHTML = '';
-            }
-            
-            // Wait a moment for DOM to be ready
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            // Setup fresh reCAPTCHA
-            this.setupReCaptcha();
-            
-            // Wait another moment for reCAPTCHA to be ready
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Send new OTP
-            await this.sendOTP();
-            
-            this.hideLoading();
 
+            await this.sendOTP();
         } catch (error) {
             console.error('Resend OTP error:', error);
             this.hideLoading();
-            this.showError('Failed to resend OTP. Please refresh the page and try again.');
+            this.showError('Failed to resend OTP');
         }
     }
 
-    async signInWithGoogle() {
+    showPhoneRegistrationModal(user) {
+        this.hideLoading();
+        this.currentUser = user;
+        
+        // Update phone display in modal
+        const phoneDisplay = document.getElementById('verified-phone-display');
+        if (phoneDisplay) {
+            phoneDisplay.textContent = user.phoneNumber;
+        }
+        
+        // Show modal
+        document.getElementById('phone-registration-modal').classList.remove('hidden');
+    }
+
+    async completePhoneRegistration() {
+        try {
+            const name = document.getElementById('phone-register-name').value.trim();
+            const email = document.getElementById('phone-register-email').value.trim();
+            
+            if (!name) {
+                this.showError('Please enter your full name');
+                return;
+            }
+            
+            if (!this.isValidEmail(email)) {
+                this.showError('Please enter a valid email address');
+                return;
+            }
+
+            this.showLoading();
+
+            // Update Firebase user profile
+            await this.currentUser.updateProfile({
+                displayName: name
+            });
+
+            // Save user data to Firestore
+            const userData = {
+                uid: this.currentUser.uid,
+                name: name,
+                email: email,
+                phone: this.currentUser.phoneNumber,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                authMethod: 'phone',
+                emailVerified: false
+            };
+
+            await this.db.collection('users').doc(this.currentUser.uid).set(userData);
+
+            // Sync with WooCommerce (force registration)
+            await this.syncFirebaseWithWooCommerce(this.currentUser, userData, 'phone', true);
+
+        } catch (error) {
+            console.error('Phone registration error:', error);
+            this.hideLoading();
+            this.showError('Registration failed. Please try again.');
+        }
+    }
+
+    closePhoneModal() {
+        document.getElementById('phone-registration-modal')?.classList.add('hidden');
+        // Clear form
+        document.getElementById('phone-register-name').value = '';
+        document.getElementById('phone-register-email').value = '';
+    }
+
+    // ============================================
+    // 2. GOOGLE AUTHENTICATION
+    // ============================================
+
+    async googleLogin() {
         try {
             this.showLoading();
             
@@ -292,85 +246,269 @@ class TostiShopFirebaseAuth {
             provider.addScope('profile');
 
             const result = await this.auth.signInWithPopup(provider);
-            console.log('Google sign-in successful:', result.user.uid);
+            const user = result.user;
+
+            // Check if user exists in Firestore and sync with WooCommerce
+            const userDoc = await this.db.collection('users').doc(user.uid).get();
             
-            // User is automatically signed in, onAuthStateChanged will handle the rest
+            if (userDoc.exists) {
+                // User exists in Firestore - sync with WooCommerce
+                await this.syncFirebaseWithWooCommerce(user, userDoc.data(), 'google');
+            } else {
+                // New Google user - create Firestore profile and sync
+                const userData = {
+                    uid: user.uid,
+                    name: user.displayName,
+                    email: user.email,
+                    phone: user.phoneNumber || '',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    authMethod: 'google',
+                    emailVerified: user.emailVerified,
+                    photoURL: user.photoURL || ''
+                };
+                
+                await this.db.collection('users').doc(user.uid).set(userData);
+                await this.syncFirebaseWithWooCommerce(user, userData, 'google', true);
+            }
 
         } catch (error) {
-            console.error('Google sign-in error:', error);
+            console.error('Google login error:', error);
             this.hideLoading();
             
-            let errorMessage = 'Google sign-in failed. Please try again.';
-            
             if (error.code === 'auth/popup-closed-by-user') {
-                errorMessage = 'Sign-in cancelled.';
-            } else if (error.code === 'auth/popup-blocked') {
-                errorMessage = 'Pop-up blocked. Please allow pop-ups and try again.';
+                this.showError('Login cancelled');
+            } else {
+                this.showError('Google login failed. Please try again.');
             }
-            
-            this.showError(errorMessage);
         }
     }
 
-    async handleSuccessfulLogin(user) {
+    // ============================================
+    // 3. EMAIL/PASSWORD AUTHENTICATION
+    // ============================================
+
+    async emailLogin() {
         try {
+            const email = document.getElementById('email-login').value.trim();
+            const password = document.getElementById('password-login').value.trim();
+            
+            if (!email || !password) {
+                this.showError('Please enter both email and password');
+                return;
+            }
+
             this.showLoading();
+
+            const result = await this.auth.signInWithEmailAndPassword(email, password);
+            const user = result.user;
+
+            // Get user data from Firestore and sync with WooCommerce
+            const userDoc = await this.db.collection('users').doc(user.uid).get();
             
-            // Get ID token for WordPress authentication
-            const idToken = await user.getIdToken();
+            if (userDoc.exists) {
+                // User exists in Firestore - sync with WooCommerce
+                await this.syncFirebaseWithWooCommerce(user, userDoc.data(), 'email');
+            } else {
+                // Fallback: create basic user data if missing
+                const userData = {
+                    uid: user.uid,
+                    name: user.displayName || 'User',
+                    email: user.email,
+                    phone: '',
+                    authMethod: 'email',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    emailVerified: user.emailVerified
+                };
+                
+                await this.db.collection('users').doc(user.uid).set(userData);
+                await this.syncFirebaseWithWooCommerce(user, userData, 'email', true);
+            }
+
+        } catch (error) {
+            console.error('Email login error:', error);
+            this.hideLoading();
             
-            // Extract user information from Firebase user object
+            if (error.code === 'auth/user-not-found') {
+                this.showError('Account not found, please register');
+            } else if (error.code === 'auth/wrong-password') {
+                this.showError('Invalid email or password');
+            } else {
+                this.showError('Login failed. Please try again.');
+            }
+        }
+    }
+
+    async emailRegister() {
+        try {
+            const name = document.getElementById('name-register').value.trim();
+            const email = document.getElementById('email-register').value.trim();
+            const password = document.getElementById('password-register').value.trim();
+            
+            if (!name) {
+                this.showError('Please enter your full name');
+                return;
+            }
+            
+            if (!this.isValidEmail(email)) {
+                this.showError('Please enter a valid email address');
+                return;
+            }
+            
+            if (password.length < 6) {
+                this.showError('Password must be at least 6 characters');
+                return;
+            }
+
+            this.showLoading();
+
+            const result = await this.auth.createUserWithEmailAndPassword(email, password);
+            const user = result.user;
+
+            // Update profile
+            await user.updateProfile({
+                displayName: name
+            });
+
+            // Save to Firestore and sync with WooCommerce
             const userData = {
+                uid: user.uid,
+                name: name,
+                email: email,
+                phone: '',
+                authMethod: 'email',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                emailVerified: user.emailVerified
+            };
+
+            await this.db.collection('users').doc(user.uid).set(userData);
+            await this.syncFirebaseWithWooCommerce(user, userData, 'email', true);
+
+        } catch (error) {
+            console.error('Email registration error:', error);
+            this.hideLoading();
+            
+            if (error.code === 'auth/email-already-in-use') {
+                this.showError('Email already in use');
+            } else if (error.code === 'auth/weak-password') {
+                this.showError('Password is too weak');
+            } else {
+                this.showError('Registration failed. Please try again.');
+            }
+        }
+    }
+
+    // ============================================
+    // COMMON METHODS
+    // ============================================
+    // FIREBASE + WOOCOMMERCE SYNC SYSTEM
+    // ============================================
+
+    /**
+     * Enhanced Firebase + WooCommerce User Sync
+     * Handles all authentication scenarios with proper user flow
+     */
+    async syncFirebaseWithWooCommerce(firebaseUser, userData, authMethod, forceRegistration = false) {
+        try {
+            // Get Firebase ID token
+            const idToken = await firebaseUser.getIdToken();
+            
+            // Prepare user data for backend
+            const syncData = {
                 action: 'tostishop_firebase_login',
                 firebase_token: idToken,
-                nonce: tostiShopAjax.nonce,
-                
-                // Real user data from Firebase
-                user_uid: user.uid,
-                user_email: user.email || '',
-                user_name: user.displayName || '',
-                phone_number: user.phoneNumber || '',
-                email_verified: user.emailVerified || false,
-                
-                // Provider information
-                auth_method: this.getAuthMethod(user),
-                
-                // Additional context
-                from_checkout: window.location.pathname.includes('checkout'),
-                check_user_exists: true // Add flag to check if user exists first
+                auth_method: authMethod,
+                user_uid: firebaseUser.uid,
+                user_email: userData.email || firebaseUser.email || '',
+                user_name: userData.name || firebaseUser.displayName || '',
+                phone_number: userData.phone || firebaseUser.phoneNumber || '',
+                email_verified: firebaseUser.emailVerified,
+                force_registration: forceRegistration,
+                check_user_exists: !forceRegistration,
+                from_checkout: window.location.href.includes('checkout'),
+                nonce: tostiShopAjax.nonce
             };
-            
-            console.log('🔥 Checking user existence in WordPress:', userData);
-            
-            // Send to WordPress backend to check if user exists
+
+            // Send to WordPress backend
             const response = await fetch(tostiShopAjax.ajaxurl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: new URLSearchParams(userData)
+                body: new URLSearchParams(syncData)
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                this.hideLoading();
+                this.showSuccess(result.data.message || 'Login successful! Redirecting...');
+                
+                // Log successful sync
+                console.log('✅ Firebase + WooCommerce sync successful:', {
+                    method: authMethod,
+                    userId: result.data.user_id,
+                    foundBy: result.data.found_by
+                });
+                
+                // Redirect after short delay
+                setTimeout(() => {
+                    window.location.href = result.data.redirect_url || '/my-account/';
+                }, 1500);
+                
+            } else {
+                this.hideLoading();
+                
+                // Handle specific error cases
+                if (result.data.code === 'user_not_found' && authMethod === 'phone') {
+                    // For phone auth, show registration modal
+                    this.showPhoneRegistrationModal(firebaseUser);
+                    return;
+                } else if (result.data.code === 'email_required') {
+                    this.showError('Email address is required to complete registration');
+                    return;
+                } else {
+                    throw new Error(result.data.message || 'Authentication failed');
+                }
+            }
+
+        } catch (error) {
+            console.error('❌ Firebase + WooCommerce sync error:', error);
+            this.hideLoading();
+            this.showError(error.message || 'Authentication failed. Please try again.');
+        }
+    }
+
+    // ============================================
+    // LEGACY LOGIN METHOD (Kept for compatibility)
+    // ============================================
+
+    async loginUser(firebaseUser, userData) {
+        try {
+            // Get Firebase ID token
+            const idToken = await firebaseUser.getIdToken();
+            
+            // Send to WordPress backend
+            const response = await fetch(tostiShopAjax.ajaxurl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    action: 'tostishop_firebase_login',
+                    firebase_token: idToken,
+                    user_data: JSON.stringify(userData),
+                    nonce: tostiShopAjax.nonce
+                })
             });
 
             const data = await response.json();
             
             if (data.success) {
-                // User exists, proceed with login
                 this.showSuccess('Login successful! Redirecting...');
                 
-                // Redirect after successful login
                 setTimeout(() => {
                     window.location.href = data.data.redirect_url || '/my-account/';
                 }, 1500);
-                
-            } else if (data.data && data.data.code === 'user_not_found' && this.getAuthMethod(user) === 'phone') {
-                // New phone user - show registration form
-                this.hideLoading();
-                this.showPhoneRegistrationForm(user);
-                
-            } else if (data.data && data.data.code === 'user_not_found' && this.getAuthMethod(user) === 'google') {
-                // New Google user - auto-register since Google provides name and email
-                await this.completeGoogleRegistration(user);
-                
             } else {
                 throw new Error(data.data.message || 'Login failed');
             }
@@ -378,315 +516,118 @@ class TostiShopFirebaseAuth {
         } catch (error) {
             console.error('WordPress login error:', error);
             this.hideLoading();
-            this.showError('Login failed. Please try again or use email login.');
-            
-            // Sign out from Firebase since WordPress login failed
-            this.auth.signOut();
+            this.showError('Login failed. Please try again.');
         }
     }
 
-    // New method to show phone registration form
-    showPhoneRegistrationForm(user) {
-        // Store user data for later use
-        this.pendingPhoneUser = user;
+    // ============================================
+    // UTILITY METHODS
+    // ============================================
+
+    validateMobileNumber() {
+        const input = document.getElementById('mobile-number');
+        const button = document.getElementById('send-otp-btn');
+        const value = input.value.replace(/\D/g, '');
         
-        // Update the phone display in the form
-        const phoneDisplay = document.getElementById('verified-phone-display');
-        if (phoneDisplay && user.phoneNumber) {
-            phoneDisplay.textContent = user.phoneNumber;
-        }
-        
-        // Switch to registration view using Alpine.js
-        const authContainer = document.querySelector('[x-data]');
-        if (authContainer && authContainer._x_dataStack && authContainer._x_dataStack[0]) {
-            authContainer._x_dataStack[0].currentView = 'phone-register';
-        }
-        
-        console.log('📱 Showing phone registration form for new user');
-    }
-
-    // New method to handle Google auto-registration
-    async completeGoogleRegistration(user) {
-        try {
-            this.showLoading();
-            
-            // Get ID token for WordPress authentication
-            const idToken = await user.getIdToken();
-            
-            // Send complete registration data to WordPress
-            const userData = {
-                action: 'tostishop_firebase_login',
-                firebase_token: idToken,
-                nonce: tostiShopAjax.nonce,
-                
-                // Real user data from Firebase
-                user_uid: user.uid,
-                user_email: user.email || '',
-                user_name: user.displayName || '',
-                phone_number: user.phoneNumber || '',
-                email_verified: user.emailVerified || false,
-                
-                // Provider information
-                auth_method: this.getAuthMethod(user),
-                
-                // Additional context
-                from_checkout: window.location.pathname.includes('checkout'),
-                force_registration: true // Force account creation
-            };
-            
-            console.log('🔥 Auto-registering Google user:', userData);
-            
-            const response = await fetch(tostiShopAjax.ajaxurl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams(userData)
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                this.showSuccess('Welcome to TostiShop! Account created successfully. Redirecting...');
-                
-                // Redirect after successful registration
-                setTimeout(() => {
-                    window.location.href = data.data.redirect_url || '/my-account/';
-                }, 1500);
-                
-            } else {
-                throw new Error(data.data.message || 'Registration failed');
-            }
-
-        } catch (error) {
-            console.error('Google auto-registration error:', error);
-            this.hideLoading();
-            this.showError('Registration failed. Please try again or use email registration.');
-            
-            // Sign out from Firebase since WordPress registration failed
-            this.auth.signOut();
-        }
-    }
-
-    // New method to complete phone registration
-    async completePhoneRegistration() {
-        try {
-            // Get form data
-            const name = document.getElementById('phone-register-name').value.trim();
-            const email = document.getElementById('phone-register-email').value.trim();
-            const termsAccepted = document.getElementById('phone-register-terms').checked;
-            
-            // Validate form
-            if (!name) {
-                this.showError('Please enter your full name.');
-                return;
-            }
-            
-            if (!email || !this.validateEmail(email)) {
-                this.showError('Please enter a valid email address.');
-                return;
-            }
-            
-            if (!termsAccepted) {
-                this.showError('Please accept the Terms of Service and Privacy Policy.');
-                return;
-            }
-            
-            if (!this.pendingPhoneUser) {
-                this.showError('Session expired. Please start over.');
-                return;
-            }
-            
-            this.showLoading();
-            
-            // Get ID token for WordPress authentication
-            const idToken = await this.pendingPhoneUser.getIdToken();
-            
-            // Send complete registration data to WordPress
-            const userData = {
-                action: 'tostishop_firebase_login',
-                firebase_token: idToken,
-                nonce: tostiShopAjax.nonce,
-                
-                // Real user data from Firebase
-                user_uid: this.pendingPhoneUser.uid,
-                user_email: email, // Use form email
-                user_name: name, // Use form name
-                phone_number: this.pendingPhoneUser.phoneNumber || '',
-                email_verified: false, // Phone users need to verify email separately
-                
-                // Provider information
-                auth_method: 'phone',
-                
-                // Additional context
-                from_checkout: window.location.pathname.includes('checkout'),
-                force_registration: true // Force account creation
-            };
-            
-            console.log('🔥 Completing phone registration:', userData);
-            
-            const response = await fetch(tostiShopAjax.ajaxurl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams(userData)
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                this.showSuccess('Welcome to TostiShop! Account created successfully. Redirecting...');
-                
-                // Clear pending user data
-                this.pendingPhoneUser = null;
-                
-                // Redirect after successful registration
-                setTimeout(() => {
-                    window.location.href = data.data.redirect_url || '/my-account/';
-                }, 1500);
-                
-            } else {
-                throw new Error(data.data.message || 'Registration failed');
-            }
-
-        } catch (error) {
-            console.error('Phone registration completion error:', error);
-            this.hideLoading();
-            this.showError('Registration failed. Please try again.');
-        }
-    }
-
-    // Helper method to validate email
-    validateEmail(email) {
-        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return re.test(email);
-    }
-
-    // Helper method to determine authentication method
-    getAuthMethod(user) {
-        if (user.phoneNumber) {
-            return 'phone';
-        }
-        
-        if (user.providerData && user.providerData.length > 0) {
-            const provider = user.providerData[0];
-            if (provider.providerId === 'google.com') {
-                return 'google';
-            } else if (provider.providerId === 'password') {
-                return 'email';
-            }
-        }
-        
-        return 'email'; // default
-    }
-
-    // Utility Methods
-    validateMobileNumber(number) {
-        return /^[0-9]{10}$/.test(number);
-    }
-
-    validateOTP(otp) {
-        return /^[0-9]{6}$/.test(otp);
-    }
-
-    formatMobileNumber(event) {
-        let value = event.target.value.replace(/\D/g, '');
+        // Limit to 10 digits
         if (value.length > 10) {
-            value = value.slice(0, 10);
-        }
-        event.target.value = value;
-    }
-
-    formatOTPInput(event) {
-        let value = event.target.value.replace(/\D/g, '');
-        if (value.length > 6) {
-            value = value.slice(0, 6);
-        }
-        event.target.value = value;
-    }
-
-    onlyNumbers(event) {
-        const char = String.fromCharCode(event.which);
-        if (!/[0-9]/.test(char)) {
-            event.preventDefault();
-        }
-    }
-
-    showOTPSection() {
-        // Switch to OTP view using Alpine.js
-        const authContainer = document.querySelector('[x-data]');
-        if (authContainer && authContainer._x_dataStack && authContainer._x_dataStack[0]) {
-            authContainer._x_dataStack[0].currentView = 'otp';
+            input.value = value.slice(0, 10);
+            return;
         }
         
-        // Update phone display
-        const phoneDisplay = document.getElementById('otp-phone-display');
-        const countryCode = document.getElementById('country-code').value;
-        const mobileNumber = document.getElementById('mobile-number').value;
-        if (phoneDisplay) {
-            phoneDisplay.textContent = countryCode + ' ' + mobileNumber;
+        input.value = value;
+        
+        // Enable/disable button
+        if (this.isValidMobile(value)) {
+            button.disabled = false;
+            button.classList.remove('bg-gray-300', 'cursor-not-allowed');
+            button.classList.add('bg-accent', 'hover:bg-red-600', 'cursor-pointer');
+        } else {
+            button.disabled = true;
+            button.classList.remove('bg-accent', 'hover:bg-red-600', 'cursor-pointer');
+            button.classList.add('bg-gray-300', 'cursor-not-allowed');
+        }
+    }
+
+    isValidMobile(number) {
+        return /^[6-9][0-9]{9}$/.test(number);
+    }
+
+    isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    switchView(view) {
+        // Hide all views
+        document.querySelectorAll('[x-show]').forEach(el => el.style.display = 'none');
+        
+        // Show target view
+        const targetView = document.querySelector(`[x-show="currentView === '${view}'"]`);
+        if (targetView) {
+            targetView.style.display = 'block';
         }
         
-        // Focus OTP input
-        setTimeout(() => {
-            document.getElementById('otp-code')?.focus();
-        }, 100);
+        // Update phone display for OTP view
+        if (view === 'otp') {
+            const phoneDisplay = document.getElementById('otp-phone-display');
+            const mobileNumber = document.getElementById('mobile-number').value;
+            if (phoneDisplay && mobileNumber) {
+                phoneDisplay.textContent = '+91 ' + mobileNumber;
+            }
+        }
     }
 
     showLoading() {
-        document.getElementById('loading-overlay').classList.remove('hidden');
+        document.getElementById('loading-overlay')?.classList.remove('hidden');
     }
 
     hideLoading() {
-        document.getElementById('loading-overlay').classList.add('hidden');
+        document.getElementById('loading-overlay')?.classList.add('hidden');
     }
 
     showError(message) {
         const errorDiv = document.getElementById('firebase-error');
         const messageDiv = document.getElementById('firebase-error-message');
         
-        messageDiv.textContent = message;
-        errorDiv.classList.remove('hidden');
-        
-        // Hide success message if shown
-        document.getElementById('firebase-success').classList.add('hidden');
-        
-        // Auto-hide after 10 seconds
-        setTimeout(() => {
-            errorDiv.classList.add('hidden');
-        }, 10000);
+        if (errorDiv && messageDiv) {
+            messageDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            
+            // Hide success message
+            document.getElementById('firebase-success')?.classList.add('hidden');
+            
+            // Auto-hide after 8 seconds
+            setTimeout(() => {
+                errorDiv.classList.add('hidden');
+            }, 8000);
+        }
     }
 
     showSuccess(message) {
         const successDiv = document.getElementById('firebase-success');
         const messageDiv = document.getElementById('firebase-success-message');
         
-        messageDiv.textContent = message;
-        successDiv.classList.remove('hidden');
-        
-        // Hide error message if shown
-        document.getElementById('firebase-error').classList.add('hidden');
-        
-        // Auto-hide after 5 seconds
-        setTimeout(() => {
-            successDiv.classList.add('hidden');
-        }, 5000);
-    }
-
-    // Public method to sign out
-    signOut() {
-        return this.auth.signOut();
+        if (successDiv && messageDiv) {
+            messageDiv.textContent = message;
+            successDiv.classList.remove('hidden');
+            
+            // Hide error message
+            document.getElementById('firebase-error')?.classList.add('hidden');
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                successDiv.classList.add('hidden');
+            }, 5000);
+        }
     }
 }
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    // Only initialize on login pages
-    if (document.getElementById('firebase-auth-container') || document.querySelector('[x-data]')) {
-        window.tostiShopAuth = new TostiShopFirebaseAuth();
+    if (document.querySelector('.firebase-auth-container') || document.querySelector('[x-data]')) {
+        window.tostiShopAuth = new TostiShopAuth();
     }
 });
 
 // Export for use in other scripts
-window.TostiShopFirebaseAuth = TostiShopFirebaseAuth;
+window.TostiShopAuth = TostiShopAuth;
