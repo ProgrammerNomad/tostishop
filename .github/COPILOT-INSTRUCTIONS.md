@@ -1,14 +1,20 @@
 # TostiShop WordPress Theme - Copilot Instructions
 
-## Theme Overview
-TostiShop is a blazing-fast, mobile-first WooCommerce theme built with:
-- **Tailwind CSS** for utility-first styling 
-- **Alpine.js** for lightweight interactivity
-- **WordPress/WooCommerce** best practices
-- **Mobile-first** responsive design approach
-- **Ultra-lightweight** and fast performance
-- **Off-canvas navigation** & filters
-- **Sticky add-to-cart CTA** on product pages
+## Architecture Overview
+TostiShop is a modular WordPress/WooCommerce theme with strict separation of concerns:
+
+### Core Architecture
+- **Modular PHP structure**: All functionality split into `/inc/` modules loaded by `functions.php`
+- **Tailwind CSS + Alpine.js**: Utility-first styling with lightweight JavaScript interactivity  
+- **Mobile-first responsive**: Mobile optimization prioritized throughout
+- **Firebase Auth integration**: Optional phone number authentication system
+- **Component-based CSS**: Organized in `/assets/css/components/` with specific files per feature
+
+### Key Architectural Decisions
+- **No jQuery dependency**: Pure JavaScript + Alpine.js for interactivity
+- **Conditional Firebase loading**: Only loads if API key is configured
+- **AJAX-first cart operations**: All cart interactions happen without page reloads
+- **Single shipping address**: Billing address is automatically copied to shipping
 
 ## 🎨 Brand Colors (From TostiShop Logo)
 
@@ -102,83 +108,229 @@ tostishop-theme/
         └── form-login.php     # Login/register form
 ```
 
-## 🔧 Development Setup
+## 🔧 Essential Development Workflows
 
-### 1. Install Dependencies
+### CSS Build Process
 ```bash
-npm install
-```
-
-### 2. Build CSS (Development)
-```bash
+# Development with file watching
 npm run dev
-```
 
-### 3. Build CSS (Production)
-```bash
+# Production build (minified)
 npm run build
+
+# One-time development build
+npm run build-dev
 ```
 
-### 4. Watch for Changes
-```bash
-npm run dev
+### Module Structure (Critical for Code Organization)
+All PHP functionality is modularized in `/inc/`:
+- `theme-setup.php` - WordPress core setup, logo auto-upload on activation
+- `assets-enqueue.php` - Conditional script/style loading based on page context
+- `woocommerce-customizations.php` - WooCommerce hooks and checkout modifications
+- `ajax-handlers.php` - All AJAX endpoints with proper nonce verification
+- `firebase/` - Complete Firebase phone auth system (conditionally loaded)
+
+### Key Development Patterns
+```php
+// Always check for direct access
+if (!defined('ABSPATH')) { exit; }
+
+// Use development mode flag
+if (TOSTISHOP_DEV_MODE) { /* dev-only code */ }
+
+// Modular includes with existence checks
+if (file_exists($firebase_init_file)) {
+    require_once $firebase_init_file;
+}
 ```
 
-## 🎨 Design System
+### AJAX Security Pattern
+```php
+function tostishop_ajax_handler() {
+    if (!wp_verify_nonce($_POST['nonce'], 'tostishop_nonce')) {
+        wp_die('Security check failed');
+    }
+    // Handler logic...
+    wp_send_json_success($response);
+}
+```
 
-### Colors
-- **Primary**: Blue (#3b82f6)
-- **Success**: Green (#10b981)
-- **Warning**: Yellow (#f59e0b)
-- **Danger**: Red (#ef4444)
-- **Gray Scale**: Tailwind gray palette
+## 🎨 Component System & Styling
 
-### Typography
-- **Font**: Inter (system fallback)
-- **Headings**: Bold, responsive sizes
-- **Body**: Regular weight, good line height
+### CSS Architecture
+- **Tailwind source**: `assets/css/main.css` (compiled to `style.css`)
+- **Component files**: `assets/css/components/` - organized by feature
+- **Custom utilities**: Component layer classes like `.btn-primary`, `.card`, `.input`
 
-### Components
-Use Tailwind utility classes and custom components defined in `assets/css/main.css`
+### Brand Colors (Logo-derived)
+```javascript
+// tailwind.config.js extended colors
+navy: { 900: '#14175b' },    // Primary brand
+red: { 600: '#e42029' },     // Accent/CTA  
+silver: { 50: '#ecebee' }    // Light backgrounds
+```
 
-## 📱 Mobile-First Approach
+### Alpine.js Interaction Patterns
+```javascript
+// Mobile menu (common pattern)
+x-data="{ mobileMenuOpen: false }"
 
-### Breakpoints
-- **sm**: 640px and up
-- **md**: 768px and up  
-- **lg**: 1024px and up
-- **xl**: 1280px and up
+// Product gallery
+x-data="{ currentImage: 0 }"
 
-### Mobile Features
-- Sticky header with cart icon
-- Off-canvas mobile menu
-- Touch-friendly product gallery
-- Sticky "Add to Cart" on mobile
-- Accordion-style footer
+// Form states
+x-data="{ loading: false, errors: {} }"
+```
 
-## 🛍️ WooCommerce Integration
+### WooCommerce Integration Specifics
+- **Product cards**: `woocommerce/content-product.php` - uses `group` hover states
+- **Checkout flow**: Single-address system (billing auto-copies to shipping)
+- **Cart operations**: All AJAX-driven via `inc/ajax-handlers.php`
+- **Mobile optimizations**: Sticky add-to-cart, accordion footers
 
-### Product Display
-- Grid layout (2 cols mobile, 3-4 cols desktop)
-- Product cards with hover effects
-- Quick add to cart buttons
-- Rating stars and price display
+## � Modular Code Organization
 
-### Cart & Checkout
-- Mobile-optimized cart page
-- Sticky checkout button
-- One-column checkout layout
-- Real-time cart updates
+TostiShop uses a modular approach for better code maintainability and organization:
 
-### Product Pages
-- Image gallery with thumbnails
-- Sticky add to cart (mobile)
-- Mobile-optimized tabs
-- Quantity controls
+### Core Module Files (`/inc/` directory)
 
-## 🔄 Interactive Features
+#### **theme-setup.php**
+- Theme initialization and WordPress setup
+- Custom logo handling and automatic upload
+- Navigation menus registration
+- Image sizes and theme supports
+- Widget areas configuration
 
-### Alpine.js Components
+#### **assets-enqueue.php**
+- Centralized script and style loading
+- Page-specific asset management
+- Firebase authentication scripts
+- Development/production mode handling
+- CDN resources (Alpine.js, fonts)
+
+#### **woocommerce-customizations.php**
+- WooCommerce checkout modifications
+- Product display customizations
+- Cart functionality enhancements
+- Order process customizations
+- Mobile-optimized checkout flow
+
+#### **ajax-handlers.php**
+- AJAX endpoint management
+- Cart operations (add, remove, update)
+- Newsletter signup handling
+- Security nonce verification
+- JSON response formatting
+
+#### **theme-customizer.php**
+- WordPress Customizer integration
+- Hero section settings
+- Brand color controls
+- Typography options
+- Theme-specific customization panels
+
+#### **helper-functions.php**
+- Utility functions library
+- Product query helpers
+- Formatting functions
+- WooCommerce integration helpers
+- Development and debugging utilities
+
+### Firebase Authentication Module (`/inc/firebase/`)
+- Complete Firebase Phone Auth integration
+- OTP verification system
+- User registration and profile management
+- Token verification and security
+- Mobile-optimized auth UI
+
+### Usage Guidelines
+
+#### Adding New Functionality
+1. **Theme Setup**: Add to `theme-setup.php`
+2. **Scripts/Styles**: Add to `assets-enqueue.php`
+3. **WooCommerce**: Add to `woocommerce-customizations.php`
+4. **AJAX/API**: Add to `ajax-handlers.php`
+5. **Settings**: Add to `theme-customizer.php`
+6. **Utilities**: Add to `helper-functions.php`
+
+#### Module Dependencies
+- All modules are included in `functions.php`
+- Each module is self-contained but can use WordPress/WooCommerce functions
+- Firebase module is conditionally loaded if present
+- Admin modules are conditionally loaded if present
+
+#### Best Practices
+- Keep related functions together in appropriate modules
+- Use descriptive function names with `tostishop_` prefix
+- Document complex functions with DocBlocks
+- Add appropriate hooks and filters for extensibility
+- Test functionality after adding to modules
+
+## 📱 Mobile-First Optimizations
+
+### Development Approach
+- **Breakpoints**: Follow Tailwind defaults (sm:640px, md:768px, lg:1024px, xl:1280px)
+- **Touch interactions**: Proper target sizes, swipe gestures
+- **Performance**: Lazy loading, minimal JavaScript, optimized images
+- **Navigation**: Off-canvas menu, sticky headers, accordion patterns
+
+### Key Mobile Features
+```php
+// Sticky elements (common pattern)
+class="sticky top-0 z-50 bg-white/95 backdrop-blur"
+
+// Touch-friendly sizing
+class="min-h-[44px] px-4 py-3"
+
+// Mobile-specific visibility
+class="block md:hidden" // Mobile only
+class="hidden md:block" // Desktop only
+```
+
+## 🛍️ WooCommerce Integration Patterns
+
+### Checkout Architecture
+- **Single address system**: Billing automatically copies to shipping via `woocommerce-customizations.php`
+- **Checkout removal**: `add_filter('woocommerce_cart_needs_shipping_address', '__return_false')`
+- **Auto-copy logic**: `add_action('woocommerce_checkout_process', 'tostishop_auto_copy_billing_to_shipping')`
+
+### Product Display Patterns
+```php
+// Product card structure (content-product.php)
+<div class="product-item group bg-white rounded-lg shadow-sm hover:shadow-md">
+    <div class="product-image aspect-square bg-gray-100">
+        // Image with hover effects
+    </div>
+    <div class="product-info p-4">
+        // Title, price, rating, add-to-cart
+    </div>
+</div>
+```
+
+### AJAX Cart Operations
+```javascript
+// Add to cart pattern (ui.js)
+fetch(ajax_url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+        action: 'tostishop_add_to_cart',
+        product_id: productId,
+        quantity: quantity,
+        nonce: tostishop_ajax.nonce
+    })
+})
+```
+
+### Template Override Strategy
+- **Archive/Shop**: `woocommerce/archive-product.php`
+- **Single Product**: `woocommerce/single-product.php`
+- **Cart/Checkout**: Individual form components in `woocommerce/checkout/`
+- **My Account**: Customized dashboard and forms in `woocommerce/myaccount/`
+
+## 🔄 Interactive Features & JavaScript Architecture
+
+### Alpine.js Component Patterns
 ```javascript
 // Mobile menu toggle
 x-data="{ mobileMenuOpen: false }"
@@ -188,13 +340,33 @@ x-data="{ currentImage: 0 }"
 
 // Product tabs
 x-data="{ activeTab: 'description' }"
+
+// Form states with loading
+x-data="{ loading: false, errors: {} }"
 ```
 
-### AJAX Functionality
-- Add to cart without page reload
-- Real-time cart count updates
-- Product search suggestions
-- Cart item quantity updates
+### AJAX Functionality Structure
+```javascript
+// Main theme functionality (ui.js)
+document.addEventListener('DOMContentLoaded', function() {
+    initializeTheme();        // Basic theme features
+    initializeWooCommerce();  // Cart operations
+});
+
+// Security pattern for all AJAX calls
+body: new URLSearchParams({
+    action: 'tostishop_action_name',
+    nonce: tostishop_ajax.nonce,
+    // ... other data
+})
+```
+
+### JavaScript File Organization
+- `assets/js/ui.js` - Main theme interactions and AJAX handlers
+- `assets/js/cart.js` - Cart-specific functionality
+- `assets/js/firebase-auth.js` - Authentication handling
+- `assets/js/theme.js` - General utilities and helpers
+- `assets/js/homepage.js` - Homepage-specific features
 
 ## 📝 Common Development Tasks
 
