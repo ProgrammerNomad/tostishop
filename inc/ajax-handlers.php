@@ -106,6 +106,22 @@ add_action('wp_ajax_tostishop_add_to_cart', 'tostishop_ajax_add_to_cart');
 add_action('wp_ajax_nopriv_tostishop_add_to_cart', 'tostishop_ajax_add_to_cart');
 
 /**
+ * Get cart count via AJAX
+ */
+function tostishop_get_cart_count() {
+    // Check if WooCommerce is available
+    if (!class_exists('WooCommerce')) {
+        wp_send_json_success('0');
+        return;
+    }
+    
+    $cart_count = WC()->cart->get_cart_contents_count();
+    wp_send_json_success($cart_count);
+}
+add_action('wp_ajax_get_cart_count', 'tostishop_get_cart_count');
+add_action('wp_ajax_nopriv_get_cart_count', 'tostishop_get_cart_count');
+
+/**
  * Update cart item quantity via AJAX
  */
 function tostishop_ajax_update_cart_item() {

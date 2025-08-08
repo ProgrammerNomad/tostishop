@@ -333,11 +333,10 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
                     </svg>
                     <?php $cart_count = tostishop_cart_count(); ?>
-                    <?php if ($cart_count > 0) : ?>
-                    <span class="absolute -top-2 -right-2 bg-accent text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    <span class="absolute -top-2 -right-2 bg-accent text-white text-xs rounded-full h-5 w-5 flex items-center justify-center <?php echo $cart_count > 0 ? '' : 'hidden'; ?>" 
+                          data-cart-count>
                         <?php echo $cart_count; ?>
                     </span>
-                    <?php endif; ?>
                 </a>
                 <?php endif; ?>
             </div>

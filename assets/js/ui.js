@@ -922,9 +922,9 @@ function initializeMobileKeyboard() {
 }
 
 /**
- * Update cart count in header
+ * Update cart count in header via AJAX
  */
-function updateCartCount() {
+function refreshCartCount() {
     const cartCount = document.querySelector('.cart-count, [data-cart-count]');
     if (!cartCount) return;
     
@@ -938,8 +938,7 @@ function updateCartCount() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            cartCount.textContent = data.data;
-            cartCount.setAttribute('aria-label', `${data.data} items in cart`);
+            updateCartCount(data.data);
         }
     })
     .catch(error => {
