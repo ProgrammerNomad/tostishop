@@ -6,6 +6,10 @@
 
 // Screen reader announcement helper - Global function
 window.announceToScreenReader = function(message) {
+    if (!message || typeof message !== 'string') {
+        return;
+    }
+    
     const announcement = document.createElement('div');
     announcement.setAttribute('aria-live', 'polite');
     announcement.setAttribute('aria-atomic', 'true');
