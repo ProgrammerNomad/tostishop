@@ -631,6 +631,55 @@ window.decreaseQuantity = function() { /* defined above */ };
 window.showNotification = showNotification;
 
 /**
+ * Show WooCommerce-style notice in the notices wrapper
+ */
+function showWooCommerceNotice(message, type = 'success') {
+    const noticesWrapper = document.querySelector('.woocommerce-notices-wrapper');
+    if (!noticesWrapper) {
+        // Fallback to regular notification if no notices wrapper
+        showNotification(message, type);
+        return;
+    }
+    
+    // Clear existing notices
+    noticesWrapper.innerHTML = '';
+    
+    // Create notice element
+    const notice = document.createElement('div');
+    notice.className = `woocommerce-message ${type === 'error' ? 'woocommerce-error' : 'woocommerce-message'}`;
+    notice.setAttribute('role', 'alert');
+    
+    // Add appropriate styling
+    if (type === 'error') {
+        notice.className += ' bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded mb-4';
+    } else {
+        notice.className += ' bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded mb-4';
+    }
+    
+    notice.innerHTML = message;
+    
+    // Add to notices wrapper
+    noticesWrapper.appendChild(notice);
+    
+    // Scroll to notices
+    noticesWrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
+    // Auto-remove success notices after 5 seconds
+    if (type === 'success') {
+        setTimeout(() => {
+            if (notice.parentNode) {
+                notice.style.opacity = '0';
+                setTimeout(() => {
+                    if (notice.parentNode) {
+                        notice.parentNode.removeChild(notice);
+                    }
+                }, 300);
+            }
+        }, 5000);
+    }
+}
+
+/**
  * Initialize AJAX Add to Cart with better feedback
  */
 function initializeAjaxAddToCart() {
@@ -638,10 +687,28 @@ function initializeAjaxAddToCart() {
     
     forms.forEach(form => {
         form.addEventListener('submit', function(e) {
-            e.preventDefault();
+            // Check if AJAX is available and working
+            if (!tostishop_ajax || !tostishop_ajax.ajax_url || !tostishop_ajax.nonce) {
+                // Let WooCommerce handle it normally if AJAX isn't properly set up
+                return;
+            }
             
             const submitBtn = form.querySelector('button[type="submit"]');
             if (!submitBtn) return;
+            
+            // Get product ID and quantity for validation
+            const productId = form.querySelector('input[name="add-to-cart"]')?.value || 
+                             form.querySelector('button[name="add-to-cart"]')?.value ||
+                             form.querySelector('[data-product-id]')?.dataset.productId;
+            const quantity = form.querySelector('input[name="quantity"]')?.value || 1;
+            
+            // Basic validation - if no product ID, let WooCommerce handle it
+            if (!productId) {
+                return;
+            }
+            
+            // Only prevent default if we're going to handle it via AJAX
+            e.preventDefault();
             
             // Show loading state
             const originalText = submitBtn.innerHTML;
@@ -651,25 +718,16 @@ function initializeAjaxAddToCart() {
             // Get form data
             const formData = new FormData(form);
             formData.append('action', 'tostishop_add_to_cart');
-            formData.append('nonce', tostishop_ajax?.nonce || '');
-            
-            // Get product ID and quantity
-            const productId = form.querySelector('input[name="add-to-cart"]')?.value || 
-                             form.querySelector('button[name="add-to-cart"]')?.value ||
-                             form.querySelector('[data-product-id]')?.dataset.productId;
-            const quantity = form.querySelector('input[name="quantity"]')?.value || 1;
-            
-            if (productId) {
-                formData.append('product_id', productId);
-                formData.append('quantity', quantity);
-            }
+            formData.append('nonce', tostishop_ajax.nonce);
+            formData.append('product_id', productId);
+            formData.append('quantity', quantity);
             
             // Debug log form data
             console.log('Form data being sent:', {
                 action: 'tostishop_add_to_cart',
                 product_id: productId,
                 quantity: quantity,
-                nonce: tostishop_ajax?.nonce
+                nonce: tostishop_ajax.nonce
             });
             
             // Submit via AJAX
@@ -682,7 +740,7 @@ function initializeAjaxAddToCart() {
                 console.log('Add to cart response:', data); // Debug log
                 if (data.success) {
                     announceToScreenReader('Product added to cart successfully');
-                    showNotification('Product added to cart!', 'success');
+                    showWooCommerceNotice(data.data.message || 'Product added to cart!', 'success');
                     // Update cart count if element exists
                     if (data.data && data.data.cart_count !== undefined) {
                         updateCartCount(data.data.cart_count);
@@ -690,13 +748,13 @@ function initializeAjaxAddToCart() {
                 } else {
                     console.error('Add to cart failed:', data); // Debug log
                     announceToScreenReader('Failed to add product to cart');
-                    showNotification(data.data || 'Failed to add to cart', 'error');
+                    showWooCommerceNotice(data.data || 'Failed to add to cart', 'error');
                 }
             })
             .catch(error => {
                 console.error('Add to cart error:', error);
                 announceToScreenReader('An error occurred while adding to cart');
-                showNotification('An error occurred. Please try again.', 'error');
+                showWooCommerceNotice('An error occurred. Please try again.', 'error');
             })
             .finally(() => {
                 // Restore button state

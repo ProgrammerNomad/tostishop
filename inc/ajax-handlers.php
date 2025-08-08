@@ -39,17 +39,64 @@ function tostishop_ajax_add_to_cart() {
         $quantity = 1;
     }
     
+    // Get the product to check if it exists and is valid
+    $product = wc_get_product($product_id);
+    if (!$product) {
+        wp_send_json_error('Product not found');
+        return;
+    }
+    
+    // Check if product is purchasable
+    if (!$product->is_purchasable()) {
+        wp_send_json_error('This product cannot be purchased');
+        return;
+    }
+    
+    // Check stock
+    if (!$product->is_in_stock()) {
+        wp_send_json_error('This product is out of stock');
+        return;
+    }
+    
+    // Check if we can add the requested quantity
+    if ($product->managing_stock()) {
+        $stock_quantity = $product->get_stock_quantity();
+        $cart_quantity = WC()->cart->get_cart_item_quantities();
+        $current_cart_quantity = isset($cart_quantity[$product_id]) ? $cart_quantity[$product_id] : 0;
+        
+        if (($current_cart_quantity + $quantity) > $stock_quantity) {
+            $available = $stock_quantity - $current_cart_quantity;
+            if ($available <= 0) {
+                wp_send_json_error(sprintf('You cannot add another "%s" to your cart.', $product->get_name()));
+                return;
+            } else {
+                wp_send_json_error(sprintf('You can only add %d more of "%s" to your cart.', $available, $product->get_name()));
+                return;
+            }
+        }
+    }
+    
     try {
         $result = WC()->cart->add_to_cart($product_id, $quantity);
         
         if ($result) {
+            // Success response
             wp_send_json_success(array(
-                'message' => 'Product added to cart successfully',
+                'message' => sprintf('"%s" has been added to your cart.', $product->get_name()),
                 'cart_count' => WC()->cart->get_cart_contents_count(),
                 'cart_total' => WC()->cart->get_cart_total(),
             ));
         } else {
-            wp_send_json_error('Failed to add product to cart');
+            // Check for any WooCommerce notices that might explain the failure
+            $notices = wc_get_notices('error');
+            $error_message = 'Failed to add product to cart';
+            
+            if (!empty($notices)) {
+                $error_message = $notices[0]['notice'];
+                wc_clear_notices(); // Clear the notices since we're handling them via AJAX
+            }
+            
+            wp_send_json_error($error_message);
         }
     } catch (Exception $e) {
         wp_send_json_error('Error: ' . $e->getMessage());
