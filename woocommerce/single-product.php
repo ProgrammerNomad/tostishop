@@ -560,7 +560,6 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                         
                         <!-- Wishlist Button -->
                         <?php echo tostishop_get_wishlist_button($product->get_id(), 'w-full border-2 border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:border-gray-400 focus:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center'); ?>
-                        <span class="ml-2"><?php echo is_user_logged_in() && tostishop_is_product_in_wishlist($product->get_id()) ? __('Remove from Wishlist', 'tostishop') : __('Add to Wishlist', 'tostishop'); ?></span>
                     </div>
                 </form>
                 

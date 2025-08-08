@@ -19,6 +19,7 @@ if (!defined('ABSPATH')) {
 function tostishop_init_wishlist() {
     // Create wishlist table on theme activation
     add_action('after_switch_theme', 'tostishop_create_wishlist_table');
+    add_action('init', 'tostishop_create_wishlist_table'); // Also create on init to ensure it exists
     
     // Add wishlist endpoints to my account
     add_action('init', 'tostishop_add_wishlist_endpoint');
@@ -30,9 +31,6 @@ function tostishop_init_wishlist() {
     add_action('wp_ajax_nopriv_tostishop_add_to_wishlist', 'tostishop_ajax_add_to_wishlist');
     add_action('wp_ajax_tostishop_remove_from_wishlist', 'tostishop_ajax_remove_from_wishlist');
     add_action('wp_ajax_nopriv_tostishop_remove_from_wishlist', 'tostishop_ajax_remove_from_wishlist');
-    
-    // Enqueue wishlist styles and scripts
-    add_action('wp_enqueue_scripts', 'tostishop_enqueue_wishlist_assets');
 }
 
 /**
@@ -64,6 +62,30 @@ function tostishop_create_wishlist_table() {
 function tostishop_add_wishlist_endpoint() {
     add_rewrite_endpoint('wishlist', EP_ROOT | EP_PAGES);
 }
+
+/**
+ * Flush rewrite rules for wishlist endpoint
+ */
+function tostishop_flush_wishlist_rules() {
+    tostishop_add_wishlist_endpoint();
+    flush_rewrite_rules();
+}
+
+// Flush rewrite rules on admin init if needed
+add_action('admin_init', function() {
+    if (get_option('tostishop_flush_wishlist_rules') === 'yes') {
+        tostishop_flush_wishlist_rules();
+        delete_option('tostishop_flush_wishlist_rules');
+    }
+});
+
+// Set flag to flush rules when visiting admin
+add_action('admin_init', function() {
+    if (!get_option('tostishop_wishlist_endpoint_added')) {
+        update_option('tostishop_flush_wishlist_rules', 'yes');
+        update_option('tostishop_wishlist_endpoint_added', 'yes');
+    }
+});
 
 /**
  * Add wishlist menu item to my account navigation
@@ -350,9 +372,10 @@ function tostishop_get_wishlist_button($product_id, $classes = '') {
     $button_class = $is_in_wishlist ? 'wishlist-btn in-wishlist' : 'wishlist-btn';
     $title = $is_in_wishlist ? __('Remove from Wishlist', 'tostishop') : __('Add to Wishlist', 'tostishop');
     $fill = $is_in_wishlist ? 'currentColor' : 'none';
+    $text_color = $is_in_wishlist ? 'text-red-500' : '';
     
     return sprintf(
-        '<button class="%s %s" data-product-id="%d" title="%s">
+        '<button class="%s %s %s" data-product-id="%d" title="%s">
             <svg class="w-5 h-5" fill="%s" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
             </svg>
@@ -360,6 +383,7 @@ function tostishop_get_wishlist_button($product_id, $classes = '') {
         </button>',
         esc_attr($button_class),
         esc_attr($classes),
+        esc_attr($text_color),
         intval($product_id),
         esc_attr($title),
         esc_attr($fill),
