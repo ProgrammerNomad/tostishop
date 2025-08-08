@@ -104,6 +104,97 @@ $notes = $order->get_customer_order_notes();
 		
 		<!-- Order Items - Takes 2 columns on large screens -->
 		<div class="lg:col-span-2">
+			
+			<!-- Order Status Timeline -->
+			<div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-6">
+				<h2 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+					<svg class="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+					</svg>
+					<?php _e( 'Order Progress', 'tostishop' ); ?>
+				</h2>
+
+				<!-- Status Timeline -->
+				<div class="flow-root">
+					<ul class="-mb-8">
+						<?php
+						$timeline_statuses = array(
+							'pending' => array(
+								'label' => __( 'Order Placed', 'tostishop' ),
+								'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+								'completed' => true
+							),
+							'processing' => array(
+								'label' => __( 'Processing', 'tostishop' ),
+								'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+								'completed' => in_array( $order->get_status(), array( 'processing', 'on-hold', 'completed' ) )
+							),
+							'shipped' => array(
+								'label' => __( 'Shipped', 'tostishop' ),
+								'icon' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
+								'completed' => $order->get_status() === 'completed'
+							),
+							'completed' => array(
+								'label' => __( 'Delivered', 'tostishop' ),
+								'icon' => 'M5 13l4 4L19 7',
+								'completed' => $order->get_status() === 'completed'
+							)
+						);
+						
+						$timeline_count = count( $timeline_statuses );
+						$current_index = 0;
+						
+						foreach ( $timeline_statuses as $status_key => $status_data ) :
+							$current_index++;
+							$is_last = ( $current_index === $timeline_count );
+							$is_completed = $status_data['completed'];
+							$is_current = ( $status_key === $order->get_status() || ( $status_key === 'shipped' && $order->get_status() === 'completed' ) );
+						?>
+							<li>
+								<div class="relative pb-8">
+									<?php if ( ! $is_last ) : ?>
+										<span class="absolute top-4 left-4 -ml-px h-full w-0.5 <?php echo $is_completed ? 'bg-primary' : 'bg-gray-200'; ?>" aria-hidden="true"></span>
+									<?php endif; ?>
+									<div class="relative flex space-x-3">
+										<div>
+											<span class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white <?php echo $is_completed ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'; ?>">
+												<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="<?php echo $status_data['icon']; ?>"></path>
+												</svg>
+											</span>
+										</div>
+										<div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+											<div>
+												<p class="text-sm font-medium text-gray-900 <?php echo $is_current ? 'font-semibold' : ''; ?>">
+													<?php echo esc_html( $status_data['label'] ); ?>
+													<?php if ( $is_current ) : ?>
+														<span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+															<?php _e( 'Current', 'tostishop' ); ?>
+														</span>
+													<?php endif; ?>
+												</p>
+											</div>
+											<div class="text-right text-sm whitespace-nowrap text-gray-500">
+												<?php if ( $is_completed && $status_key === 'pending' ) : ?>
+													<time datetime="<?php echo $order->get_date_created()->format( 'c' ); ?>">
+														<?php echo wc_format_datetime( $order->get_date_created(), get_option( 'date_format' ) ); ?>
+													</time>
+												<?php elseif ( $is_completed && $status_key === 'completed' && $order->get_date_completed() ) : ?>
+													<time datetime="<?php echo $order->get_date_completed()->format( 'c' ); ?>">
+														<?php echo wc_format_datetime( $order->get_date_completed(), get_option( 'date_format' ) ); ?>
+													</time>
+												<?php endif; ?>
+											</div>
+										</div>
+									</div>
+								</div>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				</div>
+			</div>
+
+			<!-- Order Items -->
 			<div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
 				<h2 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
 					<svg class="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -276,6 +367,49 @@ $notes = $order->get_customer_order_notes();
 						</div>
 					<?php endif; ?>
 				</div>
+
+				<!-- Payment Information -->
+				<?php if ( $order->get_payment_method_title() || $order->get_transaction_id() ) : ?>
+					<div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+						<h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+							<svg class="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+							</svg>
+							<?php _e( 'Payment Information', 'tostishop' ); ?>
+						</h3>
+						
+						<?php if ( $order->get_payment_method_title() ) : ?>
+							<div class="space-y-2 text-sm">
+								<div class="flex justify-between">
+									<span class="text-gray-600"><?php _e( 'Payment method:', 'woocommerce' ); ?></span>
+									<span class="font-medium text-gray-900"><?php echo esc_html( $order->get_payment_method_title() ); ?></span>
+								</div>
+							</div>
+						<?php endif; ?>
+
+						<?php if ( $order->get_transaction_id() ) : ?>
+							<div class="mt-3 pt-3 border-t border-gray-100">
+								<div class="flex justify-between text-sm">
+									<span class="text-gray-600"><?php _e( 'Transaction ID:', 'woocommerce' ); ?></span>
+									<span class="font-mono text-xs bg-gray-100 px-2 py-1 rounded"><?php echo esc_html( $order->get_transaction_id() ); ?></span>
+								</div>
+							</div>
+						<?php endif; ?>
+
+						<?php if ( $order->get_date_paid() ) : ?>
+							<div class="mt-3 pt-3 border-t border-gray-100">
+								<div class="flex justify-between text-sm">
+									<span class="text-gray-600"><?php _e( 'Paid on:', 'woocommerce' ); ?></span>
+									<span class="text-gray-900">
+										<time datetime="<?php echo $order->get_date_paid()->format( 'c' ); ?>">
+											<?php echo wc_format_datetime( $order->get_date_paid() ); ?>
+										</time>
+									</span>
+								</div>
+							</div>
+						<?php endif; ?>
+					</div>
+				<?php endif; ?>
 
 				<!-- Shipping Address (if different from billing) -->
 				<?php if ( ! wc_ship_to_billing_address_only() && $order->needs_shipping_address() && ( $shipping = $order->get_formatted_shipping_address() ) ) : ?>
