@@ -32,7 +32,7 @@ get_header(); ?>
 		<div class="lg:grid lg:grid-cols-12 lg:gap-6 xl:gap-8 2xl:gap-10">
 			
 			<!-- Sidebar Navigation -->
-			<div class="lg:col-span-3 xl:col-span-2 mb-8 lg:mb-0">
+			<div class="lg:col-span-4 xl:col-span-3 mb-8 lg:mb-0">
 				<div class="lg:top-8">
 					<?php
 					/**
@@ -43,7 +43,7 @@ get_header(); ?>
 			</div>
 			
 			<!-- Main Content -->
-			<div class="lg:col-span-9 xl:col-span-10">
+			<div class="lg:col-span-8 xl:col-span-9">
 				<div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[600px] lg:min-h-[700px] xl:min-h-[800px]">
 					<div class="p-6 lg:p-8 xl:p-12 2xl:p-16">
 						<?php
