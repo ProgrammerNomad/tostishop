@@ -50,12 +50,12 @@ if (!function_exists('tostishop_enqueue_firebase_scripts')) {
             true
         );
         
-        // Custom Firebase authentication script
+        // Custom Firebase authentication script (CONSOLIDATED VERSION)
         wp_enqueue_script(
             'tostishop-firebase-auth', 
             get_template_directory_uri() . '/assets/js/firebase-auth.js', 
             array('jquery', 'firebase-auth', 'firebase-firestore'), 
-            '2.0.0', 
+            '5.4.2', 
             true
         );
         
