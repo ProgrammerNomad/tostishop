@@ -2579,4 +2579,213 @@
         }
     });
 
+    /**
+     * 🔐 Firebase Password Synchronization Functions
+     * Handles password sync between WordPress and Firebase
+     */
+    
+    /**
+     * Check for queued password sync after successful login
+     */
+    function checkQueuedPasswordSync(firebaseUser) {
+        if (!firebaseUser || !auth) {
+            return;
+        }
+        
+        console.log('🔐 Checking for queued password sync...');
+        
+        $.ajax({
+            url: tostiShopAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'tostishop_check_password_sync_queue',
+                firebase_uid: firebaseUser.uid,
+                nonce: tostiShopAjax.nonce
+            },
+            success: function(response) {
+                if (response.success && response.data.sync_needed) {
+                    console.log('🔐 Password sync needed, processing...');
+                    processPasswordSync(firebaseUser, response.data.sync_data);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('❌ Failed to check password sync queue:', error);
+            }
+        });
+    }
+    
+    /**
+     * Process password sync with Firebase
+     */
+    function processPasswordSync(firebaseUser, syncData) {
+        if (!syncData.new_password_hash) {
+            console.error('❌ No password hash available for sync');
+            return;
+        }
+        
+        // Since we can't directly set Firebase password without Admin SDK,
+        // we'll prompt user to update their Firebase password
+        showPasswordSyncModal(firebaseUser, syncData);
+    }
+    
+    /**
+     * Show password sync modal to user
+     */
+    function showPasswordSyncModal(firebaseUser, syncData) {
+        const modalHtml = `
+            <div id="password-sync-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+                    <div class="text-center mb-6">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m0 0v2m0-2h2m-2 0H8m4-10a4 4 0 100 8 4 4 0 000-8z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Password Update Required</h3>
+                        <p class="text-gray-600 text-sm">Your account password was recently changed. Please update your Firebase authentication to stay in sync.</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Enter your new password:</label>
+                            <input type="password" id="sync-password" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent" placeholder="Your new password">
+                            <p class="text-xs text-gray-500 mt-1">This should be the same password you set in your account settings</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row gap-3 mt-6">
+                        <button id="skip-sync-btn" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            Skip for Now
+                        </button>
+                        <button id="sync-password-btn" class="flex-1 bg-accent text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                            Update Firebase Password
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('body').append(modalHtml);
+        
+        // Handle sync button
+        $('#sync-password-btn').on('click', function() {
+            const newPassword = $('#sync-password').val();
+            if (!newPassword) {
+                showError('Please enter your new password.');
+                return;
+            }
+            
+            updateFirebasePassword(firebaseUser, newPassword, syncData);
+        });
+        
+        // Handle skip button
+        $('#skip-sync-btn').on('click', function() {
+            $('#password-sync-modal').remove();
+            markPasswordSyncSkipped(firebaseUser.uid);
+        });
+        
+        // Close on backdrop click
+        $('#password-sync-modal').on('click', function(e) {
+            if (e.target === this) {
+                $('#password-sync-modal').remove();
+                markPasswordSyncSkipped(firebaseUser.uid);
+            }
+        });
+    }
+    
+    /**
+     * Update Firebase password
+     */
+    function updateFirebasePassword(firebaseUser, newPassword, syncData) {
+        showLoading('Updating Firebase password...');
+        
+        firebaseUser.updatePassword(newPassword)
+            .then(function() {
+                console.log('✅ Firebase password updated successfully');
+                hideLoading();
+                $('#password-sync-modal').remove();
+                
+                // Notify backend that sync is complete
+                markPasswordSyncComplete(firebaseUser.uid, syncData);
+                
+                showSuccess('🔐 Password synchronized successfully!');
+            })
+            .catch(function(error) {
+                hideLoading();
+                console.error('❌ Firebase password update failed:', error);
+                
+                let errorMessage = 'Failed to update Firebase password. ';
+                if (error.code === 'auth/weak-password') {
+                    errorMessage = 'Password is too weak. Please choose a stronger password.';
+                } else if (error.code === 'auth/requires-recent-login') {
+                    errorMessage = 'For security, please log out and log back in, then try again.';
+                } else {
+                    errorMessage += 'Please try again or contact support.';
+                }
+                
+                showError(errorMessage);
+            });
+    }
+    
+    /**
+     * Mark password sync as complete
+     */
+    function markPasswordSyncComplete(firebaseUID, syncData) {
+        $.ajax({
+            url: tostiShopAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'tostishop_mark_password_sync_complete',
+                firebase_uid: firebaseUID,
+                sync_id: syncData.sync_id,
+                nonce: tostiShopAjax.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    console.log('✅ Password sync marked as complete');
+                } else {
+                    console.error('❌ Failed to mark sync as complete:', response.data?.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('❌ Failed to mark sync as complete:', error);
+            }
+        });
+    }
+    
+    /**
+     * Mark password sync as skipped
+     */
+    function markPasswordSyncSkipped(firebaseUID) {
+        $.ajax({
+            url: tostiShopAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'tostishop_mark_password_sync_skipped',
+                firebase_uid: firebaseUID,
+                nonce: tostiShopAjax.nonce
+            },
+            success: function(response) {
+                console.log('ℹ️ Password sync marked as skipped');
+            },
+            error: function(xhr, status, error) {
+                console.error('❌ Failed to mark sync as skipped:', error);
+            }
+        });
+    }
+    
+    // Hook into successful login to check for password sync
+    const originalLoginToWordPressWithFirestoreData = loginToWordPressWithFirestoreData;
+    loginToWordPressWithFirestoreData = function(firebaseUser, firestoreData, authMethod) {
+        // Call original function
+        const result = originalLoginToWordPressWithFirestoreData(firebaseUser, firestoreData, authMethod);
+        
+        // Check for password sync after successful login
+        setTimeout(() => {
+            checkQueuedPasswordSync(firebaseUser);
+        }, 2000);
+        
+        return result;
+    };
+
 })(jQuery);

@@ -803,3 +803,225 @@ add_action('wp_ajax_nopriv_tostishop_bind_phone_to_account', 'tostishop_bind_pho
 
 add_action('wp_ajax_tostishop_check_firebase_uid_status', 'tostishop_check_firebase_uid_status');
 add_action('wp_ajax_nopriv_tostishop_check_firebase_uid_status', 'tostishop_check_firebase_uid_status');
+
+// Password sync AJAX handlers
+add_action('wp_ajax_tostishop_check_password_sync_queue', 'tostishop_check_password_sync_queue');
+add_action('wp_ajax_nopriv_tostishop_check_password_sync_queue', 'tostishop_check_password_sync_queue');
+
+add_action('wp_ajax_tostishop_mark_password_sync_complete', 'tostishop_mark_password_sync_complete');
+add_action('wp_ajax_nopriv_tostishop_mark_password_sync_complete', 'tostishop_mark_password_sync_complete');
+
+add_action('wp_ajax_tostishop_mark_password_sync_skipped', 'tostishop_mark_password_sync_skipped');
+add_action('wp_ajax_nopriv_tostishop_mark_password_sync_skipped', 'tostishop_mark_password_sync_skipped');
+
+/**
+ * Check password sync queue for user
+ */
+function tostishop_check_password_sync_queue() {
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'tostishop_firebase_nonce')) {
+        wp_send_json_error(array(
+            'message' => 'Security verification failed.',
+            'code' => 'nonce_failed'
+        ));
+        return;
+    }
+    
+    $firebase_uid = isset($_POST['firebase_uid']) ? sanitize_text_field($_POST['firebase_uid']) : '';
+    
+    if (empty($firebase_uid)) {
+        wp_send_json_error(array(
+            'message' => 'Firebase UID is required.',
+            'code' => 'firebase_uid_missing'
+        ));
+        return;
+    }
+    
+    try {
+        // Find user by Firebase UID
+        $users = get_users(array(
+            'meta_key' => 'firebase_uid',
+            'meta_value' => $firebase_uid,
+            'number' => 1,
+            'fields' => 'all'
+        ));
+        
+        if (empty($users)) {
+            wp_send_json_success(array(
+                'sync_needed' => false,
+                'message' => 'User not found'
+            ));
+            return;
+        }
+        
+        $user = $users[0];
+        
+        // Check if password sync is queued
+        $sync_queued = get_user_meta($user->ID, 'firebase_password_sync_queued', true);
+        $sync_ready = get_user_meta($user->ID, 'firebase_password_sync_ready', true);
+        
+        if (!empty($sync_queued) || !empty($sync_ready)) {
+            $sync_data = array(
+                'sync_id' => $user->ID . '_' . time(),
+                'sync_queued_date' => $sync_queued,
+                'sync_ready_date' => $sync_ready,
+                'user_id' => $user->ID
+            );
+            
+            wp_send_json_success(array(
+                'sync_needed' => true,
+                'sync_data' => $sync_data,
+                'message' => 'Password sync required'
+            ));
+        } else {
+            wp_send_json_success(array(
+                'sync_needed' => false,
+                'message' => 'No sync required'
+            ));
+        }
+        
+    } catch (Exception $e) {
+        error_log('Check password sync queue error: ' . $e->getMessage());
+        
+        wp_send_json_error(array(
+            'message' => 'Error checking sync queue.',
+            'code' => 'check_error',
+            'debug' => TOSTISHOP_DEV_MODE ? $e->getMessage() : null
+        ));
+    }
+}
+
+/**
+ * Mark password sync as complete
+ */
+function tostishop_mark_password_sync_complete() {
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'tostishop_firebase_nonce')) {
+        wp_send_json_error(array(
+            'message' => 'Security verification failed.',
+            'code' => 'nonce_failed'
+        ));
+        return;
+    }
+    
+    $firebase_uid = isset($_POST['firebase_uid']) ? sanitize_text_field($_POST['firebase_uid']) : '';
+    $sync_id = isset($_POST['sync_id']) ? sanitize_text_field($_POST['sync_id']) : '';
+    
+    if (empty($firebase_uid)) {
+        wp_send_json_error(array(
+            'message' => 'Firebase UID is required.',
+            'code' => 'firebase_uid_missing'
+        ));
+        return;
+    }
+    
+    try {
+        // Find user by Firebase UID
+        $users = get_users(array(
+            'meta_key' => 'firebase_uid',
+            'meta_value' => $firebase_uid,
+            'number' => 1,
+            'fields' => 'all'
+        ));
+        
+        if (empty($users)) {
+            wp_send_json_error(array(
+                'message' => 'User not found.',
+                'code' => 'user_not_found'
+            ));
+            return;
+        }
+        
+        $user = $users[0];
+        
+        // Clear sync queue and mark as complete
+        delete_user_meta($user->ID, 'firebase_password_sync_queued');
+        delete_user_meta($user->ID, 'firebase_password_sync_ready');
+        delete_user_meta($user->ID, 'firebase_password_sync_hash');
+        delete_user_meta($user->ID, 'firebase_password_sync_pending');
+        delete_user_meta($user->ID, 'firebase_password_sync_failed');
+        delete_user_meta($user->ID, 'firebase_password_sync_error');
+        
+        // Mark sync as complete
+        update_user_meta($user->ID, 'firebase_password_sync_date', current_time('mysql'));
+        update_user_meta($user->ID, 'firebase_password_sync_method', 'firebase_update');
+        update_user_meta($user->ID, 'firebase_password_sync_completed', current_time('mysql'));
+        
+        wp_send_json_success(array(
+            'message' => 'Password sync marked as complete.',
+            'user_id' => $user->ID
+        ));
+        
+    } catch (Exception $e) {
+        error_log('Mark password sync complete error: ' . $e->getMessage());
+        
+        wp_send_json_error(array(
+            'message' => 'Error marking sync as complete.',
+            'code' => 'sync_complete_error',
+            'debug' => TOSTISHOP_DEV_MODE ? $e->getMessage() : null
+        ));
+    }
+}
+
+/**
+ * Mark password sync as skipped
+ */
+function tostishop_mark_password_sync_skipped() {
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'tostishop_firebase_nonce')) {
+        wp_send_json_error(array(
+            'message' => 'Security verification failed.',
+            'code' => 'nonce_failed'
+        ));
+        return;
+    }
+    
+    $firebase_uid = isset($_POST['firebase_uid']) ? sanitize_text_field($_POST['firebase_uid']) : '';
+    
+    if (empty($firebase_uid)) {
+        wp_send_json_error(array(
+            'message' => 'Firebase UID is required.',
+            'code' => 'firebase_uid_missing'
+        ));
+        return;
+    }
+    
+    try {
+        // Find user by Firebase UID
+        $users = get_users(array(
+            'meta_key' => 'firebase_uid',
+            'meta_value' => $firebase_uid,
+            'number' => 1,
+            'fields' => 'all'
+        ));
+        
+        if (empty($users)) {
+            wp_send_json_error(array(
+                'message' => 'User not found.',
+                'code' => 'user_not_found'
+            ));
+            return;
+        }
+        
+        $user = $users[0];
+        
+        // Mark sync as skipped (will retry on next login)
+        update_user_meta($user->ID, 'firebase_password_sync_skipped', current_time('mysql'));
+        update_user_meta($user->ID, 'firebase_password_sync_skip_count', 
+                         intval(get_user_meta($user->ID, 'firebase_password_sync_skip_count', true)) + 1);
+        
+        wp_send_json_success(array(
+            'message' => 'Password sync marked as skipped.',
+            'user_id' => $user->ID
+        ));
+        
+    } catch (Exception $e) {
+        error_log('Mark password sync skipped error: ' . $e->getMessage());
+        
+        wp_send_json_error(array(
+            'message' => 'Error marking sync as skipped.',
+            'code' => 'sync_skip_error',
+            'debug' => TOSTISHOP_DEV_MODE ? $e->getMessage() : null
+        ));
+    }
+}
