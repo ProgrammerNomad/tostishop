@@ -1647,7 +1647,7 @@
     }
 
     /**
-     * 📱 Complete Phone Registration - NEW FUNCTION
+     * 📱 Complete Phone Registration - ENHANCED WITH EMAIL CHECK
      * Handles name + email collection for new phone users
      */
     function completePhoneRegistration() {
@@ -1684,9 +1684,71 @@
             return;
         }
         
+        showLoading('Checking email availability...');
+        
+        console.log('📱 Checking if email exists before registration:', email);
+        
+        // Step 1: Check if email already exists in WordPress
+        $.ajax({
+            url: tostiShopAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'tostishop_check_firebase_user',
+                email: email,
+                phone: firebaseUser.phoneNumber,
+                firebase_uid: firebaseUser.uid,
+                nonce: tostiShopAjax.nonce
+            },
+            timeout: 15000,
+            success: function(response) {
+                console.log('📧 Email check response:', response);
+                
+                if (response.success && response.data.exists) {
+                    // Email already exists - handle existing user scenario
+                    hideLoading();
+                    
+                    const foundBy = response.data.found_by;
+                    let message = '';
+                    
+                    if (foundBy === 'email') {
+                        message = `An account with email "${email}" already exists. Would you like to sign in instead?`;
+                    } else if (foundBy === 'phone_number') {
+                        message = `Your phone number is already registered with a different email. Would you like to update your email or sign in?`;
+                    } else {
+                        message = `An account already exists with this information. Would you like to sign in instead?`;
+                    }
+                    
+                    // Show confirmation dialog
+                    if (confirm(message + '\n\nClick OK to sign in, or Cancel to try a different email.')) {
+                        // User wants to sign in - proceed with login instead of registration
+                        proceedWithExistingUserLogin(firebaseUser, email, name);
+                    } else {
+                        // User wants to try different email - clear the email field
+                        $('#phone-register-email').val('').focus();
+                        showError('Please try a different email address.');
+                    }
+                    
+                } else {
+                    // Email doesn't exist - proceed with new account creation
+                    console.log('📧 Email is available, proceeding with registration');
+                    proceedWithNewAccountCreation(firebaseUser, name, email);
+                }
+            },
+            error: function(xhr, status, error) {
+                hideLoading();
+                console.error('❌ Email check error:', xhr.responseText, status, error);
+                showError('Unable to verify email. Please check your connection and try again.');
+            }
+        });
+    }
+
+    /**
+     * 📱 Proceed with New Account Creation
+     */
+    function proceedWithNewAccountCreation(firebaseUser, name, email) {
         showLoading('Creating your TostiShop account...');
         
-        console.log('📱 Creating Firestore profile and WordPress account...');
+        console.log('📱 Creating new account for:', email);
         
         // Step 1: Create Firestore profile with collected data
         const userData = {
@@ -1717,6 +1779,75 @@
             // No Firestore available, proceed directly
             proceedWithPhoneRegistration(firebaseUser, userData);
         }
+    }
+
+    /**
+     * 📱 Proceed with Existing User Login
+     */
+    function proceedWithExistingUserLogin(firebaseUser, email, name) {
+        showLoading('Logging into existing account...');
+        
+        console.log('📱 Logging in existing user:', email);
+        
+        firebaseUser.getIdToken()
+            .then(function(idToken) {
+                
+                const loginData = {
+                    action: 'tostishop_firebase_login',
+                    firebase_token: idToken,
+                    nonce: tostiShopAjax.nonce,
+                    auth_method: 'phone',
+                    from_checkout: window.location.href.includes('checkout') ? 'true' : 'false',
+                    
+                    // User data for existing account
+                    user_uid: firebaseUser.uid,
+                    user_email: email,
+                    user_name: name,
+                    phone_number: firebaseUser.phoneNumber,
+                    email_verified: false,
+                    force_registration: false, // Login existing user
+                    check_user_exists: true
+                };
+
+                console.log('📤 Sending login request for existing user');
+
+                $.ajax({
+                    url: tostiShopAjax.ajaxurl,
+                    type: 'POST',
+                    data: loginData,
+                    timeout: 30000,
+                    success: function(response) {
+                        hideLoading();
+                        
+                        console.log('📥 WordPress existing user login response:', response);
+                        
+                        if (response.success) {
+                            showSuccess('🎉 Welcome back! Logged in successfully. Redirecting...');
+                            
+                            // Clean up
+                            window.currentFirebaseUser = null;
+                            
+                            setTimeout(function() {
+                                window.location.href = response.data.redirect_url || tostiShopAjax.redirectUrl || '/my-account/';
+                            }, 1500);
+                            
+                        } else {
+                            const errorMessage = response.data ? response.data.message : 'Login failed. Please try again.';
+                            showError(errorMessage);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        hideLoading();
+                        console.error('❌ WordPress existing user login error:', xhr.responseText, status, error);
+                        showError('Login failed. Please check your connection and try again.');
+                    }
+                });
+            })
+            .catch(function(error) {
+                hideLoading();
+                console.error('❌ Token retrieval error:', error);
+                showError('Authentication error. Please try again.');
+            });
     }
 
     /**
