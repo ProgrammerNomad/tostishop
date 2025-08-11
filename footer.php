@@ -2,9 +2,44 @@
 
 <?php if (!is_cart() && !is_checkout()) : ?>
 <!-- Footer -->
-<footer class="bg-navy-900 text-white mt-16 relative">
-    <!-- Simple Background -->
-    <div class="absolute inset-0 bg-gradient-to-b from-navy-900 to-navy-800"></div>
+<footer class="bg-navy-900 text-white mt-16 relative overflow-hidden">
+    <!-- Beauty & Jewelry Themed Background -->
+    <div class="absolute inset-0 bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900"></div>
+    
+    <!-- Decorative Background Elements -->
+    <div class="absolute inset-0 pointer-events-none">
+        <!-- Jewelry Gems & Sparkles -->
+        <div class="absolute top-8 left-12 w-4 h-4 bg-accent/30 rounded-full animate-pulse"></div>
+        <div class="absolute top-20 right-16 w-2 h-2 bg-silver-300/40 rounded-full animate-ping"></div>
+        <div class="absolute bottom-32 left-20 w-3 h-3 bg-accent/20 rounded-full"></div>
+        <div class="absolute bottom-16 right-24 w-5 h-5 bg-silver-300/30 rounded-full animate-pulse delay-300"></div>
+        
+        <!-- Lipstick & Makeup Elements -->
+        <div class="absolute top-16 right-1/3 opacity-10">
+            <svg class="w-8 h-8 text-accent rotate-12" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2L8 6v12a4 4 0 0 0 8 0V6l-4-4z"/>
+                <circle cx="12" cy="4" r="1"/>
+            </svg>
+        </div>
+        
+        <!-- Ring/Circle Elements -->
+        <div class="absolute bottom-24 left-1/4 opacity-15">
+            <svg class="w-10 h-10 text-silver-300 rotate-45" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="8" stroke-width="1"/>
+                <circle cx="12" cy="12" r="3" fill="currentColor"/>
+            </svg>
+        </div>
+        
+        <!-- Perfume Bottle -->
+        <div class="absolute top-24 left-1/2 opacity-10">
+            <svg class="w-6 h-6 text-accent -rotate-12" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M9 3V1h6v2h4v4h-1l-1 12H7L6 7H5V3h4zm2 0h2v1h-2V3z"/>
+            </svg>
+        </div>
+        
+        <!-- Subtle Pattern Overlay -->
+        <div class="absolute inset-0 opacity-5" style="background-image: radial-gradient(circle at 20% 20%, rgba(228, 32, 41, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(236, 235, 238, 0.1) 0%, transparent 50%);"></div>
+    </div>
     
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
         
