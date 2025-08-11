@@ -3,11 +3,37 @@
 <?php if (!is_cart() && !is_checkout()) : ?>
 <!-- Footer -->
 <footer class="bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900 text-white mt-16 relative overflow-hidden">
-    <!-- Background Decorative Elements -->
-    <div class="absolute inset-0 opacity-10">
-        <div class="absolute top-0 left-0 w-64 h-64 bg-accent rounded-full -translate-x-32 -translate-y-32"></div>
-        <div class="absolute bottom-0 right-0 w-48 h-48 bg-silver-50 rounded-full translate-x-24 translate-y-24"></div>
-        <div class="absolute top-1/2 left-1/2 w-32 h-32 bg-accent rounded-full -translate-x-16 -translate-y-16"></div>
+    <!-- Enhanced Background Decorative Elements -->
+    <div class="absolute inset-0">
+        <!-- Geometric patterns -->
+        <div class="absolute top-0 left-0 w-96 h-96 opacity-5">
+            <svg viewBox="0 0 100 100" class="w-full h-full">
+                <defs>
+                    <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                        <path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" stroke-width="0.5"/>
+                    </pattern>
+                </defs>
+                <rect width="100" height="100" fill="url(#grid)" class="text-accent"/>
+            </svg>
+        </div>
+        
+        <!-- Subtle gradient orbs -->
+        <div class="absolute top-20 right-20 w-72 h-72 bg-gradient-to-br from-accent/10 to-transparent rounded-full blur-3xl"></div>
+        <div class="absolute bottom-20 left-20 w-96 h-96 bg-gradient-to-tr from-silver-50/5 to-transparent rounded-full blur-3xl"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-accent/5 to-silver-50/5 rounded-full blur-2xl"></div>
+        
+        <!-- Diagonal lines pattern -->
+        <div class="absolute inset-0 opacity-3">
+            <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <defs>
+                    <pattern id="diagonals" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <path d="M0,20 L20,0" stroke="currentColor" stroke-width="0.5" class="text-accent"/>
+                        <path d="M10,20 L20,10" stroke="currentColor" stroke-width="0.3" class="text-silver-200"/>
+                    </pattern>
+                </defs>
+                <rect width="100" height="100" fill="url(#diagonals)"/>
+            </svg>
+        </div>
     </div>
     
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
@@ -18,12 +44,7 @@
             <!-- Brand & Description -->
             <div class="lg:col-span-1">
                 <div class="mb-6">
-                    <h3 class="text-2xl font-bold text-white mb-4 flex items-center">
-                        <div class="w-10 h-10 bg-accent rounded-lg flex items-center justify-center mr-3">
-                            <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                            </svg>
-                        </div>
+                    <h3 class="text-2xl font-bold text-white mb-4">
                         TostiShop
                     </h3>
                     <p class="text-silver-200 text-sm leading-relaxed mb-6">
