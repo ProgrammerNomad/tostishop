@@ -563,8 +563,12 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                     </div>
                 </form>
                 
-                <!-- WooCommerce Single Product Summary Hook for Plugins -->
-                <?php do_action('woocommerce_single_product_summary'); ?>
+                <!-- Shiprocket Pincode Check (Mobile) -->
+                <?php 
+                if (function_exists('show_shiprocket_pincode_check')) {
+                    show_shiprocket_pincode_check();
+                }
+                ?>
                 
                 <!-- Mobile Product Meta -->
                 <div class="border-t pt-6 space-y-3">
@@ -942,8 +946,12 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                     </div>
                 </form>
                 
-                <!-- WooCommerce Single Product Summary Hook for Plugins -->
-                <?php do_action('woocommerce_single_product_summary'); ?>
+                <!-- Shiprocket Pincode Check (Desktop) -->
+                <?php 
+                if (function_exists('show_shiprocket_pincode_check')) {
+                    show_shiprocket_pincode_check();
+                }
+                ?>
                 
                 <!-- Product Meta -->
                 <div class="border-t pt-6 space-y-3">
