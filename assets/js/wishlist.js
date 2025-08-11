@@ -18,11 +18,6 @@ function initWishlistFunctionality() {
             handleWishlistClick(e.target.closest('.wishlist-btn'));
         }
         
-        if (e.target.closest('.wishlist-login-required')) {
-            e.preventDefault();
-            handleLoginRequired();
-        }
-        
         if (e.target.closest('.remove-from-wishlist')) {
             e.preventDefault();
             handleRemoveFromWishlist(e.target.closest('.remove-from-wishlist'));
@@ -43,19 +38,6 @@ function handleWishlistClick(button) {
         removeFromWishlist(productId, button);
     } else {
         addToWishlist(productId, button);
-    }
-}
-
-function handleLoginRequired() {
-    if (typeof tostishop_wishlist_ajax !== 'undefined' && tostishop_wishlist_ajax.strings) {
-        showNotification(tostishop_wishlist_ajax.strings.login_required, 'warning');
-        
-        // Redirect to login page after a short delay
-        setTimeout(function() {
-            if (tostishop_wishlist_ajax.login_url) {
-                window.location.href = tostishop_wishlist_ajax.login_url;
-            }
-        }, 1500);
     }
 }
 

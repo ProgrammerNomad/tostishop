@@ -44,6 +44,10 @@ require_once get_template_directory() . '/inc/helper-functions.php';
 
 // Wishlist functionality
 require_once get_template_directory() . '/inc/wishlist.php';
+tostishop_init_wishlist();
+
+// Enqueue wishlist assets and localization
+add_action('wp_enqueue_scripts', 'tostishop_enqueue_wishlist_assets');
 
 // Firebase authentication integration (if exists)
 $firebase_init_file = get_template_directory() . '/inc/firebase/init.php';

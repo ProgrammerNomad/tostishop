@@ -267,7 +267,7 @@ function tostishop_ajax_add_to_wishlist() {
     
     // Check if user is logged in
     if (!is_user_logged_in()) {
-        wp_send_json_error(__('Please log in to add items to your wishlist', 'tostishop'));
+        wp_send_json_error(__('Please log in to add items to your wishlist.', 'tostishop'));
         return;
     }
     
@@ -344,7 +344,10 @@ function tostishop_enqueue_wishlist_assets() {
             'add_to_wishlist' => __('Add to Wishlist', 'tostishop'),
             'remove_from_wishlist' => __('Remove from Wishlist', 'tostishop'),
             'in_wishlist' => __('In Wishlist', 'tostishop'),
-            'login_required' => __('Please log in to use wishlist', 'tostishop')
+            'login_required' => __('Please log in to add items to your wishlist.', 'tostishop'),
+            'added_to_wishlist' => __('Product added to wishlist', 'tostishop'),
+            'removed_from_wishlist' => __('Product removed from wishlist', 'tostishop'),
+            'error_occurred' => __('An error occurred. Please try again.', 'tostishop')
         )
     ));
 }
@@ -353,11 +356,12 @@ function tostishop_enqueue_wishlist_assets() {
  * Generate wishlist button HTML
  */
 function tostishop_get_wishlist_button($product_id, $classes = '', $icon_only = false) {
+    $text_html = $icon_only ? '' : '<span>' . esc_html__('Save', 'tostishop') . '</span>';
+    $margin_class = $icon_only ? '' : 'mr-2';
+    
     if (!is_user_logged_in()) {
-        $text_html = $icon_only ? '' : '<span>' . esc_html__('Save', 'tostishop') . '</span>';
-        $margin_class = $icon_only ? '' : 'mr-2';
         return sprintf(
-            '<button class="wishlist-btn wishlist-login-required %s" data-product-id="%d" title="%s">
+            '<button class="wishlist-btn %s" data-product-id="%d" title="%s">
                 <svg class="w-5 h-5 %s" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                 </svg>
