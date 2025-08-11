@@ -200,19 +200,22 @@
                 
                 <!-- Payment Methods -->
                 <div class="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
-                    <span class="text-sm font-medium text-silver-200">Secure Payments:</span>
+                    <span class="text-sm font-medium text-silver-200">Secure Payments via Razorpay:</span>
                     <div class="flex items-center space-x-3">
                         <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-3 py-1 rounded-md text-xs font-bold shadow-lg">
                             VISA
                         </div>
                         <div class="bg-gradient-to-r from-red-600 to-red-700 text-white px-3 py-1 rounded-md text-xs font-bold shadow-lg">
-                            MC
-                        </div>
-                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 rounded-md text-xs font-bold shadow-lg">
-                            PayPal
+                            MASTERCARD
                         </div>
                         <div class="bg-gradient-to-r from-green-600 to-green-700 text-white px-3 py-1 rounded-md text-xs font-bold shadow-lg">
                             UPI
+                        </div>
+                        <div class="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-3 py-1 rounded-md text-xs font-bold shadow-lg">
+                            NET BANKING
+                        </div>
+                        <div class="bg-gradient-to-r from-orange-600 to-orange-700 text-white px-3 py-1 rounded-md text-xs font-bold shadow-lg">
+                            RUPAY
                         </div>
                     </div>
                 </div>
