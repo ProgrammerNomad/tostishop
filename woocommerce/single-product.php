@@ -563,6 +563,9 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                     </div>
                 </form>
                 
+                <!-- WooCommerce Single Product Summary Hook for Plugins -->
+                <?php do_action('woocommerce_single_product_summary'); ?>
+                
                 <!-- Mobile Product Meta -->
                 <div class="border-t pt-6 space-y-3">
                     <div class="flex items-center text-sm text-gray-600">
@@ -938,6 +941,9 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                         </div>
                     </div>
                 </form>
+                
+                <!-- WooCommerce Single Product Summary Hook for Plugins -->
+                <?php do_action('woocommerce_single_product_summary'); ?>
                 
                 <!-- Product Meta -->
                 <div class="border-t pt-6 space-y-3">
