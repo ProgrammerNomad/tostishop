@@ -56,6 +56,11 @@ function tostishop_setup() {
             }
         }
     }
+    
+    // Initialize saved addresses feature on theme setup
+    if (function_exists('tostishop_install_saved_addresses') && !get_option('tostishop_saved_addresses_installed')) {
+        tostishop_install_saved_addresses();
+    }
 }
 add_action('after_setup_theme', 'tostishop_setup');
 

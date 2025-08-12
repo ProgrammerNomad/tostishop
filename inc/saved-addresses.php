@@ -27,18 +27,35 @@ class TostiShop_Saved_Addresses {
     
     public function __construct() {
         $this->init_hooks();
+        // Ensure database table exists
+        $this->maybe_create_table();
+    }
+    
+    /**
+     * Check if table exists and create if needed
+     */
+    private function maybe_create_table() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'tostishop_saved_addresses';
+        
+        // Check if table exists
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table_name'") == $table_name;
+        
+        if (!$table_exists) {
+            // Create table using install script
+            if (class_exists('TostiShop_Saved_Addresses_Install')) {
+                TostiShop_Saved_Addresses_Install::create_tables();
+            }
+        }
     }
     
     /**
      * Initialize hooks and filters
      */
     private function init_hooks() {
-        // Add address book tab to My Account
+        // Override default address management
         add_filter('woocommerce_account_menu_items', array($this, 'add_address_book_menu_item'), 40);
-        add_action('woocommerce_account_address-book_endpoint', array($this, 'address_book_content'));
-        
-        // Add endpoint for address book
-        add_action('init', array($this, 'add_address_book_endpoint'));
+        add_action('woocommerce_account_edit-address_endpoint', array($this, 'address_book_content'));
         
         // AJAX handlers
         add_action('wp_ajax_tostishop_save_address', array($this, 'ajax_save_address'));
@@ -57,28 +74,25 @@ class TostiShop_Saved_Addresses {
     }
     
     /**
-     * Add address book endpoint
-     */
-    public function add_address_book_endpoint() {
-        add_rewrite_endpoint('address-book', EP_ROOT | EP_PAGES);
-    }
-    
-    /**
      * Add address book menu item to My Account
      */
     public function add_address_book_menu_item($items) {
-        $new_items = array();
-        
-        foreach ($items as $key => $item) {
-            $new_items[$key] = $item;
-            
-            // Add address book after edit-address
-            if ($key === 'edit-address') {
-                $new_items['address-book'] = __('Address Book', 'tostishop');
+        // Replace the default edit-address with our address book
+        if (isset($items['edit-address'])) {
+            $items['edit-address'] = __('Address Book', 'tostishop');
+        } else {
+            // If edit-address doesn't exist, add our address book after dashboard
+            $new_items = array();
+            foreach ($items as $key => $item) {
+                $new_items[$key] = $item;
+                if ($key === 'dashboard') {
+                    $new_items['address-book'] = __('Address Book', 'tostishop');
+                }
             }
+            return $new_items;
         }
         
-        return $new_items;
+        return $items;
     }
     
     /**
