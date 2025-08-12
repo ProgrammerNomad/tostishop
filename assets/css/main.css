@@ -4,6 +4,56 @@
 
 /* Custom Components */
 @layer components {
+  /* Amazon-style Address Picker */
+  .amazon-address-picker {
+    @apply mb-6 p-4 bg-white border border-gray-200 rounded-lg shadow-sm;
+  }
+  
+  .address-card {
+    @apply border-2 border-gray-200 rounded-lg p-4 cursor-pointer transition-all duration-200 hover:border-red-300 hover:shadow-md;
+  }
+  
+  .address-card.selected {
+    @apply border-red-500 bg-red-50 ring-2 ring-red-200;
+  }
+  
+  .address-card-compact {
+    @apply border border-gray-200 rounded-lg p-3 cursor-pointer transition-all duration-200 hover:border-red-300 hover:shadow-sm;
+  }
+  
+  .address-card-compact.selected {
+    @apply border-red-500 bg-red-50 ring-1 ring-red-200;
+  }
+  
+  /* Mobile optimizations for address cards */
+  @media (max-width: 768px) {
+    .address-card, .address-card-compact {
+      @apply p-3 text-sm;
+    }
+    
+    .amazon-address-picker {
+      @apply p-3 mb-4;
+    }
+  }
+  
+  /* Radio button styling */
+  .address-radio {
+    @apply w-5 h-5 border-2 rounded-full flex items-center justify-center transition-all duration-200;
+  }
+  
+  .address-radio.selected {
+    @apply border-red-500 bg-red-500;
+  }
+  
+  .address-radio.unselected {
+    @apply border-gray-300;
+  }
+  
+  .address-radio-dot {
+    @apply w-2 h-2 bg-white rounded-full;
+  }
+
+  /* Existing button styles */
   .btn-primary {
     @apply bg-navy-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-navy-700 focus:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 transition-colors duration-200;
   }

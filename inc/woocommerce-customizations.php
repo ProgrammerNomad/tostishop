@@ -1,7 +1,8 @@
 <?php
 /**
- * TostiShop WooCommerce Customizations
- * All WooCommerce-related modifications and enhancements
+ * WooCommerce Customizations
+ * 
+ * @package TostiShop
  */
 
 // Prevent direct access
@@ -10,78 +11,146 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Checkout Customizations
- * Remove separate shipping address and combine with billing
+ * Remove default checkout hooks that conflict with our address system
  */
 function tostishop_checkout_customizations() {
-    // Force shipping address to be same as billing address
-    add_filter('woocommerce_cart_needs_shipping_address', '__return_false');
-    
-    // Remove shipping fields from checkout
-    add_filter('woocommerce_checkout_fields', 'tostishop_remove_shipping_fields');
-    
-    // Auto-copy billing to shipping on checkout
-    add_action('woocommerce_checkout_process', 'tostishop_auto_copy_billing_to_shipping');
+    // Remove checkout customizations that interfere with our address system
+    remove_action('woocommerce_before_checkout_billing_form', 'tostishop_amazon_style_address_picker', 5);
 }
 add_action('init', 'tostishop_checkout_customizations');
+
+/**
+ * Remove old Amazon-style address picker - replaced with simpler template approach
+ */
+
+/**
+ * Enqueue scripts for checkout address picker
+ */
+function tostishop_enqueue_checkout_address_scripts() {
+    if (is_checkout()) {
+        wp_enqueue_script('alpine-js', get_template_directory_uri() . '/assets/js/alpine.min.js', array(), '3.13.0', true);
+    }
+}
+
+/**
+ * AJAX handler for saving new checkout address
+ */
+function tostishop_ajax_save_checkout_address() {
+    check_ajax_referer('tostishop_checkout_nonce', 'nonce');
+    
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => __('You must be logged in to save addresses.', 'tostishop')));
+    }
+    
+    global $tostishop_saved_addresses;
+    if (!$tostishop_saved_addresses) {
+        $tostishop_saved_addresses = new TostiShop_Saved_Addresses();
+    }
+    
+    $address_data = array(
+        'address_type' => sanitize_text_field($_POST['address_type']),
+        'address_name' => sanitize_text_field($_POST['address_name']),
+        'first_name' => sanitize_text_field($_POST['first_name']),
+        'last_name' => sanitize_text_field($_POST['last_name']),
+        'company' => sanitize_text_field($_POST['company']),
+        'address_1' => sanitize_text_field($_POST['address_1']),
+        'address_2' => sanitize_text_field($_POST['address_2']),
+        'city' => sanitize_text_field($_POST['city']),
+        'state' => sanitize_text_field($_POST['state']),
+        'postcode' => sanitize_text_field($_POST['postcode']),
+        'country' => sanitize_text_field($_POST['country']),
+        'phone' => sanitize_text_field($_POST['phone']),
+        'email' => sanitize_email($_POST['email']),
+        'is_default' => 0 // New addresses are not default by default
+    );
+    
+    $result = $tostishop_saved_addresses->save_address($address_data);
+    
+    if ($result) {
+        wp_send_json_success(array(
+            'message' => __('Address saved successfully.', 'tostishop'),
+            'address_id' => $result
+        ));
+    } else {
+        wp_send_json_error(array('message' => __('Failed to save address.', 'tostishop')));
+    }
+}
+
+// Hook the AJAX handler
+add_action('wp_ajax_tostishop_save_checkout_address', 'tostishop_ajax_save_checkout_address');
 
 /**
  * Remove shipping fields from checkout
  */
 function tostishop_remove_shipping_fields($fields) {
-    // Remove all shipping fields
-    unset($fields['shipping']);
+    // Remove the shipping fields if we don't want them displayed
+    if (isset($fields['shipping'])) {
+        unset($fields['shipping']);
+    }
     return $fields;
 }
 
 /**
- * Auto-copy billing address to shipping address
+ * Auto copy billing address to shipping address
  */
 function tostishop_auto_copy_billing_to_shipping() {
-    // Copy billing data to shipping
-    $_POST['shipping_first_name'] = $_POST['billing_first_name'];
-    $_POST['shipping_last_name'] = $_POST['billing_last_name'];
-    $_POST['shipping_company'] = $_POST['billing_company'];
-    $_POST['shipping_address_1'] = $_POST['billing_address_1'];
-    $_POST['shipping_address_2'] = $_POST['billing_address_2'];
-    $_POST['shipping_city'] = $_POST['billing_city'];
-    $_POST['shipping_postcode'] = $_POST['billing_postcode'];
-    $_POST['shipping_country'] = $_POST['billing_country'];
-    $_POST['shipping_state'] = $_POST['billing_state'];
+    if (!is_admin() && is_checkout()) {
+        // Copy billing to shipping fields on checkout processing
+        $billing_fields = array(
+            'first_name', 'last_name', 'company', 'address_1', 'address_2',
+            'city', 'state', 'postcode', 'country', 'phone'
+        );
+        
+        foreach ($billing_fields as $field) {
+            if (isset($_POST['billing_' . $field])) {
+                $_POST['shipping_' . $field] = $_POST['billing_' . $field];
+            }
+        }
+    }
 }
+add_action('woocommerce_checkout_process', 'tostishop_auto_copy_billing_to_shipping');
 
 /**
- * Customize WooCommerce display
+ * Disable WooCommerce block styles properly
+ */
+function tostishop_disable_wc_block_styles() {
+    wp_dequeue_style('wc-blocks-style');
+    wp_deregister_style('wc-blocks-style');
+}
+add_action('wp_enqueue_scripts', 'tostishop_disable_wc_block_styles', 100);
+
+/**
+ * WooCommerce customizations for TostiShop
  */
 function tostishop_woocommerce_customizations() {
-    // Remove default WooCommerce styles
+    // Remove default WooCommerce styling
     add_filter('woocommerce_enqueue_styles', '__return_empty_array');
-
-    // Modify WooCommerce loop
-    remove_action('woocommerce_before_shop_loop_item', 'woocommerce_template_loop_product_link_open', 10);
-    remove_action('woocommerce_after_shop_loop_item', 'woocommerce_template_loop_product_link_close', 5);
-    remove_action('woocommerce_shop_loop_item_title', 'woocommerce_template_loop_product_title', 10);
-
-    // Add custom WooCommerce actions
-    add_action('woocommerce_before_shop_loop_item_title', 'tostishop_product_link_open', 10);
-    add_action('woocommerce_shop_loop_item_title', 'tostishop_product_title', 10);
-    add_action('woocommerce_after_shop_loop_item', 'tostishop_product_link_close', 5);
     
-    // Remove add to cart buttons from all pages except single product
-    tostishop_remove_add_to_cart_buttons();
+    // Remove WooCommerce generator tag
+    remove_action('wp_head', array('WC', 'generator'));
+    
+    // Modify breadcrumbs
+    add_filter('woocommerce_breadcrumb_defaults', 'tostishop_breadcrumbs');
+    
+    // Custom add to cart functionality
+    add_action('wp_ajax_woocommerce_add_to_cart', 'tostishop_ajax_add_to_cart');
+    add_action('wp_ajax_nopriv_woocommerce_add_to_cart', 'tostishop_ajax_add_to_cart');
 }
-add_action('init', 'tostishop_woocommerce_customizations');
+add_action('after_setup_theme', 'tostishop_woocommerce_customizations');
 
 /**
- * Custom product link open
+ * Product link opening tag
  */
 function tostishop_product_link_open() {
     global $product;
-    echo '<a href="' . get_permalink($product->get_id()) . '" class="group block">';
+    
+    $link = apply_filters('woocommerce_loop_product_link', get_the_permalink(), $product);
+    
+    echo '<a href="' . esc_url($link) . '" class="tostishop-product-link">';
 }
 
 /**
- * Custom product link close
+ * Product link closing tag
  */
 function tostishop_product_link_close() {
     echo '</a>';
@@ -91,139 +160,132 @@ function tostishop_product_link_close() {
  * Custom product title
  */
 function tostishop_product_title() {
-    echo '<h3 class="text-sm font-medium text-gray-900 group-hover:text-navy-600 transition-colors duration-200">' . get_the_title() . '</h3>';
+    echo '<h3 class="tostishop-product-title">' . get_the_title() . '</h3>';
 }
 
 /**
- * Remove add to cart buttons from all pages except single product
+ * Remove default add to cart buttons from shop page
  */
 function tostishop_remove_add_to_cart_buttons() {
-    // Remove ALL add to cart buttons from archive/shop pages
-    remove_action('woocommerce_after_shop_loop_item', 'woocommerce_template_loop_add_to_cart', 10);
-    
-    // Keep the add to cart functionality only on single product pages
-    if (!is_product()) {
-        remove_action('woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart', 30);
+    if (is_shop() || is_product_category() || is_product_tag()) {
+        remove_action('woocommerce_after_shop_loop_item', 'woocommerce_template_loop_add_to_cart', 10);
     }
 }
+add_action('init', 'tostishop_remove_add_to_cart_buttons');
 
 /**
  * Custom breadcrumbs
  */
-function tostishop_breadcrumbs() {
-    if (function_exists('woocommerce_breadcrumb')) {
-        woocommerce_breadcrumb(array(
-            'delimiter' => ' / ',
-            'wrap_before' => '<nav class="breadcrumbs text-sm text-gray-600 mb-4">',
-            'wrap_after' => '</nav>',
-            'before' => '',
-            'after' => '',
-            'home' => __('Home', 'tostishop'),
-        ));
-    }
+function tostishop_breadcrumbs($args) {
+    $args['delimiter'] = ' <span class="breadcrumb-separator">/</span> ';
+    $args['wrap_before'] = '<nav class="tostishop-breadcrumb" itemscope itemtype="http://schema.org/BreadcrumbList">';
+    $args['wrap_after'] = '</nav>';
+    $args['before'] = '<span itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">';
+    $args['after'] = '</span>';
+    $args['home'] = _x('Home', 'breadcrumb', 'tostishop');
+    
+    return $args;
 }
 
 /**
- * Get cart count for header
+ * Get cart count
  */
 function tostishop_cart_count() {
-    if (function_exists('WC')) {
+    if (WC()->cart) {
         return WC()->cart->get_cart_contents_count();
     }
     return 0;
 }
 
 /**
- * Get cart total for header
+ * Get cart total
  */
 function tostishop_cart_total() {
-    if (function_exists('WC')) {
+    if (WC()->cart) {
         return WC()->cart->get_cart_total();
     }
-    return '';
+    return wc_price(0);
 }
 
 /**
- * Customize order confirmation email link
+ * Custom order confirmation email text
  */
 function tostishop_order_confirmation_email_text($text, $order) {
-    if ($order && !$order->has_status('failed')) {
-        return __('We\'ve sent a confirmation email to your inbox. Please check your email for order details and tracking information.', 'tostishop');
+    if ($order && is_a($order, 'WC_Order')) {
+        $custom_text = sprintf(
+            __('Thank you for your order #%s! We\'ll send you tracking information once your order ships.', 'tostishop'),
+            $order->get_order_number()
+        );
+        return $custom_text;
     }
     return $text;
 }
 add_filter('woocommerce_thankyou_order_received_text', 'tostishop_order_confirmation_email_text', 10, 2);
 
 /**
- * Add order tracking information to confirmation page
+ * Add order tracking information
  */
 function tostishop_add_order_tracking_info($order_id) {
-    $order = wc_get_order($order_id);
+    if (!$order_id) return;
     
-    if ($order && !$order->has_status(array('failed', 'cancelled'))) {
-        echo '<div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mt-6">';
-        echo '<div class="flex items-start space-x-3">';
-        echo '<div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">';
-        echo '<svg class="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">';
-        echo '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>';
-        echo '</svg>';
-        echo '</div>';
-        echo '<div>';
-        echo '<h3 class="text-sm font-semibold text-yellow-900 mb-1">' . __('What\'s Next?', 'tostishop') . '</h3>';
-        echo '<p class="text-sm text-yellow-800">';
-        echo __('We\'ll start processing your order right away. You\'ll receive tracking information once your order ships.', 'tostishop');
-        echo '</p>';
-        echo '</div>';
-        echo '</div>';
-        echo '</div>';
-    }
+    $order = wc_get_order($order_id);
+    if (!$order) return;
+    
+    // Add custom tracking info section
+    echo '<div class="tostishop-tracking-info">';
+    echo '<h3>' . __('Track Your Order', 'tostishop') . '</h3>';
+    echo '<p>' . __('You will receive an email with tracking information once your order ships.', 'tostishop') . '</p>';
+    
+    // Add estimated delivery date
+    $estimated_delivery = date('F j, Y', strtotime('+5 business days'));
+    echo '<p><strong>' . __('Estimated Delivery:', 'tostishop') . '</strong> ' . $estimated_delivery . '</p>';
+    echo '</div>';
 }
 add_action('woocommerce_thankyou', 'tostishop_add_order_tracking_info', 20);
 
 /**
- * Filter WooCommerce pagination to use our enhanced version
+ * Custom pagination for WooCommerce
  */
 function tostishop_woocommerce_pagination_args($args) {
-    $args['prev_text'] = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>' . __('Previous', 'tostishop');
-    $args['next_text'] = __('Next', 'tostishop') . '<svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>';
-    $args['type'] = 'array';
+    $args['prev_text'] = __('← Previous', 'tostishop');
+    $args['next_text'] = __('Next →', 'tostishop');
+    $args['type'] = 'list';
+    
     return $args;
 }
 add_filter('woocommerce_pagination_args', 'tostishop_woocommerce_pagination_args');
 
 /**
- * Order confirmation enhancements
+ * Order confirmation page enhancements
  */
 function tostishop_order_confirmation_enhancements() {
-    // Add special styling to order confirmation pages
-    if (is_order_received_page() || is_wc_endpoint_url('order-received')) {
-        // Add viewport meta for better mobile experience
-        add_action('wp_head', function() {
-            echo '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">';
-        }, 1);
-        
-        // Add structured data for order confirmation
-        add_action('wp_head', 'tostishop_order_confirmation_structured_data');
-        
-        // Add print styles
-        add_action('wp_head', function() {
-            echo '<style media="print">
-                .no-print, header, footer, .order-action-btn { display: none !important; }
-                .order-details-card { box-shadow: none !important; border: 1px solid #000 !important; }
-            </style>';
-        });
+    if (!is_wc_endpoint_url('order-received')) {
+        return;
     }
+    
+    // Add custom CSS for order confirmation
+    wp_add_inline_style('tostishop-style', '
+        .tostishop-tracking-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #e42029;
+        }
+        .tostishop-tracking-info h3 {
+            margin-top: 0;
+            color: #14175b;
+        }
+    ');
 }
-add_action('template_redirect', 'tostishop_order_confirmation_enhancements');
+add_action('wp_footer', 'tostishop_order_confirmation_enhancements');
 
 /**
  * Add structured data for order confirmation
  */
 function tostishop_order_confirmation_structured_data() {
-    global $wp;
-    
-    if (isset($wp->query_vars['order-received']) && !empty($wp->query_vars['order-received'])) {
-        $order_id = absint($wp->query_vars['order-received']);
+    if (is_wc_endpoint_url('order-received') && isset($_GET['key'])) {
+        $order_id = wc_get_order_id_by_order_key($_GET['key']);
         $order = wc_get_order($order_id);
         
         if ($order && $order->get_status() !== 'failed') {
@@ -231,12 +293,16 @@ function tostishop_order_confirmation_structured_data() {
                 '@context' => 'https://schema.org',
                 '@type' => 'Order',
                 'orderNumber' => $order->get_order_number(),
-                'orderDate' => $order->get_date_created()->format('c'),
                 'orderStatus' => 'https://schema.org/OrderProcessing',
-                'priceCurrency' => $order->get_currency(),
-                'price' => $order->get_total(),
-                'url' => $order->get_view_order_url(),
+                'orderDate' => $order->get_date_created()->format('c'),
+                'customer' => array(
+                    '@type' => 'Person',
+                    'name' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+                    'email' => $order->get_billing_email()
+                ),
                 'merchant' => array(
+                    '@type' => 'Organization',
+                    'name' => get_bloginfo('name'),
                     'url' => home_url()
                 )
             );
@@ -245,3 +311,4 @@ function tostishop_order_confirmation_structured_data() {
         }
     }
 }
+add_action('wp_footer', 'tostishop_order_confirmation_structured_data');

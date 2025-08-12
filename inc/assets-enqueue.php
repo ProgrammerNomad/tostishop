@@ -57,6 +57,15 @@ function tostishop_enqueue_page_specific_assets() {
     // Checkout specific JS
     if (is_checkout()) {
         wp_enqueue_script('tostishop-checkout', get_template_directory_uri() . '/assets/js/checkout.js', array('jquery', 'wc-checkout'), '1.0.0', true);
+        
+        // Amazon-style address picker for checkout
+        wp_enqueue_script('tostishop-checkout-address-picker', get_template_directory_uri() . '/assets/js/checkout-address-picker.js', array('alpinejs', 'jquery'), '1.0.0', true);
+        
+        // Localize checkout address picker script
+        wp_localize_script('tostishop-checkout-address-picker', 'tostishop_checkout_vars', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('tostishop_checkout_nonce'),
+        ));
     }
     
     // Cart specific JS
