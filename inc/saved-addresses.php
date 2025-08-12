@@ -55,7 +55,10 @@ class TostiShop_Saved_Addresses {
     private function init_hooks() {
         // Override default address management
         add_filter('woocommerce_account_menu_items', array($this, 'add_address_book_menu_item'), 40);
-        add_action('woocommerce_account_edit-address_endpoint', array($this, 'address_book_content'));
+        add_action('woocommerce_account_edit-address_endpoint', array($this, 'address_book_content'), 5);
+        
+        // Disable default WooCommerce address forms
+        add_action('woocommerce_account_edit-address_endpoint', array($this, 'disable_default_address_forms'), 1);
         
         // AJAX handlers
         add_action('wp_ajax_tostishop_save_address', array($this, 'ajax_save_address'));
@@ -71,6 +74,39 @@ class TostiShop_Saved_Addresses {
         
         // Install database table on init if needed
         add_action('init', array($this, 'maybe_install_database'), 5);
+    }
+    
+    /**
+     * Disable default WooCommerce address forms when our address book is active
+     */
+    public function disable_default_address_forms() {
+        // Remove default WooCommerce address handling
+        remove_action('woocommerce_account_edit-address_endpoint', 'woocommerce_account_edit_address');
+        
+        // Prevent default address form from showing
+        add_filter('woocommerce_get_template', array($this, 'override_address_templates'), 10, 5);
+    }
+    
+    /**
+     * Override WooCommerce address templates to prevent default forms
+     */
+    public function override_address_templates($template, $template_name, $args, $template_path, $default_path) {
+        // Debug: Log template requests for troubleshooting
+        if (defined('WP_DEBUG') && WP_DEBUG && strpos($template_name, 'address') !== false) {
+            error_log('TostiShop Address Override: ' . $template_name);
+        }
+        
+        // If this is the default address edit template, redirect to our address book
+        if ($template_name === 'myaccount/form-edit-address.php') {
+            return get_template_directory() . '/woocommerce/myaccount/form-edit-address.php';
+        }
+        
+        // If this is addresses template, use our address book
+        if ($template_name === 'myaccount/addresses.php') {
+            return get_template_directory() . '/woocommerce/myaccount/address-book.php';
+        }
+        
+        return $template;
     }
     
     /**
@@ -429,8 +465,30 @@ class TostiShop_Saved_Addresses {
      * Address book content for My Account page
      */
     public function address_book_content() {
+        // Completely override the default WooCommerce address page
+        
+        // Clear any existing output
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
+        // Start output buffering to capture our content
+        ob_start();
+        
+        // Get user addresses
         $addresses = $this->get_user_addresses();
+        
+        // Include our custom address book template
         include get_template_directory() . '/woocommerce/myaccount/address-book.php';
+        
+        // Get the content and clear the buffer
+        $content = ob_get_clean();
+        
+        // Output our content
+        echo $content;
+        
+        // Prevent any further output from WooCommerce
+        exit;
     }
     
     /**
