@@ -96,5 +96,21 @@ function tostishop_enqueue_page_specific_assets() {
     }
 }
 
+/**
+ * Enqueue scripts for checkout address picker
+ */
+function tostishop_enqueue_checkout_address_scripts() {
+    if (is_checkout()) {
+        // Remove this line to avoid conflicts:
+        // wp_enqueue_script('tostishop-compact-address-picker', get_template_directory_uri() . '/assets/js/compact-address-picker.js', array(), '1.0.0', true);
+        
+        // Keep the AJAX localization
+        wp_localize_script('tostishop-theme', 'tostishop_ajax', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('tostishop_nonce')
+        ));
+    }
+}
+
 // Firebase Authentication is now handled by /inc/firebase/enqueue.php
 // when Firebase module is loaded conditionally from functions.php
