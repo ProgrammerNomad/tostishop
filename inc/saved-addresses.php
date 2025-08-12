@@ -511,16 +511,10 @@ class TostiShop_Saved_Addresses {
      * Enqueue scripts and styles
      */
     public function enqueue_scripts() {
+        // Script is already enqueued in assets-enqueue.php
+        // Just localize the data for AJAX
         if (is_account_page() || is_checkout()) {
-            wp_enqueue_script(
-                'tostishop-saved-addresses',
-                get_template_directory_uri() . '/assets/js/saved-addresses.js',
-                array('jquery'),
-                '1.0.0',
-                true
-            );
-            
-            wp_localize_script('tostishop-saved-addresses', 'tostishop_addresses', array(
+            wp_localize_script('tostishop-address-book', 'tostishop_addresses', array(
                 'ajax_url' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('tostishop_nonce'),
                 'i18n' => array(

@@ -70,6 +70,11 @@ function tostishop_enqueue_page_specific_assets() {
         ));
     }
     
+    // My Account Address Book specific JS
+    if (is_account_page()) {
+        wp_enqueue_script('tostishop-address-book', get_template_directory_uri() . '/assets/js/address-book.js', array('alpinejs'), '1.0.0', true);
+    }
+    
     // Order confirmation specific JS
     if (is_order_received_page() || is_wc_endpoint_url('order-received')) {
         wp_enqueue_script('tostishop-order-confirmation', get_template_directory_uri() . '/assets/js/order-confirmation.js', array(), '1.0.0', true);
