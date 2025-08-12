@@ -47,9 +47,16 @@ function tostishop_shiprocket_scripts() {
             true
         );
         
-        wp_localize_script('tostishop-shiprocket', 'tostishop_shiprocket_ajax', array(
-            'ajax_url' => admin_url('admin-ajax.php'),
+        wp_localize_script('tostishop-shiprocket', 'tostishopShiprocket', array(
+            'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('tostishop_shiprocket_nonce'),
+            'productId' => get_the_ID(),
+            'messages' => array(
+                'checking' => __('Checking...', 'tostishop'),
+                'enterPincode' => __('Please enter a pincode', 'tostishop'),
+                'validPincode' => __('Please enter a valid 6-digit pincode', 'tostishop'),
+                'error' => __('Error checking pincode. Please try again.', 'tostishop'),
+            ),
         ));
     }
 }
@@ -58,23 +65,18 @@ function tostishop_shiprocket_scripts() {
  * Display pincode serviceability check on product pages
  */
 function tostishop_shiprocket_pincode_check() {
-    // Check if pincode check is enabled
-    $show_pincode_check = get_option('tostishop_shiprocket_show_pincode_check', 'no');
-    if ($show_pincode_check !== 'yes') {
-        return;
-    }
-    
-    // Check if we have a valid token
-    $token = get_option('tostishop_shiprocket_token', '');
-    if (empty($token)) {
-        return;
-    }
+    // TEMPORARY: Remove all conditions for testing
     
     global $product;
     
-    // Only show for products that need shipping
-    if (!$product || !$product->needs_shipping()) {
-        return;
+    // Show debug info for admins
+    if (current_user_can('manage_options')) {
+        $show_pincode_check = get_option('tostishop_shiprocket_show_pincode_check', 'no');
+        $token = get_option('tostishop_shiprocket_token', '');
+        echo '<!-- Debug: Pincode check setting = ' . $show_pincode_check . ' -->';
+        echo '<!-- Debug: Token exists = ' . (!empty($token) ? 'yes' : 'no') . ' -->';
+        echo '<!-- Debug: Product exists = ' . (!empty($product) ? 'yes' : 'no') . ' -->';
+        echo '<!-- Debug: Function called on ' . current_filter() . ' -->';
     }
     ?>
     
@@ -93,12 +95,12 @@ function tostishop_shiprocket_pincode_check() {
         
         <div class="flex gap-3 items-end">
             <div class="flex-1">
-                <label for="shiprocket-pincode" class="block text-sm font-medium text-gray-700 mb-1">
+                <label for="tostishop-pincode-input" class="block text-sm font-medium text-gray-700 mb-1">
                     Enter Pincode
                 </label>
                 <input 
                     type="text" 
-                    id="shiprocket-pincode" 
+                    id="tostishop-pincode-input" 
                     name="shiprocket_pincode"
                     placeholder="e.g., 110001"
                     maxlength="6"
@@ -108,7 +110,7 @@ function tostishop_shiprocket_pincode_check() {
             </div>
             <button 
                 type="button" 
-                id="check-pincode-btn"
+                id="tostishop-check-pincode-btn"
                 class="px-6 py-2 bg-navy-900 text-white font-medium rounded-md hover:bg-navy-800 focus:outline-none focus:ring-2 focus:ring-navy-900 focus:ring-offset-2 transition-colors duration-200 min-w-[120px]"
             >
                 <span class="btn-text">Check</span>
@@ -119,7 +121,7 @@ function tostishop_shiprocket_pincode_check() {
             </button>
         </div>
         
-        <div id="pincode-result" class="mt-4 hidden">
+        <div id="tostishop-pincode-response" class="mt-4 hidden">
             <!-- Results will be populated via JavaScript -->
         </div>
     </div>

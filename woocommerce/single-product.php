@@ -565,8 +565,8 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                 
                 <!-- Shiprocket Pincode Check (Mobile) -->
                 <?php 
-                if (function_exists('show_shiprocket_pincode_check')) {
-                    show_shiprocket_pincode_check();
+                if (function_exists('tostishop_shiprocket_pincode_check')) {
+                    tostishop_shiprocket_pincode_check();
                 }
                 ?>
                 
@@ -948,8 +948,8 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                 
                 <!-- Shiprocket Pincode Check (Desktop) -->
                 <?php 
-                if (function_exists('show_shiprocket_pincode_check')) {
-                    show_shiprocket_pincode_check();
+                if (function_exists('tostishop_shiprocket_pincode_check')) {
+                    tostishop_shiprocket_pincode_check();
                 }
                 ?>
                 
