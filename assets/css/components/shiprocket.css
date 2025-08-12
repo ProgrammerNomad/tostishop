@@ -1,0 +1,181 @@
+/**
+ * TostiShop Shiprocket Integration Styles
+ * 
+ * Custom styles for pincode checking functionality
+ * Using Tailwind CSS utilities with custom enhancements
+ */
+
+/* Pincode Check Container */
+.tostishop-pincode-check {
+    @apply mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200;
+}
+
+.tostishop-checkout-pincode-verification {
+    @apply mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg;
+}
+
+/* Input Field Enhancements */
+.tostishop-pincode-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md text-sm;
+    @apply focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent;
+    @apply transition-all duration-200;
+}
+
+.tostishop-pincode-input:focus {
+    @apply shadow-sm;
+}
+
+.tostishop-pincode-input.error {
+    @apply border-red-300 focus:ring-red-500;
+}
+
+.tostishop-pincode-input.success {
+    @apply border-green-300 focus:ring-green-500;
+}
+
+/* Button Styles */
+.tostishop-pincode-btn {
+    @apply px-4 py-2 bg-accent text-white rounded-md text-sm font-medium;
+    @apply hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2;
+    @apply transition-colors duration-200 whitespace-nowrap;
+}
+
+.tostishop-pincode-btn:disabled {
+    @apply opacity-50 cursor-not-allowed;
+}
+
+.tostishop-checkout-pincode-btn {
+    @apply px-6 py-2 bg-blue-600 text-white rounded-md text-sm font-medium;
+    @apply hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+    @apply transition-colors duration-200 whitespace-nowrap;
+}
+
+.tostishop-checkout-pincode-btn:disabled {
+    @apply opacity-50 cursor-not-allowed;
+}
+
+/* Response Messages */
+.pincode-response-success {
+    @apply bg-green-50 text-green-800 border border-green-200;
+}
+
+.pincode-response-express {
+    @apply bg-blue-50 text-blue-800 border border-blue-200;
+}
+
+.pincode-response-error {
+    @apply bg-red-50 text-red-800 border border-red-200;
+}
+
+.pincode-response-info {
+    @apply bg-gray-50 text-gray-800 border border-gray-200;
+}
+
+/* Loading Animation */
+.tostishop-loading {
+    @apply relative;
+}
+
+.tostishop-loading::after {
+    content: '';
+    @apply absolute right-2 top-1/2 transform -translate-y-1/2;
+    @apply w-4 h-4 border-2 border-white border-t-transparent rounded-full;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Mobile Optimizations */
+@media (max-width: 640px) {
+    .tostishop-pincode-check {
+        @apply mt-4 p-3;
+    }
+    
+    .tostishop-checkout-pincode-verification {
+        @apply mt-4 p-3;
+    }
+    
+    .tostishop-pincode-input {
+        @apply text-base; /* Prevent zoom on iOS */
+    }
+    
+    .tostishop-pincode-btn,
+    .tostishop-checkout-pincode-btn {
+        @apply w-full mt-2;
+    }
+}
+
+/* Desktop Flexbox Layout */
+@media (min-width: 640px) {
+    .tostishop-pincode-form-row {
+        @apply flex gap-3 items-end;
+    }
+    
+    .tostishop-pincode-input-wrapper {
+        @apply flex-1;
+    }
+    
+    .tostishop-pincode-btn,
+    .tostishop-checkout-pincode-btn {
+        @apply flex-shrink-0;
+    }
+}
+
+/* Integration with WooCommerce */
+.woocommerce .tostishop-pincode-check {
+    @apply mb-4;
+}
+
+.woocommerce-checkout .tostishop-checkout-pincode-verification {
+    @apply mb-6;
+}
+
+/* Theme Integration */
+.single-product .tostishop-pincode-check {
+    @apply border-l-4 border-l-accent;
+}
+
+/* Accessibility Improvements */
+.tostishop-pincode-input:focus-visible,
+.tostishop-pincode-btn:focus-visible,
+.tostishop-checkout-pincode-btn:focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-accent;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+    .tostishop-pincode-check {
+        @apply border-2 border-gray-900;
+    }
+    
+    .tostishop-checkout-pincode-verification {
+        @apply border-2 border-blue-900;
+    }
+    
+    .tostishop-pincode-input {
+        @apply border-2 border-gray-900;
+    }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    .tostishop-pincode-input,
+    .tostishop-pincode-btn,
+    .tostishop-checkout-pincode-btn {
+        @apply transition-none;
+    }
+    
+    .tostishop-loading::after {
+        animation: none;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .tostishop-pincode-check,
+    .tostishop-checkout-pincode-verification {
+        @apply hidden;
+    }
+}

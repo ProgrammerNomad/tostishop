@@ -239,6 +239,9 @@
   @apply bg-red-50 border-red-500 text-red-700;
 }
 
+/* Import Shiprocket Components */
+@import './components/shiprocket.css';
+
 /* Custom Scrollbars */
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px;

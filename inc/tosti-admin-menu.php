@@ -48,6 +48,16 @@ function tostishop_admin_menu() {
         'tostishop_firebase_settings_page' // Function
     );
     
+    // Add Shiprocket submenu
+    add_submenu_page(
+        'tostishop-theme',     // Parent slug
+        'Shiprocket Settings', // Page title
+        'Shiprocket',          // Menu title
+        'manage_options',      // Capability
+        'tostishop-shiprocket', // Menu slug
+        'tostishop_shiprocket_settings_page' // Function
+    );
+    
     // Remove the old Firebase menu from Appearance
     remove_submenu_page('themes.php', 'tostishop-firebase');
 }
@@ -71,6 +81,7 @@ function tostishop_dashboard_page() {
                 <div class="tostishop-card-actions">
                     <a href="<?php echo admin_url('customize.php'); ?>" class="button button-primary">Customize Theme</a>
                     <a href="<?php echo admin_url('admin.php?page=tostishop-firebase'); ?>" class="button">Firebase Auth</a>
+                    <a href="<?php echo admin_url('admin.php?page=tostishop-shiprocket'); ?>" class="button">Shiprocket</a>
                 </div>
             </div>
             
@@ -88,6 +99,7 @@ function tostishop_dashboard_page() {
                 <p>TostiShop Version: <?php echo wp_get_theme()->get('Version'); ?></p>
                 <p>WooCommerce Version: <?php echo class_exists('WooCommerce') ? WC()->version : 'Not Active'; ?></p>
                 <p>Firebase Auth: <?php echo get_option('tostishop_firebase_api_key') ? '<span class="tostishop-status active">Configured</span>' : '<span class="tostishop-status inactive">Not Configured</span>'; ?></p>
+                <p>Shiprocket: <?php echo get_option('tostishop_shiprocket_token') ? '<span class="tostishop-status active">Connected</span>' : '<span class="tostishop-status inactive">Not Connected</span>'; ?></p>
             </div>
         </div>
         
@@ -275,4 +287,176 @@ function tostishop_firebase_settings_page() {
         </div>
         <?php
     }
+}
+
+/**
+ * Shiprocket Settings Page
+ */
+function tostishop_shiprocket_settings_page() {
+    // Handle form submission
+    if (isset($_POST['save_shiprocket_settings'])) {
+        // Verify nonce
+        if (!wp_verify_nonce($_POST['shiprocket_nonce'], 'save_shiprocket_settings')) {
+            wp_die('Security check failed');
+        }
+        
+        $email = sanitize_email($_POST['shiprocket_email']);
+        $password = sanitize_text_field($_POST['shiprocket_password']);
+        $show_pincode_check = isset($_POST['show_pincode_check']) ? 'yes' : 'no';
+        $show_top_courier = isset($_POST['show_top_courier']) ? 'yes' : 'no';
+        
+        // Generate token by calling Shiprocket API
+        $token = '';
+        $token_error = '';
+        
+        if ($email && $password) {
+            $response = wp_remote_post('https://apiv2.shiprocket.in/v1/external/auth/login', array(
+                'headers' => array('Content-Type' => 'application/json'),
+                'body'    => wp_json_encode(array(
+                    'email'    => $email,
+                    'password' => $password,
+                )),
+            ));
+            
+            if (!is_wp_error($response)) {
+                $body = json_decode(wp_remote_retrieve_body($response));
+                $code = wp_remote_retrieve_response_code($response);
+                
+                if ($code == 200 && isset($body->token)) {
+                    $token = $body->token;
+                } else {
+                    $token_error = 'Invalid Shiprocket credentials or API error.';
+                }
+            } else {
+                $token_error = 'Failed to connect to Shiprocket API: ' . $response->get_error_message();
+            }
+        }
+        
+        // Save settings
+        update_option('tostishop_shiprocket_email', $email);
+        update_option('tostishop_shiprocket_password', $password);
+        update_option('tostishop_shiprocket_token', $token);
+        update_option('tostishop_shiprocket_show_pincode_check', $show_pincode_check);
+        update_option('tostishop_shiprocket_show_top_courier', $show_top_courier);
+        
+        if ($token_error) {
+            echo '<div class="notice notice-error"><p>' . esc_html($token_error) . '</p></div>';
+        } else {
+            echo '<div class="notice notice-success"><p>Shiprocket settings saved successfully!</p></div>';
+        }
+    }
+    
+    // Get current settings
+    $email = get_option('tostishop_shiprocket_email', '');
+    $password = get_option('tostishop_shiprocket_password', '');
+    $token = get_option('tostishop_shiprocket_token', '');
+    $show_pincode_check = get_option('tostishop_shiprocket_show_pincode_check', 'no');
+    $show_top_courier = get_option('tostishop_shiprocket_show_top_courier', 'yes');
+    ?>
+    
+    <div class="wrap">
+        <div class="tostishop-admin-header">
+            <h1>Shiprocket Integration</h1>
+            <p class="about-description">Configure Shiprocket shipping integration for your TostiShop store.</p>
+        </div>
+        
+        <div class="tostishop-admin-cards">
+            <div class="tostishop-card" style="max-width: 600px;">
+                <h2><span class="dashicons dashicons-admin-network"></span> Shiprocket API Settings</h2>
+                
+                <form method="post" action="">
+                    <?php wp_nonce_field('save_shiprocket_settings', 'shiprocket_nonce'); ?>
+                    
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="shiprocket_email">Shiprocket Email</label></th>
+                            <td>
+                                <input type="email" id="shiprocket_email" name="shiprocket_email" 
+                                       value="<?php echo esc_attr($email); ?>" class="regular-text" required />
+                                <p class="description">Enter your Shiprocket account email.</p>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <th scope="row"><label for="shiprocket_password">Shiprocket Password</label></th>
+                            <td>
+                                <input type="password" id="shiprocket_password" name="shiprocket_password" 
+                                       value="<?php echo esc_attr($password); ?>" class="regular-text" required />
+                                <p class="description">Enter your Shiprocket account password.</p>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <th scope="row"><label for="shiprocket_token">Generated Token</label></th>
+                            <td>
+                                <textarea id="shiprocket_token" rows="3" class="large-text" readonly><?php echo esc_textarea($token); ?></textarea>
+                                <p class="description">This token is automatically generated when you save valid credentials.</p>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <h3>Feature Settings</h3>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">Pincode Check</th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="show_pincode_check" value="yes" 
+                                           <?php checked($show_pincode_check, 'yes'); ?> />
+                                    Enable pincode serviceability check on product pages
+                                </label>
+                                <p class="description">Show a pincode checker on single product pages.</p>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <th scope="row">Courier Options</th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="show_top_courier" value="yes" 
+                                           <?php checked($show_top_courier, 'yes'); ?> />
+                                    Show only top rated 5 courier providers
+                                </label>
+                                <p class="description">Limit shipping options to the best performing couriers.</p>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <?php submit_button('Save Shiprocket Settings', 'primary', 'save_shiprocket_settings'); ?>
+                </form>
+            </div>
+            
+            <div class="tostishop-card">
+                <h2><span class="dashicons dashicons-info"></span> Connection Status</h2>
+                <p><strong>API Connection:</strong> 
+                    <?php echo $token ? '<span class="tostishop-status active">Connected</span>' : '<span class="tostishop-status inactive">Not Connected</span>'; ?>
+                </p>
+                <p><strong>Pincode Check:</strong> 
+                    <?php echo $show_pincode_check === 'yes' ? '<span class="tostishop-status active">Enabled</span>' : '<span class="tostishop-status inactive">Disabled</span>'; ?>
+                </p>
+                
+                <?php if ($token): ?>
+                <div style="margin-top: 15px;">
+                    <h4>Quick Actions</h4>
+                    <a href="<?php echo admin_url('admin.php?page=wc-settings&tab=shipping'); ?>" class="button">
+                        Configure Shipping Zones
+                    </a>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+        
+        <div class="tostishop-admin-footer">
+            <h3>Shiprocket Integration Guide</h3>
+            <div class="tostishop-help-links">
+                <a href="https://shiprocket.in/" target="_blank">
+                    <span class="dashicons dashicons-external"></span> Shiprocket Dashboard
+                </a>
+                <a href="https://apidocs.shiprocket.in/" target="_blank">
+                    <span class="dashicons dashicons-book"></span> API Documentation
+                </a>
+            </div>
+        </div>
+    </div>
+    <?php
 }

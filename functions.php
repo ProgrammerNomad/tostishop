@@ -65,3 +65,9 @@ $admin_menu_file = get_template_directory() . '/inc/tosti-admin-menu.php';
 if (file_exists($admin_menu_file)) {
     require_once $admin_menu_file;
 }
+
+// Shiprocket integration for shipping and pincode checking
+$shiprocket_file = get_template_directory() . '/inc/shiprocket-integration.php';
+if (file_exists($shiprocket_file)) {
+    require_once $shiprocket_file;
+}
