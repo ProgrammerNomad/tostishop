@@ -36,41 +36,25 @@ if (!defined('ABSPATH')) {
 
     <!-- Saved Addresses Grid -->
     <?php if (!empty($addresses)) : ?>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <?php foreach ($addresses as $address) : ?>
-                <div class="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg hover:border-gray-300 transition-all duration-200 relative group" 
-                     data-address-id="<?php echo $address->id; ?>">
+                <div class="address-card bg-white rounded-lg shadow-sm p-6 relative border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col">
                     
                     <!-- Default Badge -->
                     <?php if ($address->is_default) : ?>
-                        <div class="absolute top-4 right-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 shadow-sm">
-                                <?php _e('Default', 'tostishop'); ?>
-                            </span>
-                        </div>
+                        <span class="absolute top-3 right-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <?php _e('Default', 'tostishop'); ?>
+                        </span>
                     <?php endif; ?>
                     
-                    <!-- Address Type -->
+                    <!-- Address Name/Type -->
                     <div class="mb-4">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-navy-50 text-navy-900 border border-navy-100">
-                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <?php if ($address->address_type === 'billing') : ?>
-                                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
-                                <?php else : ?>
-                                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                                <?php endif; ?>
-                            </svg>
-                            <?php echo ucfirst($address->address_type); ?>
-                        </span>
+                        <h3 class="text-lg font-semibold text-gray-800"><?php echo esc_html($address->address_name); ?></h3>
+                        <p class="text-sm text-gray-500 capitalize"><?php echo esc_html($address->address_type); ?></p>
                     </div>
                     
-                    <!-- Address Name -->
-                    <h3 class="text-lg font-semibold text-gray-900 mb-3 pr-16">
-                        <?php echo esc_html($address->address_name); ?>
-                    </h3>
-                    
                     <!-- Address Details -->
-                    <div class="text-sm text-gray-600 space-y-2 mb-6">
+                    <div class="text-sm text-gray-600 space-y-2 mb-6 flex-grow">
                         <p class="font-medium text-gray-800"><?php echo esc_html($address->first_name . ' ' . $address->last_name); ?></p>
                         <?php if ($address->company) : ?>
                             <p class="text-gray-500"><?php echo esc_html($address->company); ?></p>
@@ -94,18 +78,18 @@ if (!defined('ABSPATH')) {
                     </div>
                     
                     <!-- Action Buttons -->
-                    <div class="flex flex-col sm:flex-row gap-2">
+                    <div class="flex flex-col sm:flex-row gap-2 mt-auto">
                         <button @click="editAddress(<?php echo esc_attr(json_encode($address)); ?>)" 
                                 class="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-md hover:bg-gray-100 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L16.732 3.732z"/>
                             </svg>
                             <?php _e('Edit', 'tostishop'); ?>
                         </button>
                         
                         <?php if (!$address->is_default) : ?>
-                            <button @click="setDefault(<?php echo $address->id; ?>, '<?php echo $address->address_type; ?>')" 
-                                    class="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
+                            <button @click="setDefaultAddress(<?php echo $address->id; ?>, '<?php echo $address->address_type; ?>')"
+                                    class="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-md hover:bg-gray-100 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                 </svg>
@@ -113,11 +97,12 @@ if (!defined('ABSPATH')) {
                             </button>
                         <?php endif; ?>
                         
-                        <button @click="deleteAddress(<?php echo $address->id; ?>)" 
-                                class="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 hover:border-red-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <button @click="deleteAddress(<?php echo $address->id; ?>)"
+                                class="flex-1 inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100 hover:border-red-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                             </svg>
+                            <?php _e('Delete', 'tostishop'); ?>
                         </button>
                     </div>
                 </div>

@@ -43,6 +43,47 @@
     @apply min-h-[44px] min-w-[44px];
   }
   
+  /* Address Book Grid - Ensure proper display */
+  .address-book-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+    display: grid !important; /* Force grid display */
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+  
+  @media (min-width: 768px) {
+    .address-book-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .address-book-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  
+  .address-card {
+    @apply bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-all duration-200 flex flex-col;
+    min-height: 280px; /* Ensure consistent card heights */
+    display: flex !important; /* Force flex display */
+    flex-direction: column;
+  }
+  
+  .address-card.default {
+    @apply ring-2 ring-red-500 border-red-300;
+  }
+  
+  /* Address card content sections */
+  .address-details {
+    @apply space-y-2 text-sm text-gray-600 flex-grow;
+    flex: 1; /* Allow this section to grow */
+  }
+  
+  .address-actions {
+    @apply mt-4 flex space-x-2;
+    margin-top: auto; /* Push to bottom */
+  }
+
   /* High Contrast Mode Support */
   @media (prefers-contrast: high) {
     .btn-primary, .btn-accent {

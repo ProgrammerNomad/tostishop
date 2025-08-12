@@ -26,16 +26,51 @@ if (class_exists('TostiShop_Saved_Addresses')) {
     $addresses = $tostishop_saved_addresses->get_user_addresses();
     ?>
     
+    
     <!-- Address Book Content -->
     <div class="address-book-wrapper" x-data="addressBookManager()">
-            
-            <!-- Header -->
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-gray-900 mb-2"><?php _e('Address Book', 'tostishop'); ?></h2>
-                <p class="text-gray-600"><?php _e('Manage your saved addresses for faster checkout', 'tostishop'); ?></p>
-            </div>
-            
-            <!-- Add New Address Button -->
+        
+        <style>
+        /* Fix potential grid display issues */
+        .address-book-grid {
+            display: grid !important;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            gap: 1.5rem;
+        }
+        
+        @media (min-width: 768px) {
+            .address-book-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .address-book-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+        
+        .address-card {
+            display: flex !important;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 280px;
+        }
+        
+        .address-details {
+            flex: 1;
+        }
+        
+        .address-actions {
+            margin-top: auto;
+        }
+        </style>
+        
+        <!-- Header -->
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2"><?php _e('Address Book', 'tostishop'); ?></h2>
+            <p class="text-gray-600"><?php _e('Manage your saved addresses for faster checkout', 'tostishop'); ?></p>
+        </div>            <!-- Add New Address Button -->
             <div class="mb-6">
                 <button @click="showAddForm = true" 
                         class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors">
@@ -75,12 +110,12 @@ if (class_exists('TostiShop_Saved_Addresses')) {
             
             <!-- Addresses Display -->
             <?php if (!empty($addresses)) : ?>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <div class="address-book-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                     <?php foreach ($addresses as $address) : 
                         // Convert object to array if needed
                         $addr = is_object($address) ? (array) $address : $address;
                     ?>
-                        <div class="address-card bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-all duration-200 <?php echo $addr['is_default'] ? 'ring-2 ring-red-500 border-red-300' : ''; ?>">
+                        <div class="address-card bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-all duration-200 flex flex-col <?php echo $addr['is_default'] ? 'ring-2 ring-red-500 border-red-300' : ''; ?>">
                             
                             <!-- Address Header -->
                             <div class="flex items-start justify-between mb-4">
@@ -107,6 +142,7 @@ if (class_exists('TostiShop_Saved_Addresses')) {
                                         </span>
                                     </div>
                                 </div>
+                            </div>
                             
                             <!-- Default Badge -->
                             <?php if ($addr['is_default']) : ?>
@@ -121,7 +157,7 @@ if (class_exists('TostiShop_Saved_Addresses')) {
                             <?php endif; ?>
                             
                             <!-- Address Details -->
-                            <div class="space-y-2 text-sm text-gray-600">
+                            <div class="address-details space-y-2 text-sm text-gray-600 flex-grow">
                                 <div class="font-medium text-gray-900">
                                     <?php echo esc_html($addr['first_name'] . ' ' . $addr['last_name']); ?>
                                 </div>
@@ -146,9 +182,10 @@ if (class_exists('TostiShop_Saved_Addresses')) {
                                         <?php echo esc_html($addr['phone']); ?>
                                     </div>
                                 <?php endif; ?>
+                            </div>
                             
                             <!-- Action Buttons -->
-                            <div class="mt-4 flex space-x-2">
+                            <div class="address-actions mt-4 flex space-x-2">
                                 <button @click="editAddress(<?php echo esc_attr(json_encode($addr)); ?>)" 
                                         class="flex-1 px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
                                     <?php _e('Edit', 'tostishop'); ?>
