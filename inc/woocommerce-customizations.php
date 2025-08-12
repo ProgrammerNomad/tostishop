@@ -686,22 +686,82 @@ function tostishop_ajax_save_checkout_address() {
 add_action('wp_ajax_tostishop_save_checkout_address', 'tostishop_ajax_save_checkout_address');
 
 /**
- * Remove shipping fields from checkout
+ * Enable shipping calculation based on shipping address (not billing)
+ * This ensures shipping costs are calculated correctly based on where items are being shipped
  */
-function tostishop_remove_shipping_fields($fields) {
-    // Remove the shipping fields if we don't want them displayed
-    if (isset($fields['shipping'])) {
-        unset($fields['shipping']);
+function tostishop_enable_shipping_calculation() {
+    // Allow shipping address to be different from billing
+    add_filter('woocommerce_cart_needs_shipping_address', '__return_true');
+    
+    // Ensure shipping calculations use shipping address
+    add_filter('woocommerce_package_rates', 'tostishop_ensure_shipping_address_calculation', 10, 2);
+    
+    // Ensure India is available as shipping country
+    add_filter('woocommerce_countries_allowed_countries', 'tostishop_ensure_india_shipping');
+    add_filter('woocommerce_countries_shipping_countries', 'tostishop_ensure_india_shipping');
+    
+    // Force WooCommerce to calculate shipping based on shipping address, not billing
+    add_filter('woocommerce_cart_ready_to_calc_shipping', 'tostishop_force_shipping_calculation', 10, 1);
+}
+add_action('init', 'tostishop_enable_shipping_calculation');
+
+/**
+ * Force shipping calculation to use shipping address
+ */
+function tostishop_force_shipping_calculation($show_shipping_calc) {
+    // Override the shipping destination setting to ensure proper calculation
+    if (is_admin()) {
+        return $show_shipping_calc;
     }
-    return $fields;
+    
+    // Set shipping destination to shipping address
+    add_filter('pre_option_woocommerce_ship_to_destination', function() {
+        return 'shipping';
+    });
+    
+    return $show_shipping_calc;
 }
 
 /**
- * Auto copy billing address to shipping address
+ * Ensure India is available in shipping countries
  */
-function tostishop_auto_copy_billing_to_shipping() {
+function tostishop_ensure_india_shipping($countries) {
+    // Make sure India (IN) is always available for shipping
+    if (!isset($countries['IN'])) {
+        $countries['IN'] = __('India', 'woocommerce');
+    }
+    return $countries;
+}
+
+/**
+ * Ensure shipping calculations use shipping address
+ */
+function tostishop_ensure_shipping_address_calculation($rates, $package) {
+    // Make sure shipping calculation is based on shipping address
+    if (WC()->customer && WC()->customer->get_shipping_country()) {
+        // Force WooCommerce to use shipping address for calculations
+        $package['destination']['country'] = WC()->customer->get_shipping_country();
+        $package['destination']['state'] = WC()->customer->get_shipping_state();
+        $package['destination']['postcode'] = WC()->customer->get_shipping_postcode();
+        $package['destination']['city'] = WC()->customer->get_shipping_city();
+    }
+    
+    return $rates;
+}
+
+/**
+ * Only copy billing to shipping when explicitly requested (checkbox checked)
+ */
+function tostishop_conditional_copy_billing_to_shipping() {
+    // Only copy if the "ship to different address" checkbox is NOT checked
+    // This respects WooCommerce's built-in shipping address functionality
+    if (isset($_POST['ship_to_different_address']) && $_POST['ship_to_different_address'] == '1') {
+        // User wants different shipping address - don't copy billing
+        return;
+    }
+    
     if (!is_admin() && is_checkout()) {
-        // Copy billing to shipping fields on checkout processing
+        // Copy billing to shipping only when shipping to same address
         $billing_fields = array(
             'first_name', 'last_name', 'company', 'address_1', 'address_2',
             'city', 'state', 'postcode', 'country', 'phone'
@@ -714,7 +774,7 @@ function tostishop_auto_copy_billing_to_shipping() {
         }
     }
 }
-add_action('woocommerce_checkout_process', 'tostishop_auto_copy_billing_to_shipping');
+add_action('woocommerce_checkout_process', 'tostishop_conditional_copy_billing_to_shipping');
 
 /**
  * Disable WooCommerce block styles properly

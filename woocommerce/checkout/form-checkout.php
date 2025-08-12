@@ -89,8 +89,8 @@ if ( ! $checkout->is_registration_enabled() && $checkout->is_registration_requir
 							<?php do_action( 'woocommerce_checkout_billing' ); ?>
 						</div>
 
-						<!-- Shipping form is now empty as fields are handled in billing -->
-						<div class="hidden">
+						<!-- Shipping form is now properly enabled for separate shipping address -->
+						<div class="mt-6">
 							<?php do_action( 'woocommerce_checkout_shipping' ); ?>
 						</div>
 					</div>
