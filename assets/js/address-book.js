@@ -1,7 +1,14 @@
 // TostiShop Address Book JavaScript
 // Alpine.js component for address management
 
-document.addEventListener('alpine:init', () => {
+// Ensure Alpine.js is available
+function initAddressBook() {
+    if (typeof Alpine === 'undefined') {
+        console.log('Alpine.js not loaded yet, retrying...');
+        setTimeout(initAddressBook, 100);
+        return;
+    }
+    
     Alpine.data('addressBook', () => ({
         // State
         showAddForm: false,
@@ -29,7 +36,39 @@ document.addEventListener('alpine:init', () => {
         
         // Initialize
         init() {
-            console.log('Address Book initialized');
+            console.log('TostiShop Address Book initialized successfully');
+            // Load addresses if user is logged in
+            this.loadAddresses();
+        },
+        
+        // Load user addresses
+        async loadAddresses() {
+            if (typeof tostishop_addresses === 'undefined') {
+                console.log('AJAX data not available');
+                return;
+            }
+            
+            try {
+                const response = await fetch(tostishop_addresses.ajax_url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        action: 'tostishop_get_addresses',
+                        nonce: tostishop_addresses.nonce
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    console.log('Addresses loaded:', data.data);
+                } else {
+                    console.log('Failed to load addresses:', data.message);
+                }
+            } catch (error) {
+                console.error('Error loading addresses:', error);
+            }
         },
         
         // Show add form
@@ -202,4 +241,10 @@ document.addEventListener('alpine:init', () => {
             return Object.keys(this.errors).length === 0;
         }
     }));
-});
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', initAddressBook);
+
+// Also try to initialize on alpine:init event if available
+document.addEventListener('alpine:init', initAddressBook);

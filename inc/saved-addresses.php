@@ -54,17 +54,24 @@ class TostiShop_Saved_Addresses {
      */
     private function init_hooks() {
         // Override default address management
+        // Add menu item for address book
         add_filter('woocommerce_account_menu_items', array($this, 'add_address_book_menu_item'), 40);
-        add_action('woocommerce_account_edit-address_endpoint', array($this, 'address_book_content'), 5);
+        
+        // Hook into edit-address endpoint to show our content
+        add_action('woocommerce_account_edit-address_endpoint', array($this, 'display_address_book_instead_of_edit'));
+        
+        // IMPORTANT: Don't override the entire endpoint, just the content
+        // add_action('woocommerce_account_edit-address_endpoint', array($this, 'address_book_content'), 5);
         
         // Disable default WooCommerce address forms
-        add_action('woocommerce_account_edit-address_endpoint', array($this, 'disable_default_address_forms'), 1);
+        // add_action('woocommerce_account_edit-address_endpoint', array($this, 'disable_default_address_forms'), 1);
         
         // AJAX handlers
         add_action('wp_ajax_tostishop_save_address', array($this, 'ajax_save_address'));
         add_action('wp_ajax_tostishop_delete_address', array($this, 'ajax_delete_address'));
         add_action('wp_ajax_tostishop_set_default_address', array($this, 'ajax_set_default_address'));
         add_action('wp_ajax_tostishop_get_saved_address', array($this, 'ajax_get_saved_address'));
+        add_action('wp_ajax_tostishop_get_addresses', array($this, 'ajax_get_addresses'));
         
         // Checkout modifications
         add_action('woocommerce_checkout_before_customer_details', array($this, 'add_saved_addresses_to_checkout'));
@@ -84,6 +91,7 @@ class TostiShop_Saved_Addresses {
         remove_action('woocommerce_account_edit-address_endpoint', 'woocommerce_account_edit_address');
         
         // Prevent default address form from showing
+        // Re-enable template override with proper structure
         add_filter('woocommerce_get_template', array($this, 'override_address_templates'), 10, 5);
     }
     
@@ -129,6 +137,35 @@ class TostiShop_Saved_Addresses {
         }
         
         return $items;
+    }
+    
+    /**
+     * Display address book instead of standard edit address
+     */
+    public function display_address_book_instead_of_edit() {
+        // Remove the default edit address handler to prevent duplication
+        remove_action('woocommerce_account_edit-address_endpoint', 'woocommerce_account_edit_address');
+        
+        // Note: Template is handled by override_address_templates() method
+        // Do not manually include the template here as it causes duplication
+    }
+    
+    /**
+     * Add custom endpoint for address book
+     */
+    public function add_address_book_endpoint() {
+        add_rewrite_endpoint('address-book', EP_ROOT | EP_PAGES);
+        flush_rewrite_rules();
+    }
+    
+    /**
+     * Redirect edit-address to address book
+     */
+    public function redirect_edit_address_to_address_book() {
+        if (is_wc_endpoint_url('edit-address')) {
+            wp_redirect(wc_get_account_endpoint_url('address-book'));
+            exit;
+        }
     }
     
     /**
@@ -462,33 +499,17 @@ class TostiShop_Saved_Addresses {
     }
     
     /**
-     * Address book content for My Account page
+     * AJAX handler to get all user addresses
      */
-    public function address_book_content() {
-        // Completely override the default WooCommerce address page
+    public function ajax_get_addresses() {
+        check_ajax_referer('tostishop_nonce', 'nonce');
         
-        // Clear any existing output
-        if (ob_get_level()) {
-            ob_clean();
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => __('You must be logged in to access addresses.', 'tostishop')));
         }
         
-        // Start output buffering to capture our content
-        ob_start();
-        
-        // Get user addresses
         $addresses = $this->get_user_addresses();
-        
-        // Include our custom address book template
-        include get_template_directory() . '/woocommerce/myaccount/address-book.php';
-        
-        // Get the content and clear the buffer
-        $content = ob_get_clean();
-        
-        // Output our content
-        echo $content;
-        
-        // Prevent any further output from WooCommerce
-        exit;
+        wp_send_json_success($addresses);
     }
     
     /**
