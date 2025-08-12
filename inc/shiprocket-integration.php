@@ -189,7 +189,7 @@ function tostishop_get_pickup_postcode() {
 }
 
 /**
- * AJAX handler for pincode serviceability check
+ * AJAX handler for pincode serviceability check - Updated for multiple responses
  */
 function tostishop_ajax_check_pincode() {
     // Verify nonce for security
@@ -225,7 +225,7 @@ function tostishop_ajax_check_pincode() {
         $weight = 0.2; // Default weight matching your API example
     }
     
-    // FIXED: Use the improved function to get pickup postcode
+    // Get pickup postcode
     $pickup_postcode = tostishop_get_pickup_postcode();
     
     // Log the pickup postcode for debugging (admin only)
@@ -233,36 +233,31 @@ function tostishop_ajax_check_pincode() {
         error_log('TostiShop Shiprocket: Using pickup postcode: ' . $pickup_postcode);
     }
     
-    // Use the CORRECT Shiprocket API endpoint (matching your example)
+    // Use the CORRECT Shiprocket API endpoint
     $endpoint_url = 'https://serviceability.shiprocket.in/courier/ratingserviceability';
     
-    // Build query parameters EXACTLY matching your working example
+    // Build query parameters
     $params = array(
         'pickup_postcode' => $pickup_postcode,
         'delivery_postcode' => $pincode,
         'weight' => $weight,
-        'cod' => '0',                    // Prepaid (matching your example)
-        'declared_value' => floatval($product->get_price()) ?: 150, // Match example value
+        'cod' => '0',
+        'declared_value' => floatval($product->get_price()) ?: 150,
         'rate_calculator' => '1',
         'blocked' => '1',
         'is_return' => '0',
         'is_web' => '1',
         'is_dg' => '0',
         'only_qc_couriers' => '0',
-        'length' => '12',               // Match your example dimensions
-        'breadth' => '10',              // Match your example
+        'length' => '12',
+        'breadth' => '10',
         'height' => '10',
     );
     
     // Construct full URL
     $full_url = $endpoint_url . '?' . http_build_query($params);
     
-    // Log the full API URL for debugging (admin only)
-    if (current_user_can('manage_options')) {
-        error_log('TostiShop Shiprocket API URL: ' . $full_url);
-    }
-    
-    // Make API request with EXACT headers from your example
+    // Make API request
     $response = wp_remote_get($full_url, array(
         'headers' => array(
             'Authorization' => 'Bearer ' . $token,
@@ -278,27 +273,13 @@ function tostishop_ajax_check_pincode() {
         return;
     }
     
-    // Get response code
     $response_code = wp_remote_retrieve_response_code($response);
     $body = wp_remote_retrieve_body($response);
-    
-    // For debugging - log the full response for admins
-    if (current_user_can('manage_options')) {
-        error_log('Shiprocket API Response Code: ' . $response_code);
-        error_log('Shiprocket API Response Body: ' . substr($body, 0, 1000)); // First 1000 chars
-    }
-    
-    // Parse response
     $data = json_decode($body, true);
     
-    // Check if API returned valid data (matching your response structure)
+    // Check if API returned valid data
     if ($response_code !== 200 || !isset($data['status']) || $data['status'] !== 200) {
-        // For admins, show detailed API response for debugging
-        if (current_user_can('manage_options')) {
-            wp_send_json_error('Debug - API Response Code: ' . $response_code . ' | Response: ' . substr($body, 0, 500) . (strlen($body) > 500 ? '...' : ''));
-        } else {
-            wp_send_json_error('Service not available for this pincode.');
-        }
+        wp_send_json_error('Service not available for this pincode.');
         return;
     }
     
@@ -310,17 +291,18 @@ function tostishop_ajax_check_pincode() {
     
     $available_couriers = $data['data']['available_courier_companies'];
     
-    // Process the response
-    $result = tostishop_process_shiprocket_response($available_couriers);
+    // Process the response - NOW RETURNS ARRAY OF RESPONSES
+    $results = tostishop_process_shiprocket_response($available_couriers);
     
+    // Send all delivery options to frontend
     wp_send_json_success(array(
-        'message' => $result['message'],
-        'type' => $result['type']
+        'multiple_options' => true,
+        'responses' => $results
     ));
 }
 
 /**
- * Process Shiprocket API response - Updated for quick delivery detection
+ * Process Shiprocket API response - Updated to show BOTH quick and regular delivery options
  */
 function tostishop_process_shiprocket_response($available_couriers) {
     // Separate quick delivery and regular delivery couriers
@@ -361,7 +343,10 @@ function tostishop_process_shiprocket_response($available_couriers) {
         }
     }
     
-    // Prioritize quick delivery if available
+    // NEW LOGIC: Show BOTH quick and regular if available
+    $responses = array();
+    
+    // Process quick delivery couriers first
     if (!empty($quick_couriers)) {
         // Sort quick couriers by price (cheapest first)
         usort($quick_couriers, function($a, $b) {
@@ -374,31 +359,36 @@ function tostishop_process_shiprocket_response($available_couriers) {
         $city = isset($best_quick['city']) ? $best_quick['city'] : 'your location';
         $courier_name = $best_quick['courier_name'];
         $hours = isset($best_quick['etd_hours']) ? $best_quick['etd_hours'] : 3;
+        $rate = floatval($best_quick['rate'] ?? $best_quick['freight_charge'] ?? 0);
         
         // Format quick delivery message
         if ($hours <= 3) {
-            return array(
+            $responses[] = array(
                 'message' => sprintf(
-                    "🚀 Lightning fast delivery to %s! Get your order delivered within %d hours with %s.",
+                    "🚀 Lightning fast delivery to %s! Get your order delivered within %d hours with %s for ₹%s.",
                     esc_html($city),
                     $hours,
-                    esc_html($courier_name)
+                    esc_html($courier_name),
+                    number_format($rate, 0)
                 ),
-                'type' => 'express'
+                'type' => 'express',
+                'priority' => 1
             );
         } else {
-            return array(
+            $responses[] = array(
                 'message' => sprintf(
-                    "⚡ Same-day delivery available to %s! Order now with %s and get it today.",
+                    "⚡ Same-day delivery available to %s! Order now with %s for ₹%s and get it today.",
                     esc_html($city),
-                    esc_html($courier_name)
+                    esc_html($courier_name),
+                    number_format($rate, 0)
                 ),
-                'type' => 'express'
+                'type' => 'express',
+                'priority' => 1
             );
         }
     }
     
-    // If no quick delivery, process regular couriers
+    // Process regular delivery couriers
     if (!empty($regular_couriers)) {
         // Filter and sort regular couriers by delivery days (fastest first)
         $filtered_couriers = array_filter($regular_couriers, function($courier) {
@@ -415,45 +405,60 @@ function tostishop_process_shiprocket_response($available_couriers) {
             $city = isset($courier['city']) ? $courier['city'] : 'your location';
             $days = intval($courier['estimated_delivery_days']);
             $courier_name = $courier['courier_name'];
+            $rate = floatval($courier['rate'] ?? $courier['freight_charge'] ?? 0);
             
             // Format regular delivery message
             if ($days <= 1) {
-                return array(
+                $responses[] = array(
                     'message' => sprintf(
-                        "🚀 Next-day delivery available to %s! Order now with %s.",
+                        "🚀 Next-day delivery available to %s! Order now with %s for ₹%s.",
                         esc_html($city),
-                        esc_html($courier_name)
+                        esc_html($courier_name),
+                        number_format($rate, 0)
                     ),
-                    'type' => 'express'
+                    'type' => 'express',
+                    'priority' => 2
                 );
             } elseif ($days <= 2) {
-                return array(
+                $responses[] = array(
                     'message' => sprintf(
-                        "✅ Fast delivery to %s! Your order arrives in just %d days via %s.",
+                        "✅ Fast delivery to %s! Your order arrives in just %d days via %s for ₹%s.",
                         esc_html($city),
                         $days,
-                        esc_html($courier_name)
+                        esc_html($courier_name),
+                        number_format($rate, 0)
                     ),
-                    'type' => 'standard'
+                    'type' => 'standard',
+                    'priority' => 2
                 );
             } else {
-                return array(
+                $responses[] = array(
                     'message' => sprintf(
-                        "📦 Standard delivery to %s! Your order arrives in %d days via %s.",
+                        "📦 Standard delivery to %s! Your order arrives in %d days via %s for ₹%s.",
                         esc_html($city),
                         $days,
-                        esc_html($courier_name)
+                        esc_html($courier_name),
+                        number_format($rate, 0)
                     ),
-                    'type' => 'standard'
+                    'type' => 'standard',
+                    'priority' => 2
                 );
             }
         }
     }
     
+    // Return both responses if available, otherwise fallback
+    if (!empty($responses)) {
+        return $responses;
+    }
+    
     // Fallback message if no suitable couriers found
     return array(
-        'message' => "✅ Delivery available to your location.",
-        'type' => 'standard'
+        array(
+            'message' => "✅ Delivery available to your location.",
+            'type' => 'standard',
+            'priority' => 1
+        )
     );
 }
 

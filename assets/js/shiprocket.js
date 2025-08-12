@@ -134,7 +134,14 @@ function setupSinglePincodeContainer(container) {
         if (savedResponse) {
             try {
                 const data = JSON.parse(savedResponse);
-                showResponseForContainer(container, data.message, data.type || 'info');
+                
+                // Check if it's multiple responses
+                if (data.multiple_options && data.responses) {
+                    showMultipleResponsesForContainer(container, data.responses);
+                } else {
+                    // Single response
+                    showResponseForContainer(container, data.message, data.type || 'info');
+                }
             } catch (e) {
                 console.log('TostiShop Shiprocket: Could not parse saved response');
             }
@@ -145,7 +152,127 @@ function setupSinglePincodeContainer(container) {
 }
 
 /**
- * Handle pincode check for a specific container
+ * Show response message for specific container - Enhanced for multiple delivery options
+ */
+function showResponseForContainer(container, message, type) {
+    const responseArea = container.querySelector('.shiprocket-response-area');
+    if (!responseArea) return;
+    
+    // Base Tailwind classes for all message types
+    let classes = 'shiprocket-response-area mt-4 p-4 rounded-lg text-sm border-l-4 slide-in-up';
+    let icon = '';
+    
+    // Add type-specific Tailwind classes and icons using TostiShop brand colors
+    switch (type) {
+        case 'express':
+            classes += ' bg-blue-50 text-blue-900 border-blue-500';
+            icon = '<svg class="w-5 h-5 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>';
+            break;
+        case 'standard':
+            classes += ' bg-green-50 text-green-900 border-green-500';
+            icon = '<svg class="w-5 h-5 text-green-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+            break;
+        case 'error':
+            classes += ' bg-red-50 text-red-900 border-red-500';
+            icon = '<svg class="w-5 h-5 text-red-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+            break;
+        case 'info':
+        default:
+            classes += ' bg-gray-50 text-gray-900 border-gray-400';
+            icon = '<svg class="w-5 h-5 text-gray-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+            break;
+    }
+    
+    responseArea.className = classes;
+    responseArea.innerHTML = `
+        <div class="flex items-start">
+            ${icon}
+            <div class="flex-1">
+                <p class="font-medium">${message}</p>
+                ${type === 'express' ? '<p class="text-xs mt-1 opacity-75">⚡ Premium delivery service available</p>' : ''}
+                ${type === 'standard' ? '<p class="text-xs mt-1 opacity-75">📦 Reliable delivery service</p>' : ''}
+            </div>
+        </div>
+    `;
+    
+    // Show the response area with animation
+    responseArea.classList.remove('hidden');
+    responseArea.classList.add('show');
+    
+    // Auto-hide success messages after 15 seconds
+    if (type === 'express' || type === 'standard') {
+        setTimeout(function() {
+            if (responseArea.innerHTML.includes(message)) {
+                hideResponseForContainer(container);
+            }
+        }, 15000);
+    }
+}
+
+/**
+ * Show multiple delivery options for container
+ */
+function showMultipleResponsesForContainer(container, responses) {
+    const responseArea = container.querySelector('.shiprocket-response-area');
+    if (!responseArea) return;
+    
+    // Sort responses by priority (quick delivery first)
+    responses.sort((a, b) => a.priority - b.priority);
+    
+    let combinedHTML = '';
+    
+    responses.forEach(function(response, index) {
+        let classes = 'mb-3 p-3 rounded-lg text-sm border-l-4';
+        let icon = '';
+        let title = '';
+        
+        // Add type-specific styling
+        switch (response.type) {
+            case 'express':
+                classes += ' bg-blue-50 text-blue-900 border-blue-500';
+                icon = '<svg class="w-4 h-4 text-blue-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>';
+                title = index === 0 && response.priority === 1 ? 'Quick Delivery' : 'Express Delivery';
+                break;
+            case 'standard':
+                classes += ' bg-green-50 text-green-900 border-green-500';
+                icon = '<svg class="w-4 h-4 text-green-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+                title = 'Standard Delivery';
+                break;
+        }
+        
+        // Remove the last margin bottom for the last item
+        if (index === responses.length - 1) {
+            classes = classes.replace('mb-3', 'mb-0');
+        }
+        
+        combinedHTML += `
+            <div class="${classes}">
+                <div class="flex items-start">
+                    ${icon}
+                    <div class="flex-1">
+                        <p class="font-semibold text-xs uppercase tracking-wide mb-1">${title}</p>
+                        <p class="font-medium">${response.message}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    responseArea.className = 'shiprocket-response-area mt-4 slide-in-up';
+    responseArea.innerHTML = combinedHTML;
+    
+    // Show the response area
+    responseArea.classList.remove('hidden');
+    responseArea.classList.add('show');
+    
+    // Auto-hide after 20 seconds for multiple options
+    setTimeout(function() {
+        hideResponseForContainer(container);
+    }, 20000);
+}
+
+/**
+ * Handle pincode check for a specific container - Updated for multiple responses
  */
 function handlePincodeCheckForContainer(container) {
     console.log('TostiShop Shiprocket: handlePincodeCheck called for container');
@@ -204,11 +331,24 @@ function handlePincodeCheckForContainer(container) {
         console.log('TostiShop Shiprocket: Response data:', data);
         
         if (data.success) {
-            showResponseForContainer(container, data.data.message, data.data.type || 'standard');
-            
-            // Save to localStorage
-            localStorage.setItem('tostishop_pincode', pincode);
-            localStorage.setItem('tostishop_pincode_response', JSON.stringify(data.data));
+            // Check if we have multiple delivery options
+            if (data.data.multiple_options && data.data.responses) {
+                showMultipleResponsesForContainer(container, data.data.responses);
+                
+                // Save to localStorage
+                localStorage.setItem('tostishop_pincode', pincode);
+                localStorage.setItem('tostishop_pincode_response', JSON.stringify({
+                    multiple_options: true,
+                    responses: data.data.responses
+                }));
+            } else {
+                // Single response (backwards compatibility)
+                showResponseForContainer(container, data.data.message, data.data.type || 'standard');
+                
+                // Save to localStorage
+                localStorage.setItem('tostishop_pincode', pincode);
+                localStorage.setItem('tostishop_pincode_response', JSON.stringify(data.data));
+            }
         } else {
             showResponseForContainer(container, data.data || 'Service check failed', 'error');
         }
@@ -220,64 +360,6 @@ function handlePincodeCheckForContainer(container) {
     .finally(() => {
         setLoadingStateForContainer(container, false);
     });
-}
-
-/**
- * Show response message for specific container - Enhanced for different delivery types
- */
-function showResponseForContainer(container, message, type) {
-    const responseArea = container.querySelector('.shiprocket-response-area');
-    if (!responseArea) return;
-    
-    // Base Tailwind classes for all message types
-    let classes = 'shiprocket-response-area mt-4 p-4 rounded-lg text-sm border-l-4 slide-in-up';
-    let icon = '';
-    
-    // Add type-specific Tailwind classes and icons using TostiShop brand colors
-    switch (type) {
-        case 'express':
-            classes += ' bg-blue-50 text-blue-900 border-blue-500';
-            icon = '<svg class="w-5 h-5 text-blue-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>';
-            break;
-        case 'standard':
-            classes += ' bg-green-50 text-green-900 border-green-500';
-            icon = '<svg class="w-5 h-5 text-green-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
-            break;
-        case 'error':
-            classes += ' bg-red-50 text-red-900 border-red-500';
-            icon = '<svg class="w-5 h-5 text-red-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
-            break;
-        case 'info':
-        default:
-            classes += ' bg-gray-50 text-gray-900 border-gray-400';
-            icon = '<svg class="w-5 h-5 text-gray-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
-            break;
-    }
-    
-    responseArea.className = classes;
-    responseArea.innerHTML = `
-        <div class="flex items-start">
-            ${icon}
-            <div class="flex-1">
-                <p class="font-medium">${message}</p>
-                ${type === 'express' ? '<p class="text-xs mt-1 opacity-75">⚡ Premium delivery service available</p>' : ''}
-                ${type === 'standard' ? '<p class="text-xs mt-1 opacity-75">📦 Reliable delivery service</p>' : ''}
-            </div>
-        </div>
-    `;
-    
-    // Show the response area with animation
-    responseArea.classList.remove('hidden');
-    responseArea.classList.add('show');
-    
-    // Auto-hide success messages after 12 seconds
-    if (type === 'express' || type === 'standard') {
-        setTimeout(function() {
-            if (responseArea.innerHTML.includes(message)) {
-                hideResponseForContainer(container);
-            }
-        }, 12000);
-    }
 }
 
 /**
