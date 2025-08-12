@@ -57,15 +57,6 @@ function tostishop_enqueue_page_specific_assets() {
     // Checkout specific JS
     if (is_checkout()) {
         wp_enqueue_script('tostishop-checkout', get_template_directory_uri() . '/assets/js/checkout.js', array('jquery', 'wc-checkout'), '1.0.0', true);
-        
-        // Compact address picker for checkout
-        wp_enqueue_script('tostishop-compact-address-picker', get_template_directory_uri() . '/assets/js/compact-address-picker.js', array('alpinejs', 'jquery'), '1.0.0', true);
-        
-        // Localize compact address picker script
-        wp_localize_script('tostishop-compact-address-picker', 'tostishop_checkout_vars', array(
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('tostishop_checkout_nonce'),
-        ));
     }
     
     // Cart specific JS
@@ -79,36 +70,9 @@ function tostishop_enqueue_page_specific_assets() {
         ));
     }
     
-    // My Account Address Book specific JS
-    if (is_account_page()) {
-        wp_enqueue_script('tostishop-address-book', get_template_directory_uri() . '/assets/js/address-book.js', array('alpinejs'), '1.0.0', true);
-        
-        // Localize address book script
-        wp_localize_script('tostishop-address-book', 'tostishop_addresses', array(
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('tostishop_nonce'),
-        ));
-    }
-    
     // Order confirmation specific JS
     if (is_order_received_page() || is_wc_endpoint_url('order-received')) {
         wp_enqueue_script('tostishop-order-confirmation', get_template_directory_uri() . '/assets/js/order-confirmation.js', array(), '1.0.0', true);
-    }
-}
-
-/**
- * Enqueue scripts for checkout address picker
- */
-function tostishop_enqueue_checkout_address_scripts() {
-    if (is_checkout()) {
-        // Remove this line to avoid conflicts:
-        // wp_enqueue_script('tostishop-compact-address-picker', get_template_directory_uri() . '/assets/js/compact-address-picker.js', array(), '1.0.0', true);
-        
-        // Keep the AJAX localization
-        wp_localize_script('tostishop-theme', 'tostishop_ajax', array(
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('tostishop_nonce')
-        ));
     }
 }
 

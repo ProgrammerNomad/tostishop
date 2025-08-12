@@ -49,13 +49,6 @@ tostishop_init_wishlist();
 // Enqueue wishlist assets and localization
 add_action('wp_enqueue_scripts', 'tostishop_enqueue_wishlist_assets');
 
-// Saved Addresses functionality
-require_once get_template_directory() . '/inc/saved-addresses.php';
-
-// Initialize saved addresses globally
-global $tostishop_saved_addresses;
-$tostishop_saved_addresses = new TostiShop_Saved_Addresses();
-
 // Firebase authentication integration (if exists)
 $firebase_init_file = get_template_directory() . '/inc/firebase/init.php';
 if (file_exists($firebase_init_file)) {

@@ -288,7 +288,7 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
 <div class="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
     
     <!-- Breadcrumbs -->
-    <?php woocommerce_breadcrumb(); ?>
+    <?php tostishop_breadcrumbs(); ?>
     
     <!-- WooCommerce Notices -->
     <div class="woocommerce-notices-wrapper mb-6">

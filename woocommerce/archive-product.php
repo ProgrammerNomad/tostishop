@@ -22,7 +22,7 @@ get_header(); ?>
 <div class="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
     
     <!-- Breadcrumbs -->
-    <?php woocommerce_breadcrumb(); ?>
+    <?php tostishop_breadcrumbs(); ?>
     
     <!-- Page Header -->
     <div class="flex items-center justify-between mb-8">

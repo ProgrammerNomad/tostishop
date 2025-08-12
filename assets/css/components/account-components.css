@@ -22,6 +22,9 @@
     border-radius: 0.75rem;
     border: 1px solid #e5e7eb;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    /* Remove any fixed width constraints */
+    min-width: unset !important;
+    width: 100% !important;
 }
 
 /* Mobile Navigation Toggle */
@@ -97,9 +100,15 @@
 @media (min-width: 1024px) {
     .woocommerce-MyAccount-navigation {
         padding: 1.5rem !important;
+        /* Removed sticky positioning to prevent layout conflicts */
+        position: relative;
+        max-height: none;
+        overflow-y: visible;
+        display: block !important;
     }
     
     .woocommerce-MyAccount-navigation-list {
+        display: block !important;
         gap: 0.25rem;
     }
     
@@ -318,9 +327,33 @@
     
     /* Mobile Tables - Stack vertically */
     .woocommerce-orders-table {
-        font-size: 0.875rem;
+        display: block !important;
     }
-}/* ==========================================================================
+    
+    .woocommerce-orders-table thead,
+    .woocommerce-orders-table tbody,
+    .woocommerce-orders-table th,
+    .woocommerce-orders-table td,
+    .woocommerce-orders-table tr {
+        display: block !important;
+    }
+    
+    .woocommerce-orders-table thead tr {
+        position: absolute !important;
+        top: -9999px !important;
+        left: -9999px !important;
+    }
+    
+    .woocommerce-orders-table tr {
+        border: 1px solid #e5e7eb !important;
+        border-radius: 0.5rem !important;
+        margin-bottom: 1rem !important;
+        padding: 1rem !important;
+        background: white !important;
+    }
+}
+
+/* ==========================================================================
    Account Dashboard Specific Styles
    ========================================================================== */
 
@@ -341,6 +374,35 @@
 .woocommerce-MyAccount-content a:hover {
     color: var(--accent) !important;
     text-decoration: underline !important;
+}
+
+/* ==========================================================================
+   Address Book Styling
+   ========================================================================== */
+
+.woocommerce-Address {
+    background: white !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0.5rem !important;
+    padding: 1.5rem !important;
+    transition: box-shadow 0.2s ease !important;
+}
+
+.woocommerce-Address:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.woocommerce-Address h3 {
+    color: var(--navy-900) !important;
+    font-size: 1.125rem !important;
+    font-weight: 600 !important;
+    margin-bottom: 1rem !important;
+}
+
+.woocommerce-Address address {
+    color: #6b7280 !important;
+    line-height: 1.6 !important;
+    margin-bottom: 1.5rem !important;
 }
 
 /* ==========================================================================
