@@ -1,55 +1,132 @@
 /**
- * TostiShop Shiprocket Integration - Minimal JS
- * 
- * Handles pincode checking with Tailwind CSS styling and minimal JavaScript
+ * TostiShop Shiprocket Integration JavaScript
+ * Pure class-based approach - works universally on mobile & desktop
  */
 
+// Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('TostiShop Shiprocket: DOM loaded, initializing...');
+    
+    // Check if we have the required configuration
+    if (typeof tostishopShiprocket === 'undefined') {
+        console.error('TostiShop Shiprocket: Configuration not found');
+        return;
+    }
+    
+    console.log('TostiShop Shiprocket: Config found, initializing...');
     initPincodeCheck();
 });
 
 /**
- * Initialize pincode checking functionality
+ * Initialize pincode checking functionality - Pure class-based approach
  */
 function initPincodeCheck() {
-    const pincodeInput = document.getElementById('tostishop-pincode-input');
-    const checkButton = document.getElementById('tostishop-check-pincode-btn');
-    const responseDiv = document.getElementById('tostishop-pincode-response');
+    const maxRetries = 25;
+    let retryCount = 0;
     
-    if (!pincodeInput || !checkButton || !responseDiv) {
+    function findAndSetupElements() {
+        // Find all pincode checker containers by class
+        const pincodeContainers = document.querySelectorAll('.shiprocket-pincode-container');
+        
+        console.log('TostiShop Shiprocket: Found ' + pincodeContainers.length + ' pincode container(s)');
+        
+        if (pincodeContainers.length === 0) {
+            retryCount++;
+            if (retryCount < maxRetries) {
+                console.log('TostiShop Shiprocket: No containers found, retrying... (' + retryCount + '/' + maxRetries + ')');
+                setTimeout(findAndSetupElements, 300);
+                return;
+            } else {
+                console.error('TostiShop Shiprocket: No pincode containers found after ' + maxRetries + ' attempts');
+                return;
+            }
+        }
+        
+        // Setup each pincode checker container
+        pincodeContainers.forEach(function(container, index) {
+            console.log('TostiShop Shiprocket: Setting up container instance ' + (index + 1));
+            setupSinglePincodeContainer(container);
+        });
+    }
+    
+    findAndSetupElements();
+}
+
+/**
+ * Set up a single pincode checker container using class names only
+ */
+function setupSinglePincodeContainer(container) {
+    // Find elements within this specific container using class names
+    const pincodeInput = container.querySelector('.shiprocket-pincode-input');
+    const checkButton = container.querySelector('.shiprocket-check-button');
+    const responseArea = container.querySelector('.shiprocket-response-area');
+    
+    console.log('TostiShop Shiprocket: Elements found in container - Input:', !!pincodeInput, 'Button:', !!checkButton, 'Response:', !!responseArea);
+    
+    if (!pincodeInput || !checkButton || !responseArea) {
+        console.error('TostiShop Shiprocket: Required elements not found in container');
         return;
     }
     
-    // Add event listeners
-    checkButton.addEventListener('click', handlePincodeCheck);
+    // Mark this container as initialized to avoid duplicate setup
+    if (container.classList.contains('shiprocket-initialized')) {
+        console.log('TostiShop Shiprocket: Container already initialized, skipping');
+        return;
+    }
+    container.classList.add('shiprocket-initialized');
     
-    // Enter key support
+    // Store container reference in each element for easy access
+    pincodeInput.shiprockeContainer = container;
+    checkButton.shiprockeContainer = container;
+    responseArea.shiprockeContainer = container;
+    
+    // Add click event listener to button
+    checkButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('TostiShop Shiprocket: Check button clicked in container');
+        handlePincodeCheckForContainer(this.shiprockeContainer);
+    });
+    
+    // Add enter key support for input
     pincodeInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
-            handlePincodeCheck();
+            console.log('TostiShop Shiprocket: Enter key pressed in container');
+            handlePincodeCheckForContainer(this.shiprockeContainer);
         }
     });
     
-    // Input validation
+    // Add input validation and formatting
     pincodeInput.addEventListener('input', function(e) {
         // Only allow numbers
-        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        let value = e.target.value.replace(/[^0-9]/g, '');
         
-        // Clear response when user types
-        if (e.target.value.length === 0) {
-            responseDiv.classList.add('hidden');
+        // Limit to 6 digits
+        if (value.length > 6) {
+            value = value.substring(0, 6);
         }
         
-        // Auto-check when 6 digits entered
-        if (e.target.value.length === 6) {
-            setTimeout(handlePincodeCheck, 300);
+        e.target.value = value;
+        
+        // Clear response when user starts typing
+        if (value.length === 0) {
+            hideResponseForContainer(this.shiprockeContainer);
+        }
+        
+        // Auto-check when 6 digits are entered (with delay)
+        if (value.length === 6) {
+            const container = this.shiprockeContainer;
+            setTimeout(function() {
+                console.log('TostiShop Shiprocket: Auto-checking after 6 digits entered');
+                handlePincodeCheckForContainer(container);
+            }, 800);
         }
     });
     
-    // Load saved pincode
+    // Load saved pincode from localStorage
     const savedPincode = localStorage.getItem('tostishop_pincode');
-    if (savedPincode) {
+    if (savedPincode && savedPincode.length === 6) {
         pincodeInput.value = savedPincode;
         
         // Show saved response if available
@@ -57,37 +134,54 @@ function initPincodeCheck() {
         if (savedResponse) {
             try {
                 const data = JSON.parse(savedResponse);
-                showResponse(data.message, data.type || 'info');
+                showResponseForContainer(container, data.message, data.type || 'info');
             } catch (e) {
-                // Ignore parse errors
+                console.log('TostiShop Shiprocket: Could not parse saved response');
             }
         }
     }
+    
+    console.log('TostiShop Shiprocket: Container setup complete');
 }
 
 /**
- * Handle pincode check
+ * Handle pincode check for a specific container
  */
-function handlePincodeCheck() {
-    const pincodeInput = document.getElementById('tostishop-pincode-input');
-    const checkButton = document.getElementById('tostishop-check-pincode-btn');
-    const responseDiv = document.getElementById('tostishop-pincode-response');
+function handlePincodeCheckForContainer(container) {
+    console.log('TostiShop Shiprocket: handlePincodeCheck called for container');
     
-    const pincode = pincodeInput.value.trim();
+    const pincodeInput = container.querySelector('.shiprocket-pincode-input');
+    const checkButton = container.querySelector('.shiprocket-check-button');
+    const responseArea = container.querySelector('.shiprocket-response-area');
+    
+    if (!pincodeInput || !checkButton || !responseArea) {
+        console.error('TostiShop Shiprocket: Required elements not found in container');
+        return;
+    }
+    
+    let pincode = pincodeInput.value.trim();
+    console.log('TostiShop Shiprocket: Checking pincode:', pincode);
     
     // Validate pincode
     if (!pincode) {
-        showResponse(tostishopShiprocket.messages.enterPincode, 'error');
+        showResponseForContainer(container, 'Please enter a pincode', 'error');
         return;
     }
     
     if (!/^\d{6}$/.test(pincode)) {
-        showResponse(tostishopShiprocket.messages.validPincode, 'error');
+        showResponseForContainer(container, 'Please enter a valid 6-digit pincode', 'error');
         return;
     }
     
-    // Set loading state
-    setLoadingState(true);
+    // Check if we have the required AJAX configuration
+    if (!window.tostishopShiprocket || !tostishopShiprocket.ajaxUrl || !tostishopShiprocket.nonce) {
+        console.error('TostiShop Shiprocket: AJAX configuration missing');
+        showResponseForContainer(container, 'Configuration error. Please refresh the page.', 'error');
+        return;
+    }
+    
+    console.log('TostiShop Shiprocket: Making AJAX request to check pincode');
+    setLoadingStateForContainer(container, true);
     
     // Make AJAX request
     fetch(tostishopShiprocket.ajaxUrl, {
@@ -102,98 +196,147 @@ function handlePincodeCheck() {
             product_id: tostishopShiprocket.productId || 0
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('TostiShop Shiprocket: Received response from server');
+        return response.json();
+    })
     .then(data => {
+        console.log('TostiShop Shiprocket: Response data:', data);
+        
         if (data.success) {
-            showResponse(data.data.message, data.data.type || 'success');
+            showResponseForContainer(container, data.data.message, data.data.type || 'standard');
             
             // Save to localStorage
             localStorage.setItem('tostishop_pincode', pincode);
             localStorage.setItem('tostishop_pincode_response', JSON.stringify(data.data));
         } else {
-            showResponse(data.data.message || tostishopShiprocket.messages.error, 'error');
+            showResponseForContainer(container, data.data || 'Service check failed', 'error');
         }
     })
     .catch(error => {
-        console.error('Pincode check error:', error);
-        showResponse(tostishopShiprocket.messages.error, 'error');
+        console.error('TostiShop Shiprocket: AJAX error:', error);
+        showResponseForContainer(container, 'Unable to check serviceability. Please try again.', 'error');
     })
     .finally(() => {
-        setLoadingState(false);
+        setLoadingStateForContainer(container, false);
     });
 }
 
 /**
- * Set loading state
+ * Show response message for specific container
  */
-function setLoadingState(loading) {
-    const checkButton = document.getElementById('tostishop-check-pincode-btn');
-    const pincodeInput = document.getElementById('tostishop-pincode-input');
+function showResponseForContainer(container, message, type) {
+    const responseArea = container.querySelector('.shiprocket-response-area');
+    if (!responseArea) return;
+    
+    // Base Tailwind classes for all message types
+    let classes = 'mt-4 p-3 rounded-md text-sm border';
+    
+    // Add type-specific Tailwind classes using theme colors
+    switch (type) {
+        case 'express':
+            classes += ' bg-blue-50 text-blue-800 border-blue-200';
+            break;
+        case 'standard':
+            classes += ' bg-green-50 text-green-800 border-green-200';
+            break;
+        case 'error':
+            classes += ' bg-red-50 text-red-800 border-red-200';
+            break;
+        case 'info':
+        default:
+            classes += ' bg-gray-50 text-gray-800 border-gray-200';
+            break;
+    }
+    
+    responseArea.className = 'shiprocket-response-area ' + classes;
+    responseArea.innerHTML = message;
+    
+    // Auto-hide success messages after 10 seconds
+    if (type === 'express' || type === 'standard') {
+        setTimeout(function() {
+            if (responseArea.innerHTML === message) {
+                hideResponseForContainer(container);
+            }
+        }, 10000);
+    }
+}
+
+/**
+ * Hide response message for specific container
+ */
+function hideResponseForContainer(container) {
+    const responseArea = container.querySelector('.shiprocket-response-area');
+    if (!responseArea) return;
+    
+    responseArea.className = 'shiprocket-response-area mt-4 hidden';
+    responseArea.innerHTML = '';
+}
+
+/**
+ * Set loading state for specific container
+ */
+function setLoadingStateForContainer(container, loading) {
+    const checkButton = container.querySelector('.shiprocket-check-button');
+    const pincodeInput = container.querySelector('.shiprocket-pincode-input');
+    
+    if (!checkButton || !pincodeInput) return;
     
     if (loading) {
         checkButton.disabled = true;
-        checkButton.textContent = tostishopShiprocket.messages.checking;
+        checkButton.innerHTML = '<svg class="animate-spin w-4 h-4 mx-auto" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
         checkButton.classList.add('opacity-50', 'cursor-not-allowed');
         pincodeInput.disabled = true;
         
-        showResponse('Checking pincode serviceability...', 'info');
+        showResponseForContainer(container, 'Checking pincode serviceability...', 'info');
     } else {
         checkButton.disabled = false;
-        checkButton.textContent = 'Check';
+        checkButton.innerHTML = 'Check';
         checkButton.classList.remove('opacity-50', 'cursor-not-allowed');
         pincodeInput.disabled = false;
     }
 }
 
-/**
- * Show response message
- */
-function showResponse(message, type = 'info') {
-    const responseDiv = document.getElementById('tostishop-pincode-response');
+// Legacy function for backwards compatibility and debugging
+function handlePincodeCheck() {
+    // Find any pincode container and trigger it
+    const firstContainer = document.querySelector('.shiprocket-pincode-container');
     
-    // Clear previous classes
-    responseDiv.className = 'mt-3 p-3 rounded-md text-sm flex items-start gap-2';
-    
-    // Add type-specific classes and icon
-    let icon = '';
-    switch (type) {
-        case 'success':
-        case 'standard':
-            responseDiv.classList.add('bg-green-50', 'text-green-800', 'border', 'border-green-200');
-            icon = '✅';
-            break;
-        case 'express':
-            responseDiv.classList.add('bg-blue-50', 'text-blue-800', 'border', 'border-blue-200');
-            icon = '🚀';
-            break;
-        case 'error':
-            responseDiv.classList.add('bg-red-50', 'text-red-800', 'border', 'border-red-200');
-            icon = '❌';
-            break;
-        case 'info':
-        default:
-            responseDiv.classList.add('bg-gray-50', 'text-gray-800', 'border', 'border-gray-200');
-            icon = 'ℹ️';
-            break;
+    if (firstContainer) {
+        handlePincodeCheckForContainer(firstContainer);
+    } else {
+        console.error('TostiShop Shiprocket: No pincode container found for legacy call');
     }
-    
-    responseDiv.innerHTML = `
-        <span class="flex-shrink-0">${icon}</span>
-        <span class="flex-1">${message}</span>
-    `;
-    
-    // Show the response
-    responseDiv.classList.remove('hidden');
-    
-    // Smooth scroll to response
-    responseDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// Export for potential use by other scripts
-window.TostiShopShiprocket = {
-    handlePincodeCheck: handlePincodeCheck,
-    clearSaved: function() {
-        localStorage.removeItem('tostishop_pincode');
-        localStorage.removeItem('tostishop_pincode_response');
-    }
+// Make functions globally accessible for debugging
+window.tostishopHandlePincodeCheck = handlePincodeCheck;
+window.tostishopInitPincodeCheck = initPincodeCheck;
+
+// Touch support for mobile devices
+if ('ontouchstart' in window) {
+    document.addEventListener('touchstart', function() {}, { passive: true });
+}
+
+// Additional mobile optimizations
+window.addEventListener('resize', function() {
+    // Recheck elements on orientation change
+    setTimeout(function() {
+        const containers = document.querySelectorAll('.shiprocket-pincode-container');
+        if (containers.length === 0) {
+            console.log('TostiShop Shiprocket: Containers lost after resize, reinitializing...');
+            initPincodeCheck();
+        }
+    }, 400);
+});
+
+// Debug function to manually trigger setup
+window.debugShiprockeSetup = function() {
+    console.log('Manual Shiprocket setup triggered');
+    const containers = document.querySelectorAll('.shiprocket-pincode-container');
+    console.log('Found containers:', containers.length);
+    containers.forEach(function(container, index) {
+        console.log('Container ' + (index + 1) + ':', container);
+        setupSinglePincodeContainer(container);
+    });
 };

@@ -239,9 +239,6 @@
   @apply bg-red-50 border-red-500 text-red-700;
 }
 
-/* Import Shiprocket Components */
-@import './components/shiprocket.css';
-
 /* Custom Scrollbars */
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px;
@@ -255,3 +252,8 @@
 .custom-scrollbar::-webkit-scrollbar-thumb {
   @apply bg-gray-300 rounded-full hover:bg-gray-400;
 }
+
+/* Keep only the existing theme imports */
+@import 'custom.css';
+@import 'homepage.css';
+@import 'firebase-auth.css';
