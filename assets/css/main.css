@@ -43,6 +43,67 @@
     @apply min-h-[44px] min-w-[44px];
   }
   
+  /* Checkout Form Field Styling - More Compact */
+  .woocommerce-checkout .form-row {
+    @apply mb-4;
+  }
+  
+  .woocommerce-checkout .form-row-wide {
+    @apply mb-4;
+  }
+  
+  .woocommerce-checkout .form-row-first,
+  .woocommerce-checkout .form-row-last {
+    @apply mb-4;
+  }
+  
+  .woocommerce-checkout input[type="text"],
+  .woocommerce-checkout input[type="email"],
+  .woocommerce-checkout input[type="tel"],
+  .woocommerce-checkout select,
+  .woocommerce-checkout textarea {
+    @apply px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200;
+  }
+  
+  .woocommerce-checkout label {
+    @apply text-sm font-medium text-gray-700 mb-1 block;
+  }
+  
+  .woocommerce-checkout .required::after {
+    content: " *";
+    @apply text-red-500;
+  }
+
+  /* Checkout Address Selection - Compact Design */
+  .checkout-address-compact {
+    @apply border border-gray-200 rounded-lg p-3 cursor-pointer transition-all duration-200;
+  }
+  
+  .checkout-address-compact:hover {
+    @apply border-red-300 bg-red-50;
+  }
+  
+  .checkout-address-compact.selected {
+    @apply border-red-500 bg-red-50 ring-1 ring-red-200;
+  }
+  
+  .checkout-address-compact.shipping:hover {
+    @apply border-green-300 bg-green-50;
+  }
+  
+  .checkout-address-compact.shipping.selected {
+    @apply border-green-500 bg-green-50 ring-1 ring-green-200;
+  }
+  
+  /* Compact address text formatting */
+  .address-inline {
+    @apply text-sm text-gray-600;
+  }
+  
+  .address-inline .separator {
+    @apply mx-1 text-gray-400;
+  }
+
   /* Address Book Grid - Ensure proper display */
   .address-book-grid {
     @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
