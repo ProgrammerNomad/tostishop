@@ -549,11 +549,3 @@ class TostiShop_Saved_Addresses {
         }
     }
 }
-
-// Initialize the saved addresses feature
-function tostishop_init_saved_addresses() {
-    return new TostiShop_Saved_Addresses();
-}
-
-// Initialize on WordPress init
-add_action('init', 'tostishop_init_saved_addresses');
