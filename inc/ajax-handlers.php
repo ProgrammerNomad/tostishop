@@ -283,3 +283,94 @@ function tostishop_newsletter_signup() {
 }
 add_action('wp_ajax_newsletter_signup', 'tostishop_newsletter_signup');
 add_action('wp_ajax_nopriv_newsletter_signup', 'tostishop_newsletter_signup');
+
+/**
+ * Save new address for Amazon-style address picker using existing database system
+ */
+function tostishop_save_new_address() {
+    // Verify nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'tostishop_address_nonce')) {
+        wp_send_json_error(array('message' => 'Security check failed'));
+        return;
+    }
+
+    // Check if user is logged in
+    if (!is_user_logged_in()) {
+        wp_send_json_error(array('message' => 'User not logged in'));
+        return;
+    }
+
+    $type = sanitize_text_field($_POST['type']);
+    $label = sanitize_text_field($_POST['label']);
+
+    if (!in_array($type, array('billing', 'shipping'))) {
+        wp_send_json_error(array('message' => 'Invalid address type'));
+        return;
+    }
+
+    if (empty($label)) {
+        wp_send_json_error(array('message' => 'Address label is required'));
+        return;
+    }
+
+    // Use existing TostiShop_Saved_Addresses class
+    global $tostishop_saved_addresses;
+    if (!$tostishop_saved_addresses) {
+        $tostishop_saved_addresses = new TostiShop_Saved_Addresses();
+    }
+
+    // Build address array using existing database format
+    $address_data = array(
+        'address_type' => $type,
+        'address_name' => $label,
+        'first_name' => sanitize_text_field($_POST['first_name'] ?? ''),
+        'last_name' => sanitize_text_field($_POST['last_name'] ?? ''),
+        'company' => sanitize_text_field($_POST['company'] ?? ''),
+        'address_1' => sanitize_text_field($_POST['address_1'] ?? ''),
+        'address_2' => sanitize_text_field($_POST['address_2'] ?? ''),
+        'city' => sanitize_text_field($_POST['city'] ?? ''),
+        'state' => sanitize_text_field($_POST['state'] ?? ''),
+        'postcode' => sanitize_text_field($_POST['postcode'] ?? ''),
+        'country' => sanitize_text_field($_POST['country'] ?? ''),
+        'phone' => sanitize_text_field($_POST['phone'] ?? ''),
+        'is_default' => 0 // Will be set to 1 if this is first address of this type
+    );
+
+    // Add email for billing addresses
+    if ($type === 'billing') {
+        $address_data['email'] = sanitize_email($_POST['email'] ?? '');
+    }
+
+    // Validate required fields
+    $required_fields = array('first_name', 'last_name', 'address_1', 'city', 'state', 'postcode', 'country');
+    if ($type === 'billing') {
+        $required_fields[] = 'email';
+    }
+
+    foreach ($required_fields as $field) {
+        if (empty($address_data[$field])) {
+            wp_send_json_error(array('message' => sprintf('Field %s is required', $field)));
+            return;
+        }
+    }
+
+    // Check if this is the first address of this type - make it default
+    $existing_addresses = $tostishop_saved_addresses->get_user_addresses(null, $type);
+    if (empty($existing_addresses)) {
+        $address_data['is_default'] = 1;
+    }
+
+    // Save using existing class method
+    $result = $tostishop_saved_addresses->save_address($address_data);
+
+    if ($result) {
+        wp_send_json_success(array(
+            'message' => 'Address saved successfully',
+            'address_id' => $result
+        ));
+    } else {
+        wp_send_json_error(array('message' => 'Failed to save address'));
+    }
+}
+
+add_action('wp_ajax_tostishop_save_new_address', 'tostishop_save_new_address');

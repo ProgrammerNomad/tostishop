@@ -54,15 +54,140 @@
   }
 
   /* Existing button styles */
-  .btn-primary {
-    @apply bg-navy-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-navy-700 focus:bg-navy-700 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 transition-colors duration-200;
-  }
-  
-  .btn-secondary {
-    @apply bg-silver-100 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-silver-200 focus:bg-silver-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200;
-  }
-  
-  .btn-accent {
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+body {
+    @apply bg-gray-50 text-gray-900;
+}
+
+/* Component styles */
+.btn-primary {
+    @apply inline-flex items-center px-4 py-2 bg-red-600 text-white font-medium text-sm rounded-lg shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200;
+}
+
+.btn-secondary {
+    @apply inline-flex items-center px-4 py-2 bg-white text-gray-700 font-medium text-sm border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200;
+}
+
+.input {
+    @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm placeholder-gray-400 focus:outline-none focus:ring-red-500 focus:border-red-500;
+}
+
+.card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden;
+}
+
+.badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-success {
+    @apply bg-green-100 text-green-800;
+}
+
+.badge-warning {
+    @apply bg-yellow-100 text-yellow-800;
+}
+
+.badge-error {
+    @apply bg-red-100 text-red-800;
+}
+
+/* Amazon-style Address Picker Styles */
+.amazon-address-picker .woocommerce-billing-fields__field-wrapper,
+.amazon-address-picker .woocommerce-shipping-fields__field-wrapper {
+    @apply hidden;
+}
+
+/* Hide WooCommerce address fields when Amazon picker is active */
+body.woocommerce-checkout .woocommerce-billing-fields__field-wrapper,
+body.woocommerce-checkout .woocommerce-shipping-fields__field-wrapper {
+    @apply hidden;
+}
+
+/* Address card hover effects */
+.address-card:hover {
+    @apply shadow-lg transform scale-[1.02];
+}
+
+.address-card.selected {
+    @apply ring-2 ring-offset-2;
+}
+
+.address-card.selected.billing {
+    @apply ring-red-500;
+}
+
+.address-card.selected.shipping {
+    @apply ring-green-500;
+}
+
+/* Custom radio button styles */
+.custom-radio {
+    @apply w-5 h-5 border-2 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer;
+}
+
+.custom-radio.checked {
+    @apply border-current;
+}
+
+.custom-radio.checked::after {
+    content: '';
+    @apply w-2 h-2 bg-white rounded-full;
+}
+
+.custom-radio.billing {
+    @apply border-gray-300 hover:border-red-300;
+}
+
+.custom-radio.billing.checked {
+    @apply border-red-500 bg-red-500;
+}
+
+.custom-radio.shipping {
+    @apply border-gray-300 hover:border-green-300;
+}
+
+.custom-radio.shipping.checked {
+    @apply border-green-500 bg-green-500;
+}
+
+/* Transition animations */
+.slide-down-enter {
+    @apply opacity-0 scale-95;
+}
+
+.slide-down-enter-active {
+    @apply opacity-100 scale-100;
+    transition: opacity 300ms ease-out, transform 300ms ease-out;
+}
+
+.slide-down-leave {
+    @apply opacity-100 scale-100;
+}
+
+.slide-down-leave-active {
+    @apply opacity-0 scale-95;
+    transition: opacity 300ms ease-in, transform 300ms ease-in;
+}
+
+/* Form field styling within address picker */
+#tostishop-amazon-address-picker .form-row input,
+#tostishop-amazon-address-picker .form-row select,
+#tostishop-amazon-address-picker .form-row textarea {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-current focus:border-transparent;
+}
+
+#tostishop-amazon-address-picker .form-row label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+}
+
+#tostishop-amazon-address-picker .form-row {
+    @apply mb-4;
+}  .btn-accent {
     @apply bg-accent text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 focus:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors duration-200;
   }
   
