@@ -42,14 +42,14 @@ function tostishop_shiprocket_scripts() {
         wp_enqueue_script(
             'tostishop-shiprocket',
             get_template_directory_uri() . '/assets/js/shiprocket.js',
-            array('jquery'), // Add jQuery dependency
+            array('jquery'),
             wp_get_theme()->get('Version'),
             true
         );
         
         wp_localize_script('tostishop-shiprocket', 'tostishopShiprocket', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('tostishop_shiprocket_nonce'), // Fixed: Use consistent nonce name
+            'nonce' => wp_create_nonce('tostishop_shiprocket_nonce'),
             'productId' => get_the_ID(),
             'messages' => array(
                 'checking' => __('Checking...', 'tostishop'),
@@ -67,63 +67,50 @@ function tostishop_shiprocket_scripts() {
 function tostishop_shiprocket_pincode_check() {
     global $product;
     
-    // Check if setting is enabled
-    $show_pincode_check = get_option('tostishop_shiprocket_show_pincode_check', 'no');
-    $token = get_option('tostishop_shiprocket_token', '');
-    
-    if ($show_pincode_check !== 'yes' || empty($token)) {
+    if (!$product) {
         return;
     }
-    ?>
     
-    <!-- Pure Class-Based Pincode Checker - Universal for Mobile & Desktop -->
-    <div class="shiprocket-pincode-container mt-4 sm:mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200 w-full">
-        <!-- Header with Icon -->
-        <div class="flex items-center mb-3">
-            <svg class="w-5 h-5 text-gray-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-            </svg>
-            <h3 class="text-base font-medium text-gray-900">Check Delivery Availability</h3>
-        </div>
-        
-        <!-- Description -->
-        <p class="text-sm text-gray-600 mb-4">
-            Enter your pincode to check if delivery is available in your area and get estimated delivery time.
-        </p>
-        
-        <!-- Input and Button - Responsive Layout -->
-        <div class="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 sm:items-end">
-            <!-- Input Field -->
-            <div class="flex-1">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Enter Pincode
-                </label>
+    $product_id = $product->get_id();
+    ?>
+    <div class="shiprocket-pincode-container mb-6">
+        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <h3 class="text-sm font-semibold text-gray-900 mb-3 flex items-center">
+                <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                Check Delivery Availability
+            </h3>
+            
+            <div class="flex gap-2">
                 <input 
                     type="text" 
-                    class="shiprocket-pincode-input w-full px-3 py-3 border border-gray-300 rounded-md text-center font-mono text-lg focus:outline-none focus:ring-2 focus:ring-navy-900 focus:border-transparent transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                    name="shiprocket_pincode"
-                    placeholder="e.g., 110001"
+                    class="shiprocket-pincode-input flex-1 h-10 px-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-navy-500 focus:border-transparent text-sm placeholder-gray-500" 
+                    placeholder="Enter 6-digit pincode"
                     maxlength="6"
+                    inputmode="numeric"
                     pattern="[0-9]{6}"
+                    autocomplete="postal-code"
                 />
+                <button 
+                    type="button" 
+                    class="shiprocket-check-button h-10 px-4 bg-navy-600 text-white rounded-md hover:bg-navy-700 focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 transition-colors duration-200 text-sm font-medium whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    Check
+                </button>
             </div>
             
-            <!-- Check Button -->
-            <button 
-                type="button" 
-                class="shiprocket-check-button w-full sm:w-auto px-6 py-3 bg-navy-900 text-white font-medium rounded-md hover:bg-navy-800 focus:outline-none focus:ring-2 focus:ring-navy-900 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px] flex items-center justify-center"
-            >
-                Check
-            </button>
-        </div>
-        
-        <!-- Response Area -->
-        <div class="shiprocket-response-area mt-4 hidden">
-            <!-- Results populated via JavaScript -->
+            <!-- Response area for delivery options -->
+            <div class="shiprocket-response-area mt-4 hidden"></div>
         </div>
     </div>
     
+    <script>
+        // Pass product ID to JavaScript
+        window.tostishopShiprocket = window.tostishopShiprocket || {};
+        window.tostishopShiprocket.productId = <?php echo esc_js($product_id); ?>;
+    </script>
     <?php
 }
 
@@ -146,12 +133,11 @@ function tostishop_get_pickup_postcode() {
     
     // 3. If still empty, try store address postcode
     if (empty($pickup_postcode)) {
-        $pickup_postcode = get_option('woocommerce_store_address_2', ''); // Sometimes postcode is stored here
+        $pickup_postcode = get_option('woocommerce_store_address_2', '');
     }
     
     // 4. Try the full store address options
     if (empty($pickup_postcode)) {
-        // Get all WooCommerce options that might contain postcode
         $store_postcode_options = array(
             'woocommerce_store_postcode',
             'woocommerce_default_postcode',
@@ -178,18 +164,148 @@ function tostishop_get_pickup_postcode() {
     // Final fallback to your working example
     if (empty($pickup_postcode)) {
         $pickup_postcode = '201009'; // Your working example pickup postcode
-        
-        // Log this for admin debugging
-        if (current_user_can('manage_options')) {
-            error_log('TostiShop Shiprocket: No store postcode found in WooCommerce settings, using fallback: ' . $pickup_postcode);
-        }
     }
     
     return $pickup_postcode;
 }
 
 /**
- * AJAX handler for pincode serviceability check - Updated for multiple responses
+ * Get city name from Shiprocket postcode details API
+ * 
+ * @param string $pincode The pincode to lookup
+ * @return string City name or fallback text
+ */
+function tostishop_get_city_from_pincode($pincode) {
+    $token = get_option('tostishop_shiprocket_token', '');
+    
+    if (empty($token) || empty($pincode)) {
+        return 'your location';
+    }
+    
+    // API endpoint for postcode details
+    $api_url = 'https://apiv2.shiprocket.co/v1/postcode/details?postcode=' . $pincode;
+    
+    // Make API request
+    $response = wp_remote_get($api_url, array(
+        'headers' => array(
+            'Authorization' => 'Bearer ' . $token,
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ),
+        'timeout' => 10,
+    ));
+    
+    // Handle errors
+    if (is_wp_error($response)) {
+        return 'your location';
+    }
+    
+    $response_code = wp_remote_retrieve_response_code($response);
+    $body = wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+    
+    // Validate response and extract city name
+    if ($response_code === 200 && 
+        isset($data['success']) && 
+        $data['success'] === true && 
+        isset($data['postcode_details']['city'])) {
+        
+        return $data['postcode_details']['city'];
+    }
+    
+    // Fallback if API call fails
+    return 'your location';
+}
+
+/**
+ * CORE SHIPROCKET API FUNCTION - Single point for all API calls
+ * 
+ * @param string $pincode Delivery pincode
+ * @param WC_Product|null $product Product object (optional)
+ * @param array $options Additional options
+ * @return array API response data or empty array on failure
+ */
+function tostishop_get_shiprocket_couriers($pincode, $product = null, $options = array()) {
+    $token = get_option('tostishop_shiprocket_token', '');
+    
+    if (empty($token) || empty($pincode)) {
+        return array();
+    }
+    
+    // Get pickup postcode
+    $pickup_postcode = tostishop_get_pickup_postcode();
+    
+    // Set default parameters
+    $defaults = array(
+        'weight' => 0.2,
+        'declared_value' => 150,
+        'cod' => '0',
+        'length' => '12',
+        'breadth' => '10',
+        'height' => '10'
+    );
+    
+    // Override with product data if available
+    if ($product) {
+        $defaults['weight'] = floatval($product->get_weight()) ?: 0.2;
+        $defaults['declared_value'] = floatval($product->get_price()) ?: 150;
+    }
+    
+    // Merge with provided options
+    $params = wp_parse_args($options, $defaults);
+    
+    // Build API parameters
+    $api_params = array(
+        'pickup_postcode' => $pickup_postcode,
+        'delivery_postcode' => $pincode,
+        'weight' => $params['weight'],
+        'cod' => $params['cod'],
+        'declared_value' => $params['declared_value'],
+        'rate_calculator' => '1',
+        'blocked' => '1',
+        'is_return' => '0',
+        'is_web' => '1',
+        'is_dg' => '0',
+        'only_qc_couriers' => '0',
+        'length' => $params['length'],
+        'breadth' => $params['breadth'],
+        'height' => $params['height'],
+    );
+    
+    // API endpoint
+    $api_url = 'https://serviceability.shiprocket.in/courier/ratingserviceability';
+    $full_url = $api_url . '?' . http_build_query($api_params);
+    
+    // Make API request
+    $response = wp_remote_get($full_url, array(
+        'headers' => array(
+            'Authorization' => 'Bearer ' . $token,
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ),
+        'timeout' => 15,
+    ));
+    
+    // Handle errors
+    if (is_wp_error($response)) {
+        return array();
+    }
+    
+    $response_code = wp_remote_retrieve_response_code($response);
+    $body = wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+    
+    // Validate response
+    if ($response_code !== 200 || !isset($data['status']) || $data['status'] !== 200) {
+        return array();
+    }
+    
+    // Return courier companies
+    return isset($data['data']['available_courier_companies']) ? $data['data']['available_courier_companies'] : array();
+}
+
+/**
+ * AJAX handler for pincode serviceability check - Now uses single API function with city lookup
  */
 function tostishop_ajax_check_pincode() {
     // Verify nonce for security
@@ -212,87 +328,19 @@ function tostishop_ajax_check_pincode() {
         return;
     }
     
-    // Get Shiprocket token
-    $token = get_option('tostishop_shiprocket_token', '');
-    if (empty($token)) {
-        wp_send_json_error('Shiprocket not configured');
-        return;
-    }
+    // FIRST: Get the correct city name from pincode
+    $city_name = tostishop_get_city_from_pincode($pincode);
     
-    // Get product weight (default to 0.2 if not set)
-    $weight = floatval($product->get_weight());
-    if ($weight <= 0) {
-        $weight = 0.2; // Default weight matching your API example
-    }
+    // THEN: Use the centralized API function to get courier data
+    $available_couriers = tostishop_get_shiprocket_couriers($pincode, $product);
     
-    // Get pickup postcode
-    $pickup_postcode = tostishop_get_pickup_postcode();
-    
-    // Log the pickup postcode for debugging (admin only)
-    if (current_user_can('manage_options')) {
-        error_log('TostiShop Shiprocket: Using pickup postcode: ' . $pickup_postcode);
-    }
-    
-    // Use the CORRECT Shiprocket API endpoint
-    $endpoint_url = 'https://serviceability.shiprocket.in/courier/ratingserviceability';
-    
-    // Build query parameters
-    $params = array(
-        'pickup_postcode' => $pickup_postcode,
-        'delivery_postcode' => $pincode,
-        'weight' => $weight,
-        'cod' => '0',
-        'declared_value' => floatval($product->get_price()) ?: 150,
-        'rate_calculator' => '1',
-        'blocked' => '1',
-        'is_return' => '0',
-        'is_web' => '1',
-        'is_dg' => '0',
-        'only_qc_couriers' => '0',
-        'length' => '12',
-        'breadth' => '10',
-        'height' => '10',
-    );
-    
-    // Construct full URL
-    $full_url = $endpoint_url . '?' . http_build_query($params);
-    
-    // Make API request
-    $response = wp_remote_get($full_url, array(
-        'headers' => array(
-            'Authorization' => 'Bearer ' . $token,
-            'Accept' => 'application/json',
-            'Content-Type' => 'application/json',
-        ),
-        'timeout' => 15,
-    ));
-    
-    // Check for API errors
-    if (is_wp_error($response)) {
-        wp_send_json_error('Unable to check serviceability. Please try again.');
-        return;
-    }
-    
-    $response_code = wp_remote_retrieve_response_code($response);
-    $body = wp_remote_retrieve_body($response);
-    $data = json_decode($body, true);
-    
-    // Check if API returned valid data
-    if ($response_code !== 200 || !isset($data['status']) || $data['status'] !== 200) {
-        wp_send_json_error('Service not available for this pincode.');
-        return;
-    }
-    
-    // Check if courier companies are available
-    if (!isset($data['data']['available_courier_companies']) || empty($data['data']['available_courier_companies'])) {
+    if (empty($available_couriers)) {
         wp_send_json_error('No courier companies available for this pincode.');
         return;
     }
     
-    $available_couriers = $data['data']['available_courier_companies'];
-    
-    // Process the response - NOW RETURNS ARRAY OF RESPONSES
-    $results = tostishop_process_shiprocket_response($available_couriers);
+    // Process the response with correct city name
+    $results = tostishop_process_shiprocket_response($available_couriers, $city_name);
     
     // Send all delivery options to frontend
     wp_send_json_success(array(
@@ -302,9 +350,9 @@ function tostishop_ajax_check_pincode() {
 }
 
 /**
- * Process Shiprocket API response - Updated to show BOTH quick and regular delivery options
+ * Process Shiprocket API response - Updated to use correct city name
  */
-function tostishop_process_shiprocket_response($available_couriers) {
+function tostishop_process_shiprocket_response($available_couriers, $city_name = 'your location') {
     // Separate quick delivery and regular delivery couriers
     $quick_couriers = array();
     $regular_couriers = array();
@@ -343,7 +391,7 @@ function tostishop_process_shiprocket_response($available_couriers) {
         }
     }
     
-    // NEW LOGIC: Show BOTH quick and regular if available
+    // Show BOTH quick and regular if available
     $responses = array();
     
     // Process quick delivery couriers first
@@ -356,17 +404,16 @@ function tostishop_process_shiprocket_response($available_couriers) {
         });
         
         $best_quick = $quick_couriers[0];
-        $city = isset($best_quick['city']) ? $best_quick['city'] : 'your location';
         $courier_name = $best_quick['courier_name'];
         $hours = isset($best_quick['etd_hours']) ? $best_quick['etd_hours'] : 3;
         $rate = floatval($best_quick['rate'] ?? $best_quick['freight_charge'] ?? 0);
         
-        // Format quick delivery message
+        // Format quick delivery message with correct city name
         if ($hours <= 3) {
             $responses[] = array(
                 'message' => sprintf(
                     "🚀 Lightning fast delivery to %s! Get your order delivered within %d hours with %s for ₹%s.",
-                    esc_html($city),
+                    esc_html($city_name),
                     $hours,
                     esc_html($courier_name),
                     number_format($rate, 0)
@@ -378,7 +425,7 @@ function tostishop_process_shiprocket_response($available_couriers) {
             $responses[] = array(
                 'message' => sprintf(
                     "⚡ Same-day delivery available to %s! Order now with %s for ₹%s and get it today.",
-                    esc_html($city),
+                    esc_html($city_name),
                     esc_html($courier_name),
                     number_format($rate, 0)
                 ),
@@ -402,17 +449,16 @@ function tostishop_process_shiprocket_response($available_couriers) {
             });
             
             $courier = $filtered_couriers[0]; // Get fastest regular courier
-            $city = isset($courier['city']) ? $courier['city'] : 'your location';
             $days = intval($courier['estimated_delivery_days']);
             $courier_name = $courier['courier_name'];
             $rate = floatval($courier['rate'] ?? $courier['freight_charge'] ?? 0);
             
-            // Format regular delivery message
+            // Format regular delivery message with correct city name
             if ($days <= 1) {
                 $responses[] = array(
                     'message' => sprintf(
                         "🚀 Next-day delivery available to %s! Order now with %s for ₹%s.",
-                        esc_html($city),
+                        esc_html($city_name),
                         esc_html($courier_name),
                         number_format($rate, 0)
                     ),
@@ -423,7 +469,7 @@ function tostishop_process_shiprocket_response($available_couriers) {
                 $responses[] = array(
                     'message' => sprintf(
                         "✅ Fast delivery to %s! Your order arrives in just %d days via %s for ₹%s.",
-                        esc_html($city),
+                        esc_html($city_name),
                         $days,
                         esc_html($courier_name),
                         number_format($rate, 0)
@@ -435,7 +481,7 @@ function tostishop_process_shiprocket_response($available_couriers) {
                 $responses[] = array(
                     'message' => sprintf(
                         "📦 Standard delivery to %s! Your order arrives in %d days via %s for ₹%s.",
-                        esc_html($city),
+                        esc_html($city_name),
                         $days,
                         esc_html($courier_name),
                         number_format($rate, 0)
@@ -455,7 +501,7 @@ function tostishop_process_shiprocket_response($available_couriers) {
     // Fallback message if no suitable couriers found
     return array(
         array(
-            'message' => "✅ Delivery available to your location.",
+            'message' => sprintf("✅ Delivery available to %s.", esc_html($city_name)),
             'type' => 'standard',
             'priority' => 1
         )
@@ -463,178 +509,33 @@ function tostishop_process_shiprocket_response($available_couriers) {
 }
 
 /**
- * Check pincode serviceability with Shiprocket API
+ * Get Shiprocket shipping rates for checkout - Now uses centralized API function
  * 
- * @param string $pincode The pincode to check
- * @param WC_Product $product The product object
- * @return array Result array with success status and data/message
- */
-function tostishop_check_pincode_serviceability($pincode, $product) {
-    $token = get_option('tostishop_shiprocket_token', '');
-    
-    if (empty($token)) {
-        return array(
-            'success' => false,
-            'message' => 'Shiprocket not configured'
-        );
-    }
-    
-    // FIXED: Use the improved function to get pickup postcode
-    $pickup_postcode = tostishop_get_pickup_postcode();
-    $weight = $product->get_weight() ?: 0.2; // Default weight if not set
-    $cod = 1; // Assume COD is available
-    $declared_value = $product->get_price();
-    
-    // Use correct API endpoint
-    $api_url = 'https://serviceability.shiprocket.in/courier/ratingserviceability';
-    
-    $response = wp_remote_get($api_url . '?' . http_build_query(array(
-        'pickup_postcode' => $pickup_postcode,
-        'delivery_postcode' => $pincode,
-        'weight' => $weight,
-        'cod' => $cod,
-        'declared_value' => $declared_value,
-        'rate_calculator' => '1',
-        'blocked' => '1',
-        'is_return' => '0',
-        'is_web' => '1',
-        'is_dg' => '0',
-        'only_qc_couriers' => '0',
-        'length' => '12',
-        'breadth' => '10',
-        'height' => '10',
-    )), array(
-        'headers' => array(
-            'Content-Type' => 'application/json',
-            'Authorization' => 'Bearer ' . $token,
-            'Accept' => 'application/json',
-        ),
-        'timeout' => 15
-    ));
-    
-    if (is_wp_error($response)) {
-        return array(
-            'success' => false,
-            'message' => 'Unable to check serviceability. Please try again.'
-        );
-    }
-    
-    $body = wp_remote_retrieve_body($response);
-    $data = json_decode($body, true);
-    
-    // Check correct response structure
-    if (!isset($data['status']) || $data['status'] !== 200 || empty($data['data']['available_courier_companies'])) {
-        return array(
-            'success' => false,
-            'message' => 'Delivery not available to this pincode'
-        );
-    }
-    
-    // Process courier data
-    $couriers = $data['data']['available_courier_companies'];
-    $show_top_courier = get_option('tostishop_shiprocket_show_top_courier', 'yes');
-    
-    if ($show_top_courier === 'yes') {
-        // Sort by rating and limit to top 5
-        usort($couriers, function($a, $b) {
-            return ($b['rating'] ?? 0) <=> ($a['rating'] ?? 0);
-        });
-        $couriers = array_slice($couriers, 0, 5);
-    }
-    
-    // Find the best option (lowest cost with good rating)
-    $best_courier = null;
-    $min_cost = PHP_INT_MAX;
-    
-    foreach ($couriers as $courier) {
-        $cost = floatval($courier['rate'] ?? 0);
-        $rating = floatval($courier['rating'] ?? 0);
-        
-        if ($cost < $min_cost && $rating >= 3.5) {
-            $min_cost = $cost;
-            $best_courier = $courier;
-        }
-    }
-    
-    // Fallback to first courier if no good rated courier found
-    if (!$best_courier && !empty($couriers)) {
-        $best_courier = $couriers[0];
-    }
-    
-    if (!$best_courier) {
-        return array(
-            'success' => false,
-            'message' => 'No suitable courier service found'
-        );
-    }
-    
-    return array(
-        'success' => true,
-        'data' => array(
-            'available' => true,
-            'pincode' => $pincode,
-            'courier_name' => $best_courier['courier_name'] ?? 'Standard Delivery',
-            'estimated_delivery_days' => $best_courier['estimated_delivery_days'] ?? '3-5',
-            'shipping_cost' => $best_courier['rate'] ?? 0,
-            'cod_available' => !empty($best_courier['cod']),
-            'all_couriers' => $couriers
-        )
-    );
-}
-
-/**
- * Get Shiprocket shipping rates for checkout
+ * @param string $pincode Delivery pincode
+ * @param float $weight Package weight
+ * @param array $dimensions Package dimensions
+ * @param float $declared_value Package value
+ * @return array Array of shipping rates
  */
 function tostishop_get_shiprocket_rates($pincode, $weight, $dimensions, $declared_value) {
-    $token = get_option('tostishop_shiprocket_token', '');
-    
-    if (empty($token)) {
-        return array();
-    }
-    
-    // FIXED: Use the improved function to get pickup postcode
-    $pickup_postcode = tostishop_get_pickup_postcode();
-    
-    // Use correct API endpoint
-    $api_url = 'https://serviceability.shiprocket.in/courier/ratingserviceability';
-    
-    $response = wp_remote_get($api_url . '?' . http_build_query(array(
-        'pickup_postcode' => $pickup_postcode,
-        'delivery_postcode' => $pincode,
+    // Prepare options for API call
+    $options = array(
         'weight' => $weight,
-        'cod' => 1,
         'declared_value' => $declared_value,
-        'rate_calculator' => '1',
-        'blocked' => '1',
-        'is_return' => '0',
-        'is_web' => '1',
-        'is_dg' => '0',
-        'only_qc_couriers' => '0',
-        'length' => '12',
-        'breadth' => '10',
-        'height' => '10',
-    )), array(
-        'headers' => array(
-            'Content-Type' => 'application/json',
-            'Authorization' => 'Bearer ' . $token,
-            'Accept' => 'application/json',
-        ),
-        'timeout' => 15
-    ));
+        'cod' => '1',
+        'length' => $dimensions['length'] ?? '12',
+        'breadth' => $dimensions['breadth'] ?? '10',
+        'height' => $dimensions['height'] ?? '10'
+    );
     
-    if (is_wp_error($response)) {
+    // Use centralized API function
+    $couriers = tostishop_get_shiprocket_couriers($pincode, null, $options);
+    
+    if (empty($couriers)) {
         return array();
     }
     
-    $body = wp_remote_retrieve_body($response);
-    $data = json_decode($body, true);
-    
-    // Check correct response structure
-    if (!isset($data['status']) || $data['status'] !== 200 || empty($data['data']['available_courier_companies'])) {
-        return array();
-    }
-    
-    $couriers = $data['data']['available_courier_companies'];
+    // Optional: Filter to show only top couriers
     $show_top_courier = get_option('tostishop_shiprocket_show_top_courier', 'yes');
     
     if ($show_top_courier === 'yes') {
@@ -645,6 +546,7 @@ function tostishop_get_shiprocket_rates($pincode, $weight, $dimensions, $declare
         $couriers = array_slice($couriers, 0, 5);
     }
     
+    // Format rates for WooCommerce
     $rates = array();
     foreach ($couriers as $courier) {
         $rates[] = array(
