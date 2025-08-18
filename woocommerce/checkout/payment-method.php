@@ -19,13 +19,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 ?>
-<li class="wc_payment_method payment_method_<?php echo esc_attr( $gateway->id ); ?> border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors duration-200">
+<li class="wc_payment_method payment_method_<?php echo esc_attr( $gateway->id ); ?> border border-gray-200 rounded-lg p-4 hover:border-accent hover:bg-gray-50 transition-all duration-200 cursor-pointer">
 	<div class="flex items-center">
-		<input id="payment_method_<?php echo esc_attr( $gateway->id ); ?>" type="radio" class="w-4 h-4 text-accent bg-gray-100 border-gray-300 focus:ring-accent focus:ring-2 mr-3" name="payment_method" value="<?php echo esc_attr( $gateway->id ); ?>" <?php checked( $gateway->chosen, true ); ?> data-order_button_text="<?php echo esc_attr( $gateway->order_button_text ); ?>" />
+		<input id="payment_method_<?php echo esc_attr( $gateway->id ); ?>" type="radio" class="w-4 h-4 text-accent bg-gray-100 border-gray-300 focus:ring-accent focus:ring-2 mr-3 flex-shrink-0" name="payment_method" value="<?php echo esc_attr( $gateway->id ); ?>" <?php checked( $gateway->chosen, true ); ?> data-order_button_text="<?php echo esc_attr( $gateway->order_button_text ); ?>" />
 
-		<label for="payment_method_<?php echo esc_attr( $gateway->id ); ?>" class="flex-1 flex items-center justify-between cursor-pointer">
-			<span class="text-gray-900 font-medium"><?php echo $gateway->get_title(); /* phpcs:ignore WordPress.XSS.EscapeOutput.OutputNotEscaped */ ?></span>
-			<span class="ml-2"><?php echo $gateway->get_icon(); /* phpcs:ignore WordPress.XSS.EscapeOutput.OutputNotEscaped */ ?></span>
+		<label for="payment_method_<?php echo esc_attr( $gateway->id ); ?>" class="flex-1 flex items-center justify-between cursor-pointer min-h-[24px]">
+			<span class="text-gray-900 font-medium text-sm sm:text-base"><?php echo $gateway->get_title(); /* phpcs:ignore WordPress.XSS.EscapeOutput.OutputNotEscaped */ ?></span>
+			<span class="ml-2 flex-shrink-0"><?php echo $gateway->get_icon(); /* phpcs:ignore WordPress.XSS.EscapeOutput.OutputNotEscaped */ ?></span>
 		</label>
 	</div>
 	<?php if ( $gateway->has_fields() || $gateway->get_description() ) : ?>
