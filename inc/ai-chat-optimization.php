@@ -146,9 +146,9 @@ function tostishop_ai_business_context() {
 }
 
 /**
- * FAQ Schema for AI Voice Search
+ * AI-Optimized FAQ Schema for Voice Search
  */
-function tostishop_faq_schema() {
+function tostishop_ai_faq_schema() {
     $faqs = [
         '@context' => 'https://schema.org',
         '@type' => 'FAQPage',
