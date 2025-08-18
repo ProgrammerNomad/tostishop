@@ -172,15 +172,18 @@ defined( 'ABSPATH' ) || exit;
 			<?php do_action( 'woocommerce_review_order_before_shipping' ); ?>
 
 		<!-- Shipping -->
-		<h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
-			<div class="p-2 bg-purple-100 rounded-lg mr-3">
-				<svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4-8-4m16 0v10l-8 4-8-4V7"></path>
-				</svg>
-			</div>
-		</h3>
 		<div class="shipping-methods-wrapper">
-			<?php wc_cart_totals_shipping_html(); ?>
+			<h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+				<div class="p-2 bg-purple-100 rounded-lg mr-3">
+					<svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4-8-4m16 0v10l-8 4-8-4V7"></path>
+					</svg>
+				</div>
+				<?php esc_html_e( 'Shipping', 'woocommerce' ); ?>
+			</h3>
+			<div>
+				<?php wc_cart_totals_shipping_html(); ?>
+			</div>
 		</div>
 
 		<?php do_action( 'woocommerce_review_order_after_shipping' ); ?>
