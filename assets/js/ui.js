@@ -35,6 +35,31 @@ window.handleFloatingAddToCart = function() {
         return;
     }
     
+    // Check if this is a variable product and if all variations are selected
+    const variationSelects = form.querySelectorAll('select[name^="attribute_"]');
+    if (variationSelects.length > 0) {
+        // Check if all variations are selected
+        let allSelected = true;
+        variationSelects.forEach(select => {
+            if (!select.value || select.value === '') {
+                allSelected = false;
+            }
+        });
+        
+        if (!allSelected) {
+            // Show error message for missing variations
+            showWooCommerceNotice('Please select all product options before adding to cart.', 'error');
+            
+            // Scroll to the first unselected variation
+            const firstEmpty = form.querySelector('select[name^="attribute_"]:not([value]), select[name^="attribute_"][value=""]');
+            if (firstEmpty) {
+                firstEmpty.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstEmpty.focus();
+            }
+            return;
+        }
+    }
+    
     // Check if the form has all required data
     const productId = form.querySelector('input[name="add-to-cart"]')?.value || 
                      form.querySelector('button[name="add-to-cart"]')?.value ||
