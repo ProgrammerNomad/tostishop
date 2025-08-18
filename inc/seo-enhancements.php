@@ -190,23 +190,31 @@ function tostishop_enhanced_social_meta() {
         $og_image = $hero_image ?: get_theme_file_uri('/assets/images/logo-big.png');
         echo '<meta property="og:image" content="' . esc_url($og_image) . '">' . "\n";
         
-    } elseif (is_product() && $product) {
-        echo '<meta property="og:type" content="product">' . "\n";
-        echo '<meta property="og:title" content="' . esc_attr($product->get_name()) . '">' . "\n";
-        echo '<meta property="og:url" content="' . esc_url(get_permalink()) . '">' . "\n";
-        
-        // Product image
-        if ($product->get_image_id()) {
-            $image_url = wp_get_attachment_image_url($product->get_image_id(), 'large');
-            echo '<meta property="og:image" content="' . esc_url($image_url) . '">' . "\n";
+    } elseif (is_product()) {
+        // Get the current product object properly
+        global $woocommerce, $product;
+        if (!$product) {
+            $product = wc_get_product(get_the_ID());
         }
         
-        // Product-specific OG tags
-        echo '<meta property="product:brand" content="' . esc_attr(get_bloginfo('name')) . '">' . "\n";
-        echo '<meta property="product:availability" content="' . ($product->is_in_stock() ? 'in stock' : 'out of stock') . '">' . "\n";
-        echo '<meta property="product:condition" content="new">' . "\n";
-        echo '<meta property="product:price:amount" content="' . esc_attr($product->get_price()) . '">' . "\n";
-        echo '<meta property="product:price:currency" content="' . esc_attr(get_woocommerce_currency()) . '">' . "\n";
+        if ($product && is_object($product)) {
+            echo '<meta property="og:type" content="product">' . "\n";
+            echo '<meta property="og:title" content="' . esc_attr($product->get_name()) . '">' . "\n";
+            echo '<meta property="og:url" content="' . esc_url(get_permalink()) . '">' . "\n";
+            
+            // Product image
+            if ($product->get_image_id()) {
+                $image_url = wp_get_attachment_image_url($product->get_image_id(), 'large');
+                echo '<meta property="og:image" content="' . esc_url($image_url) . '">' . "\n";
+            }
+            
+            // Product-specific OG tags
+            echo '<meta property="product:brand" content="' . esc_attr(get_bloginfo('name')) . '">' . "\n";
+            echo '<meta property="product:availability" content="' . ($product->is_in_stock() ? 'in stock' : 'out of stock') . '">' . "\n";
+            echo '<meta property="product:condition" content="new">' . "\n";
+            echo '<meta property="product:price:amount" content="' . esc_attr($product->get_price()) . '">' . "\n";
+            echo '<meta property="product:price:currency" content="' . esc_attr(get_woocommerce_currency()) . '">' . "\n";
+        }
     }
     
     // Twitter Cards
