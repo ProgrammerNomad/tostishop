@@ -949,7 +949,7 @@ function tostishop_shipping_methods_calculator() {
                     </div>
                     <div class="ml-3">
                         <p class="text-sm font-medium text-green-800">
-                            🎉 <?php printf(__('Congratulations! You qualify for free shipping on all methods!', 'tostishop')); ?>
+                            <?php printf(__('Congratulations! You qualify for free shipping on all methods!', 'tostishop')); ?>
                         </p>
                     </div>
                 </div>
@@ -1078,7 +1078,7 @@ function tostishop_checkout_free_shipping_notice() {
                 </div>
                 <div class="ml-3">
                     <p class="text-sm font-medium text-green-800">
-                        🎉 <?php printf(__('Congratulations! You qualify for free shipping on all methods!', 'tostishop')); ?>
+                        <?php printf(__('Congratulations! You qualify for free shipping on all methods!', 'tostishop')); ?>
                     </p>
                 </div>
             </div>

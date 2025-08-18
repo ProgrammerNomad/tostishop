@@ -30,9 +30,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize theme components
     initializeTheme();
     
-    // Initialize modern cart/checkout enhancements
-    initializeModernTotals();
-    
     // WooCommerce specific functionality
     if (typeof wc_add_to_cart_params !== 'undefined') {
         initializeWooCommerce();

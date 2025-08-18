@@ -172,21 +172,15 @@ defined( 'ABSPATH' ) || exit;
 			<?php do_action( 'woocommerce_review_order_before_shipping' ); ?>
 
 		<!-- Shipping -->
-		<div class="group justify-between items-center p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-100 hover:border-purple-200 transition-all duration-200">
-			<div class="flex items-center">
-				<div class="flex items-center justify-center w-10 h-10 bg-purple-100 rounded-lg mr-3 group-hover:bg-purple-200 transition-colors">
-					<svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4-8-4m16 0v10l-8 4-8-4V7"></path>
-					</svg>
-				</div>
-				<div>
-					<span class="text-base font-semibold text-purple-900"><?php esc_html_e( 'Shipping', 'woocommerce' ); ?></span>
-					<p class="text-xs text-purple-700 mt-0.5"><?php esc_html_e( 'Delivery to your address', 'tostishop' ); ?></p>
-				</div>
+		<h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+			<div class="p-2 bg-purple-100 rounded-lg mr-3">
+				<svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4-8-4m16 0v10l-8 4-8-4V7"></path>
+				</svg>
 			</div>
-			<div class="shipping-methods-wrapper">
-				<?php wc_cart_totals_shipping_html(); ?>
-			</div>
+		</h3>
+		<div class="shipping-methods-wrapper">
+			<?php wc_cart_totals_shipping_html(); ?>
 		</div>
 
 		<?php do_action( 'woocommerce_review_order_after_shipping' ); ?>
