@@ -1,3 +1,4 @@
+<?php
 /**
  * AI Chat Model Optimization
  * Enhanced website information for AI systems
