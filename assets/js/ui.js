@@ -356,6 +356,12 @@ function initializeProductGallery() {
         isHorizontalSwipe = false;
     });
     
+    // Handle touch cancel events
+    gallery.addEventListener('touchcancel', function() {
+        isDragging = false;
+        isHorizontalSwipe = false;
+    });
+    
     // Initialize first image as active
     if (thumbnails.length > 0) {
         const mainThumb = document.querySelector('[data-thumbnail="main"]');
