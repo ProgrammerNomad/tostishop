@@ -1279,7 +1279,8 @@ if ( ! empty( $related_products ) ) :
             </div>
         </div>
         <button type="button" 
-                onclick="document.querySelector('form.cart').submit()" 
+                onclick="handleFloatingAddToCart()" 
+                id="floating-add-to-cart-btn"
                 class="<?php echo $product->is_in_stock() ? 'bg-blue-600 hover:bg-blue-700 focus:bg-blue-700' : 'bg-gray-300 cursor-not-allowed'; ?> text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                 <?php echo (!$product->is_in_stock() ? 'disabled' : ''); ?>
                 aria-label="<?php echo $product->is_in_stock() ? esc_attr(sprintf(__('Add %s to cart', 'tostishop'), get_the_title())) : esc_attr__('Product is out of stock', 'tostishop'); ?>">

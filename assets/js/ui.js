@@ -25,6 +25,61 @@ window.announceToScreenReader = function(message) {
     }, 1000);
 };
 
+// Handle floating add to cart button - Global function
+window.handleFloatingAddToCart = function() {
+    const form = document.querySelector('form.cart');
+    const floatingBtn = document.getElementById('floating-add-to-cart-btn');
+    
+    if (!form) {
+        console.error('Cart form not found');
+        return;
+    }
+    
+    // Check if the form has all required data
+    const productId = form.querySelector('input[name="add-to-cart"]')?.value || 
+                     form.querySelector('button[name="add-to-cart"]')?.value ||
+                     form.querySelector('[data-product-id]')?.dataset.productId;
+    
+    if (!productId) {
+        console.error('Product ID not found');
+        // Fallback to regular form submission
+        form.submit();
+        return;
+    }
+    
+    // Check if AJAX is available
+    if (!window.tostishop_ajax || !tostishop_ajax.ajax_url || !tostishop_ajax.nonce) {
+        console.log('AJAX not available, using regular form submission');
+        form.submit();
+        return;
+    }
+    
+    // Show loading state on floating button
+    if (floatingBtn) {
+        const originalHTML = floatingBtn.innerHTML;
+        floatingBtn.disabled = true;
+        floatingBtn.innerHTML = `
+            <span class="flex items-center">
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Adding...
+            </span>
+        `;
+        
+        // Handle the AJAX submission
+        handleFormSubmissionAjax(form, () => {
+            // Restore button state on completion
+            floatingBtn.disabled = false;
+            floatingBtn.innerHTML = originalHTML;
+        });
+    } else {
+        // If floating button not found, just handle the form
+        handleFormSubmissionAjax(form);
+    }
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize theme components
@@ -790,6 +845,72 @@ function initializeAjaxAddToCart() {
                 submitBtn.innerHTML = originalText;
             });
         });
+    });
+}
+
+/**
+ * Handle form submission via AJAX (shared function for both regular and floating buttons)
+ */
+function handleFormSubmissionAjax(form, onComplete = null) {
+    // Get product ID and quantity for validation
+    const productId = form.querySelector('input[name="add-to-cart"]')?.value || 
+                     form.querySelector('button[name="add-to-cart"]')?.value ||
+                     form.querySelector('[data-product-id]')?.dataset.productId;
+    const quantity = form.querySelector('input[name="quantity"]')?.value || 1;
+    
+    // Basic validation - if no product ID, fallback to normal submission
+    if (!productId) {
+        console.error('Product ID not found, falling back to normal form submission');
+        form.submit();
+        return;
+    }
+    
+    // Get form data
+    const formData = new FormData(form);
+    formData.append('action', 'tostishop_add_to_cart');
+    formData.append('nonce', tostishop_ajax.nonce);
+    formData.append('product_id', productId);
+    formData.append('quantity', quantity);
+    
+    // Debug log form data
+    console.log('Form data being sent:', {
+        action: 'tostishop_add_to_cart',
+        product_id: productId,
+        quantity: quantity,
+        nonce: tostishop_ajax.nonce
+    });
+    
+    // Submit via AJAX
+    fetch(tostishop_ajax?.ajax_url || '/wp-admin/admin-ajax.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Add to cart response:', data); // Debug log
+        if (data.success) {
+            announceToScreenReader('Product added to cart successfully');
+            showWooCommerceNotice(data.data.message || 'Product added to cart!', 'success');
+            // Update cart count if element exists
+            if (data.data && data.data.cart_count !== undefined) {
+                updateCartCount(data.data.cart_count);
+            }
+        } else {
+            console.error('Add to cart failed:', data); // Debug log
+            announceToScreenReader('Failed to add product to cart');
+            showWooCommerceNotice(data.data || 'Failed to add to cart', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Add to cart error:', error);
+        announceToScreenReader('An error occurred while adding to cart');
+        showWooCommerceNotice('An error occurred. Please try again.', 'error');
+    })
+    .finally(() => {
+        // Call completion callback if provided
+        if (onComplete && typeof onComplete === 'function') {
+            onComplete();
+        }
     });
 }
 
