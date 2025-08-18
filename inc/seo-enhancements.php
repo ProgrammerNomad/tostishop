@@ -43,7 +43,13 @@ function tostishop_enhanced_seo_meta() {
         echo '<meta name="description" content="' . esc_attr(get_bloginfo('description') . ' - Shop quality products online with fast delivery across India.') . '">' . "\n";
         echo '<meta name="keywords" content="online shopping, ecommerce, quality products, fast delivery, india">' . "\n";
     } elseif (is_product()) {
-        if ($product) {
+        // Get the current product object properly
+        global $woocommerce, $product;
+        if (!$product) {
+            $product = wc_get_product(get_the_ID());
+        }
+        
+        if ($product && is_object($product)) {
             $description = wp_strip_all_tags($product->get_short_description() ?: $product->get_description());
             $description = wp_trim_words($description, 30, '...');
             echo '<meta name="description" content="' . esc_attr($description) . ' Buy online at ' . get_bloginfo('name') . ' with fast delivery.">' . "\n";
@@ -51,7 +57,7 @@ function tostishop_enhanced_seo_meta() {
             // Product-specific keywords
             $categories = get_the_terms($product->get_id(), 'product_cat');
             $keywords = [];
-            if ($categories) {
+            if ($categories && !is_wp_error($categories)) {
                 foreach ($categories as $category) {
                     $keywords[] = $category->name;
                 }
