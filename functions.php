@@ -14,6 +14,11 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// Define theme version constant
+if (!defined('TOSTISHOP_VERSION')) {
+    define('TOSTISHOP_VERSION', wp_get_theme()->get('Version') ?: '1.0.0');
+}
+
 // Development mode flag for testing
 if (!defined('TOSTISHOP_DEV_MODE')) {
     define('TOSTISHOP_DEV_MODE', WP_DEBUG || (isset($_GET['dev']) && $_GET['dev'] === '1'));

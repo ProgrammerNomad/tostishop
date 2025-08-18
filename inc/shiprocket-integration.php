@@ -43,7 +43,7 @@ function tostishop_shiprocket_scripts() {
             'tostishop-shiprocket',
             get_template_directory_uri() . '/assets/js/shiprocket.js',
             array('jquery'),
-            wp_get_theme()->get('Version'),
+            TOSTISHOP_VERSION,
             true
         );
         
@@ -560,5 +560,547 @@ function tostishop_get_shiprocket_rates($pincode, $weight, $dimensions, $declare
     return $rates;
 }
 
+/**
+ * Calculate shipping methods for cart/checkout
+ * 
+ * @param string $pincode Delivery pincode
+ * @param array $cart_items Cart items for calculation
+ * @return array Array of shipping methods with rates
+ */
+function tostishop_calculate_shiprocket_shipping_methods($pincode, $cart_items = null) {
+    $token = get_option('tostishop_shiprocket_token', '');
+    
+    if (empty($token) || empty($pincode)) {
+        return array();
+    }
+    
+    // Get cart items if not provided
+    if (is_null($cart_items)) {
+        if (!WC()->cart || WC()->cart->is_empty()) {
+            return array();
+        }
+        $cart_items = WC()->cart->get_cart();
+    }
+    
+    if (empty($cart_items)) {
+        return array();
+    }
+    
+    // Calculate total weight and value
+    $total_weight = 0;
+    $total_value = 0;
+    
+    foreach ($cart_items as $cart_item) {
+        $product = $cart_item['data'];
+        $quantity = $cart_item['quantity'];
+        
+        $weight = floatval($product->get_weight()) ?: 0.2; // Default 200g
+        $price = floatval($product->get_price()) ?: 100;
+        
+        $total_weight += ($weight * $quantity);
+        $total_value += ($price * $quantity);
+    }
+    
+    // Minimum values
+    $total_weight = max($total_weight, 0.2);
+    $total_value = max($total_value, 100);
+    
+    // Get pickup postcode
+    $pickup_postcode = tostishop_get_pickup_postcode();
+    
+    // Prepare API parameters
+    $api_params = array(
+        'pickup_postcode' => $pickup_postcode,
+        'delivery_postcode' => $pincode,
+        'weight' => $total_weight,
+        'cod' => '1', // Enable COD
+        'declared_value' => $total_value,
+        'rate_calculator' => '1',
+        'blocked' => '1',
+        'is_return' => '0',
+        'is_web' => '1',
+        'is_dg' => '0',
+        'only_qc_couriers' => '0',
+        'length' => '12',
+        'breadth' => '10',
+        'height' => '10'
+    );
+    
+    // API endpoint
+    $api_url = 'https://serviceability.shiprocket.in/courier/ratingserviceability';
+    $full_url = $api_url . '?' . http_build_query($api_params);
+    
+    // Make API request
+    $response = wp_remote_get($full_url, array(
+        'headers' => array(
+            'Authorization' => 'Bearer ' . $token,
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ),
+        'timeout' => 15,
+    ));
+    
+    // Handle errors
+    if (is_wp_error($response)) {
+        return array();
+    }
+    
+    $response_code = wp_remote_retrieve_response_code($response);
+    $body = wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+    
+    // Validate response
+    if ($response_code !== 200 || !isset($data['status']) || $data['status'] !== 200) {
+        return array();
+    }
+    
+    $couriers = isset($data['data']['available_courier_companies']) ? $data['data']['available_courier_companies'] : array();
+    
+    if (empty($couriers)) {
+        return array();
+    }
+    
+    // Process and format shipping methods
+    return tostishop_process_shipping_methods($couriers, $total_value);
+}
+
+/**
+ * Process courier data into shipping methods
+ * 
+ * @param array $couriers Raw courier data from API
+ * @param float $total_value Cart total value
+ * @return array Formatted shipping methods
+ */
+function tostishop_process_shipping_methods($couriers, $total_value = 0) {
+    $shipping_methods = array();
+    
+    // Free shipping threshold
+    $free_shipping_threshold = 500; // ₹500
+    $is_free_shipping = ($total_value >= $free_shipping_threshold);
+    
+    foreach ($couriers as $courier) {
+        // Skip blocked or disabled couriers
+        if (isset($courier['blocked']) && $courier['blocked'] == 1) continue;
+        if (isset($courier['courier_disabled']) && $courier['courier_disabled'] == 1) continue;
+        
+        $courier_name = $courier['courier_name'] ?? 'Unknown Courier';
+        $rate = floatval($courier['rate'] ?? $courier['freight_charge'] ?? 0);
+        $estimated_days = intval($courier['estimated_delivery_days'] ?? 0);
+        $cod_charges = floatval($courier['cod_charges'] ?? 0);
+        $other_charges = floatval($courier['other_charges'] ?? 0);
+        
+        // Calculate total shipping cost from API
+        $total_cost = $rate + $cod_charges + $other_charges;
+        
+        // Determine shipping type
+        $shipping_type = 'standard';
+        $delivery_text = '';
+        
+        if (isset($courier['is_hyperlocal']) && $courier['is_hyperlocal'] === true) {
+            $shipping_type = 'express';
+            $delivery_text = 'Same day delivery';
+        } elseif ($estimated_days <= 1) {
+            $shipping_type = 'express';
+            $delivery_text = 'Next day delivery';
+        } elseif ($estimated_days <= 2) {
+            $shipping_type = 'fast';
+            $delivery_text = '2 day delivery';
+        } else {
+            $delivery_text = $estimated_days . ' days delivery';
+        }
+        
+        // Apply free shipping logic
+        $final_cost = $is_free_shipping ? 0 : $total_cost;
+        
+        // Create method title based on free shipping status
+        $method_title = $courier_name . ' - ' . $delivery_text;
+        if ($is_free_shipping) {
+            $method_title .= ' (FREE)';
+        }
+        
+        $shipping_methods[] = array(
+            'id' => sanitize_title($courier_name . '_' . $rate),
+            'courier_name' => $courier_name,
+            'method_title' => $method_title,
+            'cost' => $final_cost,
+            'original_cost' => $total_cost,
+            'estimated_days' => $estimated_days,
+            'type' => $shipping_type,
+            'delivery_text' => $delivery_text,
+            'is_free' => $is_free_shipping,
+            'cod_available' => isset($courier['cod']) ? $courier['cod'] : true,
+            'rating' => floatval($courier['rating'] ?? 0),
+            'etd_hours' => intval($courier['etd_hours'] ?? 24),
+            'raw_data' => $courier
+        );
+    }
+    
+    // Sort by cost (free shipping first, then by price)
+    usort($shipping_methods, function($a, $b) {
+        // Free shipping first
+        if ($a['is_free'] && !$b['is_free']) return -1;
+        if (!$a['is_free'] && $b['is_free']) return 1;
+        
+        // Then by original cost (API price) for consistency
+        if ($a['is_free'] && $b['is_free']) {
+            // Both free, sort by delivery speed
+            return $a['estimated_days'] - $b['estimated_days'];
+        }
+        
+        // Sort by actual cost
+        if ($a['cost'] == $b['cost']) {
+            // If same cost, prefer faster delivery
+            return $a['estimated_days'] - $b['estimated_days'];
+        }
+        
+        return $a['cost'] - $b['cost'];
+    });
+    
+    // Return top 5 methods
+    return array_slice($shipping_methods, 0, 5);
+}
+
+/**
+ * AJAX handler for calculating shipping methods
+ */
+function tostishop_ajax_calculate_shipping_methods() {
+    // Verify nonce for security
+    if (!wp_verify_nonce($_POST['nonce'], 'tostishop_shiprocket_nonce')) {
+        wp_send_json_error('Security check failed');
+        return;
+    }
+    
+    $pincode = sanitize_text_field($_POST['pincode'] ?? '');
+    
+    if (!$pincode) {
+        wp_send_json_error('Pincode is required');
+        return;
+    }
+    
+    if (!preg_match('/^\d{6}$/', $pincode)) {
+        wp_send_json_error('Invalid pincode format');
+        return;
+    }
+    
+    // Calculate shipping methods
+    $shipping_methods = tostishop_calculate_shiprocket_shipping_methods($pincode);
+    
+    if (empty($shipping_methods)) {
+        wp_send_json_error('No shipping methods available for this location');
+        return;
+    }
+    
+    // Get cart total for display
+    $cart_total = WC()->cart ? WC()->cart->get_cart_contents_total() : 0;
+    
+    wp_send_json_success(array(
+        'shipping_methods' => $shipping_methods,
+        'cart_total' => $cart_total,
+        'free_shipping_threshold' => 500
+    ));
+}
+
+// Register the new AJAX handler
+add_action('wp_ajax_tostishop_calculate_shipping_methods', 'tostishop_ajax_calculate_shipping_methods');
+add_action('wp_ajax_nopriv_tostishop_calculate_shipping_methods', 'tostishop_ajax_calculate_shipping_methods');
+
 // Initialize all Shiprocket hooks and functionality
 tostishop_shiprocket_init();
+
+/**
+ * Display shipping methods calculator on cart/checkout pages
+ */
+function tostishop_shipping_methods_calculator() {
+    if (!WC()->cart || WC()->cart->is_empty()) {
+        return;
+    }
+    
+    $cart_total = WC()->cart->get_cart_contents_total();
+    $free_shipping_threshold = 500;
+    $is_free_shipping = ($cart_total >= $free_shipping_threshold);
+    
+    ?>
+    <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm mb-8">
+        <h3 class="text-xl font-bold text-navy-900 mb-6 flex items-center">
+            <div class="flex items-center justify-center w-10 h-10 bg-navy-100 rounded-lg mr-3">
+                <svg class="w-5 h-5 text-navy-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4-8-4m16 0v10l-8 4-8-4V7"></path>
+                </svg>
+            </div>
+            <?php _e('Calculate Shipping', 'tostishop'); ?>
+        </h3>
+        
+        <!-- Free Shipping Status -->
+        <?php if ($is_free_shipping): ?>
+            <div class="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg mb-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-green-800">
+                            🎉 <?php printf(__('Congratulations! You qualify for free shipping on all methods!', 'tostishop')); ?>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        <?php else: ?>
+            <?php $remaining = $free_shipping_threshold - $cart_total; ?>
+            <div class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg mb-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-blue-800">
+                            <?php printf(__('Add ₹%s more for free shipping on all methods!', 'tostishop'), number_format($remaining, 0)); ?>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+        
+        <!-- Pincode Input Section -->
+        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+            <div class="flex flex-col sm:flex-row gap-3">
+                <div class="flex-1">
+                    <input 
+                        type="text" 
+                        id="shipping-pincode-input"
+                        class="w-full h-12 px-4 text-base border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-navy-500 focus:border-navy-500 placeholder-gray-500 transition-all duration-200" 
+                        placeholder="<?php esc_attr_e('Enter 6-digit pincode', 'tostishop'); ?>"
+                        maxlength="6"
+                        inputmode="numeric"
+                        pattern="[0-9]{6}"
+                        autocomplete="postal-code"
+                    />
+                </div>
+                <button 
+                    type="button" 
+                    id="calculate-shipping-btn"
+                    class="h-12 px-6 bg-navy-600 text-white rounded-lg hover:bg-navy-700 focus:ring-2 focus:ring-navy-500 focus:ring-offset-2 transition-all duration-200 text-base font-semibold whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[120px]"
+                >
+                    <span class="calculate-btn-text"><?php _e('Calculate', 'tostishop'); ?></span>
+                    <svg class="calculate-btn-icon hidden animate-spin ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Shipping Methods Results -->
+        <div id="shipping-methods-results" class="hidden">
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="text-lg font-bold text-gray-900"><?php _e('Available Shipping Methods', 'tostishop'); ?></h4>
+                <span class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Top 5 Methods</span>
+            </div>
+            <div id="shipping-methods-list" class="space-y-3"></div>
+        </div>
+        
+        <!-- Loading State -->
+        <div id="shipping-loading" class="hidden">
+            <div class="text-center py-8">
+                <div class="inline-flex items-center justify-center">
+                    <svg class="animate-spin h-8 w-8 text-navy-600 mr-3" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <div>
+                        <p class="text-base font-medium text-gray-900"><?php _e('Calculating shipping options...', 'tostishop'); ?></p>
+                        <p class="text-sm text-gray-500"><?php _e('Please wait while we find the best rates', 'tostishop'); ?></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Error Message -->
+        <div id="shipping-error" class="hidden">
+            <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-red-800" id="shipping-error-message"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Pass AJAX configuration to JavaScript
+        window.tostishopShipping = window.tostishopShipping || {};
+        window.tostishopShipping.ajaxUrl = '<?php echo admin_url('admin-ajax.php'); ?>';
+        window.tostishopShipping.nonce = '<?php echo wp_create_nonce('tostishop_shiprocket_nonce'); ?>';
+        window.tostishopShipping.cartTotal = <?php echo $cart_total; ?>;
+        window.tostishopShipping.freeShippingThreshold = <?php echo $free_shipping_threshold; ?>;
+        window.tostishopShipping.isFreeShipping = <?php echo $is_free_shipping ? 'true' : 'false'; ?>;
+    </script>
+    <?php
+}
+
+/**
+ * Display simple free shipping notification for checkout
+ */
+function tostishop_checkout_free_shipping_notice() {
+    if (!WC()->cart || WC()->cart->is_empty()) {
+        return;
+    }
+    
+    $cart_total = WC()->cart->get_cart_contents_total();
+    $free_shipping_threshold = 500;
+    $is_free_shipping = ($cart_total >= $free_shipping_threshold);
+    
+    if ($is_free_shipping) {
+        ?>
+        <div class="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg mb-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-green-800">
+                        🎉 <?php printf(__('Congratulations! You qualify for free shipping on all methods!', 'tostishop')); ?>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <?php
+    } else {
+        $remaining = $free_shipping_threshold - $cart_total;
+        ?>
+        <div class="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg mb-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-amber-800">
+                        <?php printf(__('Add ₹%s more for free shipping on all methods!', 'tostishop'), number_format($remaining, 0)); ?>
+                    </p>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+}
+
+// Add shipping calculator to cart page ONLY
+add_action('woocommerce_cart_collaterals', 'tostishop_shipping_methods_calculator', 5);
+
+// Add simple free shipping notice to checkout page ONLY
+add_action('woocommerce_checkout_before_order_review', 'tostishop_checkout_free_shipping_notice');
+
+/**
+ * Custom WooCommerce Shipping Method for Shiprocket
+ */
+class TostiShop_Shiprocket_Shipping_Method extends WC_Shipping_Method {
+    
+    public function __construct() {
+        $this->id = 'tostishop_shiprocket';
+        $this->method_title = __('Shiprocket Shipping', 'tostishop');
+        $this->method_description = __('Dynamic shipping rates from Shiprocket with free shipping above ₹500', 'tostishop');
+        
+        $this->init();
+    }
+    
+    public function init() {
+        $this->init_form_fields();
+        $this->init_settings();
+        
+        $this->title = $this->get_option('title');
+        $this->enabled = $this->get_option('enabled');
+        
+        add_action('woocommerce_update_options_shipping_' . $this->id, array($this, 'process_admin_options'));
+    }
+    
+    public function init_form_fields() {
+        $this->form_fields = array(
+            'enabled' => array(
+                'title' => __('Enable/Disable', 'tostishop'),
+                'type' => 'checkbox',
+                'description' => __('Enable Shiprocket shipping', 'tostishop'),
+                'default' => 'yes'
+            ),
+            'title' => array(
+                'title' => __('Title', 'tostishop'),
+                'type' => 'text',
+                'description' => __('This controls the title which the user sees during checkout.', 'tostishop'),
+                'default' => __('Shiprocket Shipping', 'tostishop'),
+                'desc_tip' => true,
+            ),
+            'free_shipping_threshold' => array(
+                'title' => __('Free Shipping Threshold', 'tostishop'),
+                'type' => 'number',
+                'description' => __('Minimum order amount for free shipping (in ₹)', 'tostishop'),
+                'default' => '500',
+                'desc_tip' => true,
+            )
+        );
+    }
+    
+    public function calculate_shipping($package = array()) {
+        if (empty($package['destination']['postcode'])) {
+            return;
+        }
+        
+        $pincode = $package['destination']['postcode'];
+        $cart_items = WC()->cart->get_cart();
+        
+        $shipping_methods = tostishop_calculate_shiprocket_shipping_methods($pincode, $cart_items);
+        
+        foreach ($shipping_methods as $method) {
+            $rate = array(
+                'id' => $this->id . '_' . $method['id'],
+                'label' => $method['method_title'],
+                'cost' => $method['cost'], // This will be 0 if free shipping applies
+                'meta_data' => array(
+                    'courier_name' => $method['courier_name'],
+                    'estimated_days' => $method['estimated_days'],
+                    'delivery_text' => $method['delivery_text'],
+                    'type' => $method['type'],
+                    'original_cost' => $method['original_cost'],
+                    'is_free' => $method['is_free']
+                )
+            );
+            
+            $this->add_rate($rate);
+        }
+    }
+}
+
+/**
+ * Register Shiprocket shipping method
+ */
+function tostishop_add_shiprocket_shipping_method($methods) {
+    $methods['tostishop_shiprocket'] = 'TostiShop_Shiprocket_Shipping_Method';
+    return $methods;
+}
+add_filter('woocommerce_shipping_methods', 'tostishop_add_shiprocket_shipping_method');
+
+/**
+ * Initialize shipping method after plugins loaded
+ */
+function tostishop_init_shiprocket_shipping_method() {
+    if (!class_exists('WC_Shipping_Method')) {
+        return;
+    }
+    
+    // Load our shipping method class
+    if (!class_exists('TostiShop_Shiprocket_Shipping_Method')) {
+        // Class is defined above
+    }
+}
+add_action('woocommerce_shipping_init', 'tostishop_init_shiprocket_shipping_method');

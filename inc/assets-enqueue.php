@@ -14,21 +14,32 @@ if (!defined('ABSPATH')) {
  */
 function tostishop_scripts() {
     // Main stylesheet (compiled Tailwind CSS)
-    wp_enqueue_style('tostishop-style', get_stylesheet_uri(), array(), '1.0.0');
+    wp_enqueue_style('tostishop-style', get_stylesheet_uri(), array(), TOSTISHOP_VERSION);
     
     // Custom CSS for enhanced functionality
-    wp_enqueue_style('tostishop-custom', get_template_directory_uri() . '/assets/css/custom.css', array('tostishop-style'), '1.0.0');
+    wp_enqueue_style('tostishop-custom', get_template_directory_uri() . '/assets/css/custom.css', array('tostishop-style'), TOSTISHOP_VERSION);
     
     // Account components CSS - now loaded site-wide for global primary color fixes
-    wp_enqueue_style('tostishop-account-components', get_template_directory_uri() . '/assets/css/components/account-components.css', array('tostishop-style', 'tostishop-custom'), '1.0.0');
+    wp_enqueue_style('tostishop-account-components', get_template_directory_uri() . '/assets/css/components/account-components.css', array('tostishop-style', 'tostishop-custom'), TOSTISHOP_VERSION);
     
     // Alpine.js for interactivity (local version)
     wp_enqueue_script('alpinejs', get_template_directory_uri() . '/assets/js/alpine.min.js', array(), '3.14.9', true);
     wp_script_add_data('alpinejs', 'defer', true);
     
     // Custom JS
-    wp_enqueue_script('tostishop-ui', get_template_directory_uri() . '/assets/js/ui.js', array('jquery'), '1.0.1', true);
-    wp_enqueue_script('tostishop-theme', get_template_directory_uri() . '/assets/js/theme.js', array('jquery', 'tostishop-ui'), '1.0.1', true);
+    wp_enqueue_script('tostishop-ui', get_template_directory_uri() . '/assets/js/ui.js', array('jquery'), TOSTISHOP_VERSION, true);
+    wp_enqueue_script('tostishop-theme', get_template_directory_uri() . '/assets/js/theme.js', array('jquery', 'tostishop-ui'), TOSTISHOP_VERSION, true);
+    
+    // Add shipping calculator script ONLY on cart page (not checkout)
+    if (is_cart()) {
+        wp_enqueue_script(
+            'tostishop-shipping-calculator',
+            get_template_directory_uri() . '/assets/js/shipping-calculator.js',
+            array(),
+            TOSTISHOP_VERSION,
+            true
+        );
+    }
     
     // Localize AJAX data for main UI script
     wp_localize_script('tostishop-ui', 'tostishop_ajax', array(
@@ -50,18 +61,18 @@ add_action('wp_enqueue_scripts', 'tostishop_scripts');
 function tostishop_enqueue_page_specific_assets() {
     // Homepage specific styles and scripts
     if (is_page_template('page-home.php') || is_front_page()) {
-        wp_enqueue_style('tostishop-homepage', get_template_directory_uri() . '/assets/css/homepage.css', array('tostishop-style'), '1.0.0');
-        wp_enqueue_script('tostishop-homepage', get_template_directory_uri() . '/assets/js/homepage.js', array('jquery'), '1.0.0', true);
+        wp_enqueue_style('tostishop-homepage', get_template_directory_uri() . '/assets/css/homepage.css', array('tostishop-style'), TOSTISHOP_VERSION);
+        wp_enqueue_script('tostishop-homepage', get_template_directory_uri() . '/assets/js/homepage.js', array('jquery'), TOSTISHOP_VERSION, true);
     }
     
-    // Checkout specific JS
+    // Checkout specific JS (no shipping calculator)
     if (is_checkout()) {
-        wp_enqueue_script('tostishop-checkout', get_template_directory_uri() . '/assets/js/checkout.js', array('jquery', 'wc-checkout'), '1.0.0', true);
+        wp_enqueue_script('tostishop-checkout', get_template_directory_uri() . '/assets/js/checkout.js', array('jquery', 'wc-checkout'), TOSTISHOP_VERSION, true);
     }
     
-    // Cart specific JS
+    // Cart specific JS (with shipping calculator)
     if (is_cart()) {
-        wp_enqueue_script('tostishop-cart', get_template_directory_uri() . '/assets/js/cart.js', array('jquery'), '1.0.0', true);
+        wp_enqueue_script('tostishop-cart', get_template_directory_uri() . '/assets/js/cart.js', array('jquery'), TOSTISHOP_VERSION, true);
         
         // Localize cart script specifically
         wp_localize_script('tostishop-cart', 'tostishop_ajax', array(
@@ -72,7 +83,7 @@ function tostishop_enqueue_page_specific_assets() {
     
     // Order confirmation specific JS
     if (is_order_received_page() || is_wc_endpoint_url('order-received')) {
-        wp_enqueue_script('tostishop-order-confirmation', get_template_directory_uri() . '/assets/js/order-confirmation.js', array(), '1.0.0', true);
+        wp_enqueue_script('tostishop-order-confirmation', get_template_directory_uri() . '/assets/js/order-confirmation.js', array(), TOSTISHOP_VERSION, true);
     }
 }
 

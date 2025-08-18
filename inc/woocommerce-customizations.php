@@ -245,3 +245,281 @@ function tostishop_order_confirmation_structured_data() {
         }
     }
 }
+
+/**
+ * Improve checkout shipping methods display with accurate API data
+ */
+function tostishop_improve_checkout_shipping_display() {
+    ?>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add a small delay to ensure DOM is fully loaded
+        setTimeout(function() {
+            styleShippingMethods();
+        }, 100);
+        
+        // Re-run when checkout updates
+        if (typeof jQuery !== 'undefined') {
+            jQuery(document.body).on('updated_checkout', function() {
+                setTimeout(function() {
+                    styleShippingMethods();
+                }, 100);
+            });
+        }
+        
+        function styleShippingMethods() {
+            const shippingMethods = document.getElementById('shipping_method');
+            if (!shippingMethods) return;
+            
+            // Find and style the parent shipping section
+            const shippingContainer = shippingMethods.closest('.flex.justify-between.items-center.text-base');
+            if (shippingContainer) {
+                // Transform the container layout - make it more compact
+                shippingContainer.className = 'shipping-section-container p-4 bg-white border border-gray-200 rounded-lg mb-4';
+                
+                // Find and style the shipping label
+                const shippingLabel = shippingContainer.querySelector('.text-gray-600.font-medium');
+                if (shippingLabel) {
+                    shippingLabel.className = 'shipping-section-title mb-3';
+                    shippingLabel.innerHTML = `
+                        <div class="flex items-center text-base font-bold text-navy-900">
+                            <div class="flex items-center justify-center w-8 h-8 bg-navy-100 rounded-lg mr-2">
+                                <svg class="w-4 h-4 text-navy-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4-8-4m16 0v10l-8 4-8-4V7"></path>
+                                </svg>
+                            </div>
+                            Choose Shipping Method
+                        </div>
+                    `;
+                }
+                
+                // Remove the second span that contains "Shipping" text
+                const duplicateShippingSpan = shippingContainer.querySelector('.font-semibold.text-gray-900');
+                if (duplicateShippingSpan && duplicateShippingSpan.textContent.trim() === 'Shipping') {
+                    duplicateShippingSpan.style.display = 'none';
+                }
+            }
+            
+            // Style the shipping methods list
+            if (shippingMethods) {
+                shippingMethods.className = 'shipping-methods-list space-y-2';
+                
+                // Style each shipping method item
+                const shippingItems = shippingMethods.querySelectorAll('li');
+                shippingItems.forEach((item, index) => {
+                    const input = item.querySelector('input[type="radio"]');
+                    const label = item.querySelector('label');
+                    
+                    if (input && label) {
+                        // Style the list item
+                        item.className = 'shipping-method-item';
+                        
+                        // Hide the radio input
+                        input.className = 'sr-only shipping_method';
+                        
+                        // Style the label as a card - more compact
+                        const isChecked = input.checked;
+                        const baseClasses = 'flex items-center justify-between p-3 bg-white border-2 rounded-lg cursor-pointer transition-all duration-200 hover:border-navy-300 hover:shadow-sm w-full';
+                        const checkedClasses = isChecked ? 'border-navy-500 bg-navy-50 ring-1 ring-navy-200' : 'border-gray-200';
+                        
+                        label.className = `${baseClasses} ${checkedClasses}`;
+                        
+                        // Parse label content and extract delivery information
+                        const labelText = label.textContent || label.innerText;
+                        const parts = labelText.split(':');
+                        const methodInfo = parts[0]?.trim() || '';
+                        const priceMatch = labelText.match(/₹[\d,]+/);
+                        const priceText = priceMatch ? priceMatch[0] : '';
+                        
+                        // Extract courier name and delivery days from method info
+                        const courierParts = methodInfo.split(' - ');
+                        const courierName = courierParts[0] || '';
+                        const deliveryInfo = courierParts[1] || '';
+                        
+                        // Parse delivery days from the API data
+                        const deliveryDaysMatch = deliveryInfo.match(/(\d+)\s+days?\s+delivery/i);
+                        const deliveryDays = deliveryDaysMatch ? parseInt(deliveryDaysMatch[1]) : null;
+                        
+                        // Determine delivery type and text based on actual API data
+                        let deliveryTypeText = '';
+                        let deliveryIcon = '';
+                        let deliveryTypeClass = 'text-blue-600';
+                        
+                        if (deliveryDays === 1) {
+                            deliveryTypeText = 'Next day delivery';
+                            deliveryIcon = '⚡';
+                            deliveryTypeClass = 'text-green-600';
+                        } else if (deliveryDays === 2) {
+                            deliveryTypeText = '2 day delivery';
+                            deliveryIcon = '🚚';
+                            deliveryTypeClass = 'text-blue-600';
+                        } else if (deliveryDays === 3) {
+                            deliveryTypeText = '3 day delivery';
+                            deliveryIcon = '📦';
+                            deliveryTypeClass = 'text-gray-600';
+                        } else if (deliveryDays === 4) {
+                            deliveryTypeText = '4 day delivery';
+                            deliveryIcon = '📦';
+                            deliveryTypeClass = 'text-gray-600';
+                        } else if (deliveryDays >= 5) {
+                            deliveryTypeText = `${deliveryDays} day delivery`;
+                            deliveryIcon = '📦';
+                            deliveryTypeClass = 'text-gray-600';
+                        } else {
+                            // Fallback for unclear delivery info
+                            deliveryTypeText = 'Standard delivery';
+                            deliveryIcon = '📦';
+                            deliveryTypeClass = 'text-gray-600';
+                        }
+                        
+                        // Check for same-day delivery keywords in courier name (rare case)
+                        const sameDayKeywords = ['quick', 'hyperlocal', 'same-day', 'sameday', 'instant'];
+                        const isSameDayService = sameDayKeywords.some(keyword => 
+                            courierName.toLowerCase().includes(keyword)
+                        );
+                        
+                        if (isSameDayService && deliveryDays <= 1) {
+                            deliveryTypeText = 'Same day delivery';
+                            deliveryIcon = '🚀';
+                            deliveryTypeClass = 'text-green-600';
+                        }
+                        
+                        // Determine if this is a free shipping method
+                        const isFreeMethod = priceText === '₹0' || labelText.includes('(FREE)');
+                        const displayPrice = isFreeMethod ? 'FREE' : priceText;
+                        
+                        // Clean courier name (remove unnecessary parts)
+                        const cleanCourierName = courierName
+                            .replace(/surface/i, '')
+                            .replace(/air/i, '')
+                            .replace(/stressed/i, '')
+                            .replace(/_/g, ' ')
+                            .trim();
+                        
+                        // Create new label structure - more compact
+                        label.innerHTML = `
+                            <div class="flex items-center flex-1">
+                                <div class="flex items-center mr-3">
+                                    <div class="w-4 h-4 border-2 ${isChecked ? 'border-navy-500 bg-navy-500' : 'border-gray-300'} rounded-full flex items-center justify-center">
+                                        ${isChecked ? '<div class="w-1.5 h-1.5 bg-white rounded-full"></div>' : ''}
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="font-semibold text-gray-900 text-sm truncate">${cleanCourierName}</span>
+                                        ${index === 0 ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-accent text-white flex-shrink-0">⭐</span>' : ''}
+                                        ${isFreeMethod ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 flex-shrink-0">FREE</span>' : ''}
+                                    </div>
+                                    <div class="text-xs ${deliveryTypeClass} flex items-center">
+                                        <span class="mr-1">${deliveryIcon}</span>
+                                        <span>${deliveryTypeText}</span>
+                                        <span class="mx-2">•</span>
+                                        <span>COD Available</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right ml-3">
+                                <span class="text-lg font-bold ${isFreeMethod ? 'text-green-600' : 'text-navy-900'}">${displayPrice}</span>
+                            </div>
+                        `;
+                        
+                        // Add change event listener for dynamic updates
+                        input.addEventListener('change', function() {
+                            updateShippingMethodStyles();
+                        });
+                    }
+                });
+            }
+        }
+        
+        function updateShippingMethodStyles() {
+            const shippingItems = document.querySelectorAll('#shipping_method li');
+            shippingItems.forEach((item) => {
+                const input = item.querySelector('input[type="radio"]');
+                const label = item.querySelector('label');
+                const radioButton = label?.querySelector('.w-4.h-4');
+                
+                if (input && label && radioButton) {
+                    if (input.checked) {
+                        // Checked state
+                        label.className = label.className.replace('border-gray-200', 'border-navy-500 bg-navy-50 ring-1 ring-navy-200');
+                        radioButton.className = 'w-4 h-4 border-2 border-navy-500 bg-navy-500 rounded-full flex items-center justify-center';
+                        radioButton.innerHTML = '<div class="w-1.5 h-1.5 bg-white rounded-full"></div>';
+                    } else {
+                        // Unchecked state
+                        label.className = label.className.replace('border-navy-500 bg-navy-50 ring-1 ring-navy-200', 'border-gray-200');
+                        radioButton.className = 'w-4 h-4 border-2 border-gray-300 rounded-full flex items-center justify-center';
+                        radioButton.innerHTML = '';
+                    }
+                }
+            });
+        }
+    });
+    </script>
+    
+    <style>
+    /* Compact shipping method styling */
+    .shipping-section-container {
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    }
+    
+    .shipping-methods-list li {
+        list-style: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .shipping-method-item label {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        margin: 0 !important;
+        text-align: left !important;
+    }
+    
+    .shipping-method-item input[type="radio"] {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+    }
+    
+    /* Remove any conflicting WooCommerce styles */
+    .woocommerce-shipping-methods {
+        margin: 0 !important;
+        padding: 0 !important;
+        list-style: none !important;
+    }
+    
+    .woocommerce-shipping-methods li {
+        margin: 0 0 8px 0 !important;
+        padding: 0 !important;
+        list-style: none !important;
+    }
+    
+    .woocommerce-shipping-methods label {
+        cursor: pointer !important;
+        font-weight: normal !important;
+    }
+    
+    /* Ensure proper spacing and layout */
+    .flex.justify-between.items-center.text-base {
+        display: block !important;
+    }
+    
+    /* Compact design improvements */
+    .shipping-section-container .shipping-section-title {
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 8px;
+        margin-bottom: 12px !important;
+    }
+    </style>
+    <?php
+}
+add_action('wp_footer', 'tostishop_improve_checkout_shipping_display');
