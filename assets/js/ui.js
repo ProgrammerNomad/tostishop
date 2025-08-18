@@ -298,22 +298,43 @@ function initializeProductGallery() {
     
     // Touch swipe support for mobile
     let startX = 0;
+    let startY = 0;
     let currentX = 0;
+    let currentY = 0;
     let isDragging = false;
+    let isHorizontalSwipe = false;
     
     gallery.addEventListener('touchstart', function(e) {
         startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
         isDragging = true;
+        isHorizontalSwipe = false;
     });
     
     gallery.addEventListener('touchmove', function(e) {
         if (!isDragging) return;
+        
         currentX = e.touches[0].clientX;
-        e.preventDefault(); // Prevent scrolling while swiping
+        currentY = e.touches[0].clientY;
+        
+        const diffX = Math.abs(startX - currentX);
+        const diffY = Math.abs(startY - currentY);
+        
+        // Determine if this is a horizontal swipe gesture
+        if (diffX > diffY && diffX > 10) {
+            isHorizontalSwipe = true;
+            e.preventDefault(); // Only prevent default for horizontal swipes
+        } else if (diffY > diffX) {
+            // This is vertical scrolling, allow default behavior
+            isHorizontalSwipe = false;
+        }
     });
     
     gallery.addEventListener('touchend', function() {
-        if (!isDragging) return;
+        if (!isDragging || !isHorizontalSwipe) {
+            isDragging = false;
+            return;
+        }
         
         const diffX = startX - currentX;
         const threshold = 50;
@@ -332,6 +353,7 @@ function initializeProductGallery() {
         }
         
         isDragging = false;
+        isHorizontalSwipe = false;
     });
     
     // Initialize first image as active
