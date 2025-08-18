@@ -76,3 +76,9 @@ $shiprocket_file = get_template_directory() . '/inc/shiprocket-integration.php';
 if (file_exists($shiprocket_file)) {
     require_once $shiprocket_file;
 }
+
+// SEO enhancements for search engines and AI chat models
+require_once get_template_directory() . '/inc/seo-enhancements.php';
+
+// AI Chat Model optimization for modern search and voice assistants
+require_once get_template_directory() . '/inc/ai-chat-optimization.php';
