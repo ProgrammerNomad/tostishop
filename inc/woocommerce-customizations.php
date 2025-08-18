@@ -454,34 +454,7 @@ function tostishop_improve_checkout_shipping_display() {
     });
     </script>
     
-    <style>
-    /* MINIMAL CSS - Only what Tailwind can't handle */
     
-    /* Reset WooCommerce list styles that conflict with Tailwind */
-    #shipping_method {
-        list-style: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    
-    #shipping_method li {
-        list-style: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    
-    /* Ensure labels display properly - required for WooCommerce compatibility */
-    #shipping_method label {
-        display: flex !important;
-        width: 100% !important;
-        margin: 0 !important;
-    }
-    
-    /* Hide duplicate shipping text in WooCommerce generated content */
-    .woocommerce-checkout-review-order .shipping > span:only-child {
-        display: none !important;
-    }
-    </style>
     <?php
 }
 add_action('wp_footer', 'tostishop_improve_checkout_shipping_display');
