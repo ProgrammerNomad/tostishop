@@ -247,7 +247,7 @@ function tostishop_order_confirmation_structured_data() {
 }
 
 /**
- * Improve checkout shipping methods display with accurate API data
+ * Improve checkout shipping methods display with pure Tailwind CSS
  */
 function tostishop_improve_checkout_shipping_display() {
     ?>
@@ -271,16 +271,16 @@ function tostishop_improve_checkout_shipping_display() {
             const shippingMethods = document.getElementById('shipping_method');
             if (!shippingMethods) return;
             
-            // Find and style the parent shipping section
+            // Find and style the parent shipping section - PURE TAILWIND
             const shippingContainer = shippingMethods.closest('.flex.justify-between.items-center.text-base');
             if (shippingContainer) {
-                // Transform the container layout - make it more compact
-                shippingContainer.className = 'shipping-section-container p-4 bg-white border border-gray-200 rounded-lg mb-4';
+                // Pure Tailwind utility classes - no custom CSS needed
+                shippingContainer.className = 'bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm';
                 
-                // Find and style the shipping label
+                // Find and style the shipping label with pure Tailwind
                 const shippingLabel = shippingContainer.querySelector('.text-gray-600.font-medium');
                 if (shippingLabel) {
-                    shippingLabel.className = 'shipping-section-title mb-3';
+                    shippingLabel.className = 'border-b border-gray-200 pb-3 mb-3';
                     shippingLabel.innerHTML = `
                         <div class="flex items-center text-base font-bold text-navy-900">
                             <div class="flex items-center justify-center w-8 h-8 bg-navy-100 rounded-lg mr-2">
@@ -293,16 +293,16 @@ function tostishop_improve_checkout_shipping_display() {
                     `;
                 }
                 
-                // Remove the second span that contains "Shipping" text
+                // Remove duplicate "Shipping" text
                 const duplicateShippingSpan = shippingContainer.querySelector('.font-semibold.text-gray-900');
                 if (duplicateShippingSpan && duplicateShippingSpan.textContent.trim() === 'Shipping') {
                     duplicateShippingSpan.style.display = 'none';
                 }
             }
             
-            // Style the shipping methods list
+            // Style shipping methods with pure Tailwind
             if (shippingMethods) {
-                shippingMethods.className = 'shipping-methods-list space-y-2';
+                shippingMethods.className = 'space-y-2';
                 
                 // Style each shipping method item
                 const shippingItems = shippingMethods.querySelectorAll('li');
@@ -311,13 +311,10 @@ function tostishop_improve_checkout_shipping_display() {
                     const label = item.querySelector('label');
                     
                     if (input && label) {
-                        // Style the list item
-                        item.className = 'shipping-method-item';
-                        
-                        // Hide the radio input
+                        // Pure Tailwind styling - no custom classes
+                        item.className = '';
                         input.className = 'sr-only shipping_method';
                         
-                        // Style the label as a card - more compact
                         const isChecked = input.checked;
                         const baseClasses = 'flex items-center justify-between p-3 bg-white border-2 rounded-lg cursor-pointer transition-all duration-200 hover:border-navy-300 hover:shadow-sm w-full';
                         const checkedClasses = isChecked ? 'border-navy-500 bg-navy-50 ring-1 ring-navy-200' : 'border-gray-200';
@@ -396,7 +393,7 @@ function tostishop_improve_checkout_shipping_display() {
                             .replace(/_/g, ' ')
                             .trim();
                         
-                        // Create new label structure - more compact
+                        // Create new label structure with pure Tailwind
                         label.innerHTML = `
                             <div class="flex items-center flex-1">
                                 <div class="flex items-center mr-3">
@@ -441,12 +438,12 @@ function tostishop_improve_checkout_shipping_display() {
                 
                 if (input && label && radioButton) {
                     if (input.checked) {
-                        // Checked state
+                        // Checked state - pure Tailwind classes
                         label.className = label.className.replace('border-gray-200', 'border-navy-500 bg-navy-50 ring-1 ring-navy-200');
                         radioButton.className = 'w-4 h-4 border-2 border-navy-500 bg-navy-500 rounded-full flex items-center justify-center';
                         radioButton.innerHTML = '<div class="w-1.5 h-1.5 bg-white rounded-full"></div>';
                     } else {
-                        // Unchecked state
+                        // Unchecked state - pure Tailwind classes
                         label.className = label.className.replace('border-navy-500 bg-navy-50 ring-1 ring-navy-200', 'border-gray-200');
                         radioButton.className = 'w-4 h-4 border-2 border-gray-300 rounded-full flex items-center justify-center';
                         radioButton.innerHTML = '';
@@ -458,66 +455,31 @@ function tostishop_improve_checkout_shipping_display() {
     </script>
     
     <style>
-    /* Compact shipping method styling */
-    .shipping-section-container {
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-    }
+    /* MINIMAL CSS - Only what Tailwind can't handle */
     
-    .shipping-methods-list li {
+    /* Reset WooCommerce list styles that conflict with Tailwind */
+    #shipping_method {
         list-style: none !important;
         margin: 0 !important;
         padding: 0 !important;
     }
     
-    .shipping-method-item label {
+    #shipping_method li {
+        list-style: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* Ensure labels display properly - required for WooCommerce compatibility */
+    #shipping_method label {
         display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
         width: 100% !important;
         margin: 0 !important;
-        text-align: left !important;
     }
     
-    .shipping-method-item input[type="radio"] {
-        position: absolute !important;
-        width: 1px !important;
-        height: 1px !important;
-        padding: 0 !important;
-        margin: -1px !important;
-        overflow: hidden !important;
-        clip: rect(0, 0, 0, 0) !important;
-        white-space: nowrap !important;
-        border: 0 !important;
-    }
-    
-    /* Remove any conflicting WooCommerce styles */
-    .woocommerce-shipping-methods {
-        margin: 0 !important;
-        padding: 0 !important;
-        list-style: none !important;
-    }
-    
-    .woocommerce-shipping-methods li {
-        margin: 0 0 8px 0 !important;
-        padding: 0 !important;
-        list-style: none !important;
-    }
-    
-    .woocommerce-shipping-methods label {
-        cursor: pointer !important;
-        font-weight: normal !important;
-    }
-    
-    /* Ensure proper spacing and layout */
-    .flex.justify-between.items-center.text-base {
-        display: block !important;
-    }
-    
-    /* Compact design improvements */
-    .shipping-section-container .shipping-section-title {
-        border-bottom: 1px solid #e5e7eb;
-        padding-bottom: 8px;
-        margin-bottom: 12px !important;
+    /* Hide duplicate shipping text in WooCommerce generated content */
+    .woocommerce-checkout-review-order .shipping > span:only-child {
+        display: none !important;
     }
     </style>
     <?php
