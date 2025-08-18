@@ -247,214 +247,205 @@ function tostishop_order_confirmation_structured_data() {
 }
 
 /**
- * Improve checkout shipping methods display with pure Tailwind CSS
+ * Helper functions for WooCommerce template customizations
  */
-function tostishop_improve_checkout_shipping_display() {
+
+/**
+ * Parse shipping method data for consistent display
+ */
+function tostishop_parse_shipping_method_data($method) {
+    $label_text = $method->get_label();
+    $cost = $method->get_cost();
+    $is_free = ($cost == 0);
+    
+    // Extract courier name and delivery info
+    $parts = explode(':', $label_text);
+    $method_info = trim($parts[0]);
+    
+    // Parse courier name and delivery details
+    $courier_parts = explode(' - ', $method_info);
+    $courier_name = isset($courier_parts[0]) ? $courier_parts[0] : $method_info;
+    $delivery_info = isset($courier_parts[1]) ? $courier_parts[1] : '';
+    
+    // Extract delivery days
+    preg_match('/(\d+)\s+days?\s+delivery/i', $delivery_info, $delivery_matches);
+    $delivery_days = isset($delivery_matches[1]) ? (int)$delivery_matches[1] : null;
+    
+    // Determine delivery type and styling
+    $delivery_type_text = 'Standard delivery';
+    $delivery_icon = '📦';
+    $delivery_type_class = 'text-gray-600';
+    
+    if ($delivery_days === 1) {
+        $delivery_type_text = 'Next day delivery';
+        $delivery_icon = '⚡';
+        $delivery_type_class = 'text-green-600';
+    } elseif ($delivery_days === 2) {
+        $delivery_type_text = '2 day delivery';
+        $delivery_icon = '🚚';
+        $delivery_type_class = 'text-blue-600';
+    } elseif ($delivery_days === 3) {
+        $delivery_type_text = '3 day delivery';
+        $delivery_icon = '📦';
+        $delivery_type_class = 'text-gray-600';
+    } elseif ($delivery_days === 4) {
+        $delivery_type_text = '4 day delivery';
+        $delivery_icon = '📦';
+        $delivery_type_class = 'text-gray-600';
+    } elseif ($delivery_days >= 5) {
+        $delivery_type_text = $delivery_days . ' day delivery';
+        $delivery_icon = '📦';
+        $delivery_type_class = 'text-gray-600';
+    }
+    
+    // Check for express services
+    $express_keywords = ['quick', 'hyperlocal', 'same-day', 'sameday', 'instant'];
+    $is_express = false;
+    foreach ($express_keywords as $keyword) {
+        if (stripos($courier_name, $keyword) !== false) {
+            $is_express = true;
+            break;
+        }
+    }
+    
+    if ($is_express && $delivery_days <= 1) {
+        $delivery_type_text = 'Same day delivery';
+        $delivery_icon = '🚀';
+        $delivery_type_class = 'text-green-600';
+    }
+    
+    // Clean courier name
+    $clean_courier_name = preg_replace('/\b(surface|air|stressed)\b/i', '', $courier_name);
+    $clean_courier_name = str_replace('_', ' ', $clean_courier_name);
+    $clean_courier_name = trim($clean_courier_name);
+    
+    // Determine if recommended (first method)
+    static $method_count = 0;
+    $method_count++;
+    $is_recommended = ($method_count === 1);
+    
+    // Format price
+    $display_price = $is_free ? 'FREE' : wc_price($cost);
+    
+    return array(
+        'courier_name' => $clean_courier_name,
+        'delivery_type_text' => $delivery_type_text,
+        'delivery_icon' => $delivery_icon,
+        'delivery_type_class' => $delivery_type_class,
+        'is_free' => $is_free,
+        'display_price' => $display_price,
+        'delivery_days' => $delivery_days,
+        'is_recommended' => $is_recommended,
+        'is_express' => $is_express
+    );
+}
+
+/**
+ * Get shipping method label classes
+ */
+function tostishop_get_shipping_method_label_classes($method_id, $chosen_method) {
+    $base_classes = 'flex items-center justify-between p-3 bg-white border-2 rounded-lg cursor-pointer transition-all duration-200 hover:border-navy-300 hover:shadow-sm w-full mb-2';
+    $checked_classes = ($method_id === $chosen_method) ? 'border-navy-500 bg-navy-50 ring-1 ring-navy-200' : 'border-gray-200';
+    
+    return $base_classes . ' ' . $checked_classes;
+}
+
+/**
+ * Get shipping radio button classes
+ */
+function tostishop_get_shipping_radio_classes($method_id, $chosen_method) {
+    $is_checked = ($method_id === $chosen_method);
+    
+    if ($is_checked) {
+        return 'w-4 h-4 border-2 border-navy-500 bg-navy-500 rounded-full flex items-center justify-center';
+    } else {
+        return 'w-4 h-4 border-2 border-gray-300 rounded-full flex items-center justify-center';
+    }
+}
+
+/**
+ * Template-based shipping display (replaces JavaScript approach)
+ * Templates: woocommerce/cart/shipping-methods.php and woocommerce/checkout/shipping.php
+ */
+
+/**
+ * Style shipping methods output with Tailwind classes
+ */
+function tostishop_style_shipping_methods_output() {
     ?>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Add a small delay to ensure DOM is fully loaded
-        setTimeout(function() {
-            styleShippingMethods();
-        }, 100);
+        // Style shipping methods lists on both cart and checkout pages
+        const shippingSelectors = [
+            '.shipping-methods-wrapper ul.woocommerce-shipping-methods',
+            'ul#shipping_method.woocommerce-shipping-methods'
+        ];
         
-        // Re-run when checkout updates
-        if (typeof jQuery !== 'undefined') {
-            jQuery(document.body).on('updated_checkout', function() {
-                setTimeout(function() {
-                    styleShippingMethods();
-                }, 100);
-            });
-        }
-        
-        function styleShippingMethods() {
-            const shippingMethods = document.getElementById('shipping_method');
-            if (!shippingMethods) return;
+        shippingSelectors.forEach(function(selector) {
+            const shippingLists = document.querySelectorAll(selector);
             
-            // Find and style the parent shipping section - PURE TAILWIND
-            const shippingContainer = shippingMethods.closest('.flex.justify-between.items-center.text-base');
-            if (shippingContainer) {
-                // Pure Tailwind utility classes - no custom CSS needed
-                shippingContainer.className = 'bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm';
+            shippingLists.forEach(function(list) {
+                // Style the list container
+                list.className = 'space-y-2 mt-3';
                 
-                // Find and style the shipping label with pure Tailwind
-                const shippingLabel = shippingContainer.querySelector('.text-gray-600.font-medium');
-                if (shippingLabel) {
-                    shippingLabel.className = 'border-b border-gray-200 pb-3 mb-3';
-                    shippingLabel.innerHTML = `
-                        <div class="flex items-center text-base font-bold text-navy-900">
-                            <div class="flex items-center justify-center w-8 h-8 bg-navy-100 rounded-lg mr-2">
-                                <svg class="w-4 h-4 text-navy-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4-8-4m16 0v10l-8 4-8-4V7"></path>
-                                </svg>
-                            </div>
-                            Choose Shipping Method
-                        </div>
-                    `;
-                }
-                
-                // Remove duplicate "Shipping" text
-                const duplicateShippingSpan = shippingContainer.querySelector('.font-semibold.text-gray-900');
-                if (duplicateShippingSpan && duplicateShippingSpan.textContent.trim() === 'Shipping') {
-                    duplicateShippingSpan.style.display = 'none';
-                }
-            }
-            
-            // Style shipping methods with pure Tailwind
-            if (shippingMethods) {
-                shippingMethods.className = 'space-y-2';
-                
-                // Style each shipping method item
-                const shippingItems = shippingMethods.querySelectorAll('li');
-                shippingItems.forEach((item, index) => {
-                    const input = item.querySelector('input[type="radio"]');
-                    const label = item.querySelector('label');
+                // Style each list item
+                list.querySelectorAll('li').forEach(function(item) {
+                    item.className = '';
                     
-                    if (input && label) {
-                        // Pure Tailwind styling - no custom classes
-                        item.className = '';
-                        input.className = 'sr-only shipping_method';
+                    const label = item.querySelector('label');
+                    const radio = item.querySelector('input[type="radio"]');
+                    
+                    if (label && radio) {
+                        // Style radio button
+                        radio.className = 'w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 focus:ring-purple-500 focus:ring-2 mr-3';
                         
-                        const isChecked = input.checked;
-                        const baseClasses = 'flex items-center justify-between p-3 bg-white border-2 rounded-lg cursor-pointer transition-all duration-200 hover:border-navy-300 hover:shadow-sm w-full';
-                        const checkedClasses = isChecked ? 'border-navy-500 bg-navy-50 ring-1 ring-navy-200' : 'border-gray-200';
+                        // Style label
+                        label.className = 'flex items-center justify-between w-full p-3 bg-white border border-gray-200 rounded-lg hover:bg-purple-50 hover:border-purple-200 transition-all duration-200 cursor-pointer';
                         
-                        label.className = `${baseClasses} ${checkedClasses}`;
+                        // Get label text and extract price
+                        const labelText = label.textContent.trim();
+                        const priceRegex = /\((.*?)\)$/;
+                        const priceMatch = labelText.match(priceRegex);
+                        const price = priceMatch ? priceMatch[1] : '';
+                        const methodName = priceMatch ? labelText.replace(priceMatch[0], '').trim() : labelText;
                         
-                        // Parse label content and extract delivery information
-                        const labelText = label.textContent || label.innerText;
-                        const parts = labelText.split(':');
-                        const methodInfo = parts[0]?.trim() || '';
-                        const priceMatch = labelText.match(/₹[\d,]+/);
-                        const priceText = priceMatch ? priceMatch[0] : '';
-                        
-                        // Extract courier name and delivery days from method info
-                        const courierParts = methodInfo.split(' - ');
-                        const courierName = courierParts[0] || '';
-                        const deliveryInfo = courierParts[1] || '';
-                        
-                        // Parse delivery days from the API data
-                        const deliveryDaysMatch = deliveryInfo.match(/(\d+)\s+days?\s+delivery/i);
-                        const deliveryDays = deliveryDaysMatch ? parseInt(deliveryDaysMatch[1]) : null;
-                        
-                        // Determine delivery type and text based on actual API data
-                        let deliveryTypeText = '';
-                        let deliveryIcon = '';
-                        let deliveryTypeClass = 'text-blue-600';
-                        
-                        if (deliveryDays === 1) {
-                            deliveryTypeText = 'Next day delivery';
-                            deliveryIcon = '⚡';
-                            deliveryTypeClass = 'text-green-600';
-                        } else if (deliveryDays === 2) {
-                            deliveryTypeText = '2 day delivery';
-                            deliveryIcon = '🚚';
-                            deliveryTypeClass = 'text-blue-600';
-                        } else if (deliveryDays === 3) {
-                            deliveryTypeText = '3 day delivery';
-                            deliveryIcon = '📦';
-                            deliveryTypeClass = 'text-gray-600';
-                        } else if (deliveryDays === 4) {
-                            deliveryTypeText = '4 day delivery';
-                            deliveryIcon = '📦';
-                            deliveryTypeClass = 'text-gray-600';
-                        } else if (deliveryDays >= 5) {
-                            deliveryTypeText = `${deliveryDays} day delivery`;
-                            deliveryIcon = '📦';
-                            deliveryTypeClass = 'text-gray-600';
-                        } else {
-                            // Fallback for unclear delivery info
-                            deliveryTypeText = 'Standard delivery';
-                            deliveryIcon = '📦';
-                            deliveryTypeClass = 'text-gray-600';
-                        }
-                        
-                        // Check for same-day delivery keywords in courier name (rare case)
-                        const sameDayKeywords = ['quick', 'hyperlocal', 'same-day', 'sameday', 'instant'];
-                        const isSameDayService = sameDayKeywords.some(keyword => 
-                            courierName.toLowerCase().includes(keyword)
-                        );
-                        
-                        if (isSameDayService && deliveryDays <= 1) {
-                            deliveryTypeText = 'Same day delivery';
-                            deliveryIcon = '🚀';
-                            deliveryTypeClass = 'text-green-600';
-                        }
-                        
-                        // Determine if this is a free shipping method
-                        const isFreeMethod = priceText === '₹0' || labelText.includes('(FREE)');
-                        const displayPrice = isFreeMethod ? 'FREE' : priceText;
-                        
-                        // Clean courier name (remove unnecessary parts)
-                        const cleanCourierName = courierName
-                            .replace(/surface/i, '')
-                            .replace(/air/i, '')
-                            .replace(/stressed/i, '')
-                            .replace(/_/g, ' ')
-                            .trim();
-                        
-                        // Create new label structure with pure Tailwind
+                        // Rebuild label with better structure
                         label.innerHTML = `
                             <div class="flex items-center flex-1">
-                                <div class="flex items-center mr-3">
-                                    <div class="w-4 h-4 border-2 ${isChecked ? 'border-navy-500 bg-navy-500' : 'border-gray-300'} rounded-full flex items-center justify-center">
-                                        ${isChecked ? '<div class="w-1.5 h-1.5 bg-white rounded-full"></div>' : ''}
-                                    </div>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <span class="font-semibold text-gray-900 text-sm truncate">${cleanCourierName}</span>
-                                        ${index === 0 ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-accent text-white flex-shrink-0">⭐</span>' : ''}
-                                        ${isFreeMethod ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 flex-shrink-0">FREE</span>' : ''}
-                                    </div>
-                                    <div class="text-xs ${deliveryTypeClass} flex items-center">
-                                        <span class="mr-1">${deliveryIcon}</span>
-                                        <span>${deliveryTypeText}</span>
-                                        <span class="mx-2">•</span>
-                                        <span>COD Available</span>
-                                    </div>
-                                </div>
+                                <span class="text-sm font-medium text-gray-900">${methodName}</span>
                             </div>
-                            <div class="text-right ml-3">
-                                <span class="text-lg font-bold ${isFreeMethod ? 'text-green-600' : 'text-navy-900'}">${displayPrice}</span>
-                            </div>
+                            <div class="text-sm font-semibold text-purple-600">${price}</div>
                         `;
                         
-                        // Add change event listener for dynamic updates
-                        input.addEventListener('change', function() {
-                            updateShippingMethodStyles();
+                        // Insert radio button at the beginning
+                        label.insertBefore(radio, label.firstChild);
+                        
+                        // Add checked state styling
+                        if (radio.checked) {
+                            label.classList.add('bg-purple-50', 'border-purple-300');
+                            label.classList.remove('bg-white', 'border-gray-200');
+                        }
+                        
+                        // Add click event for dynamic styling
+                        radio.addEventListener('change', function() {
+                            // Remove checked styling from all labels in all shipping lists
+                            document.querySelectorAll('.woocommerce-shipping-methods label').forEach(function(lbl) {
+                                lbl.classList.remove('bg-purple-50', 'border-purple-300');
+                                lbl.classList.add('bg-white', 'border-gray-200');
+                            });
+                            
+                            // Add checked styling to selected label
+                            if (this.checked) {
+                                label.classList.remove('bg-white', 'border-gray-200');
+                                label.classList.add('bg-purple-50', 'border-purple-300');
+                            }
                         });
                     }
                 });
-            }
-        }
-        
-        function updateShippingMethodStyles() {
-            const shippingItems = document.querySelectorAll('#shipping_method li');
-            shippingItems.forEach((item) => {
-                const input = item.querySelector('input[type="radio"]');
-                const label = item.querySelector('label');
-                const radioButton = label?.querySelector('.w-4.h-4');
-                
-                if (input && label && radioButton) {
-                    if (input.checked) {
-                        // Checked state - pure Tailwind classes
-                        label.className = label.className.replace('border-gray-200', 'border-navy-500 bg-navy-50 ring-1 ring-navy-200');
-                        radioButton.className = 'w-4 h-4 border-2 border-navy-500 bg-navy-500 rounded-full flex items-center justify-center';
-                        radioButton.innerHTML = '<div class="w-1.5 h-1.5 bg-white rounded-full"></div>';
-                    } else {
-                        // Unchecked state - pure Tailwind classes
-                        label.className = label.className.replace('border-navy-500 bg-navy-50 ring-1 ring-navy-200', 'border-gray-200');
-                        radioButton.className = 'w-4 h-4 border-2 border-gray-300 rounded-full flex items-center justify-center';
-                        radioButton.innerHTML = '';
-                    }
-                }
             });
-        }
+        });
     });
     </script>
-    
-    
     <?php
 }
-add_action('wp_footer', 'tostishop_improve_checkout_shipping_display');
+add_action('wp_footer', 'tostishop_style_shipping_methods_output');

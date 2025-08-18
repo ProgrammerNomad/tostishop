@@ -793,11 +793,119 @@ function tostishop_ajax_calculate_shipping_methods() {
     // Get cart total for display
     $cart_total = WC()->cart ? WC()->cart->get_cart_contents_total() : 0;
     
+    // Generate HTML using the same format as WooCommerce template
+    $html = tostishop_generate_shipping_methods_html($shipping_methods, $cart_total);
+    
     wp_send_json_success(array(
         'shipping_methods' => $shipping_methods,
         'cart_total' => $cart_total,
-        'free_shipping_threshold' => 500
+        'free_shipping_threshold' => 500,
+        'html' => $html
     ));
+}
+
+/**
+ * Generate shipping methods HTML consistent with WooCommerce templates
+ */
+function tostishop_generate_shipping_methods_html($shipping_methods, $cart_total = 0) {
+    if (empty($shipping_methods)) {
+        return '';
+    }
+    
+    $html = '<div class="shipping-methods-container bg-white border border-gray-200 rounded-lg p-4 shadow-sm">';
+    
+    // Header
+    $html .= '<div class="border-b border-gray-200 pb-3 mb-3">';
+    $html .= '<div class="flex items-center text-base font-bold text-navy-900">';
+    $html .= '<div class="flex items-center justify-center w-8 h-8 bg-navy-100 rounded-lg mr-2">';
+    $html .= '<svg class="w-4 h-4 text-navy-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">';
+    $html .= '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4-8-4m16 0v10l-8 4-8-4V7"></path>';
+    $html .= '</svg>';
+    $html .= '</div>';
+    $html .= 'Available Shipping Methods';
+    $html .= '</div>';
+    $html .= '</div>';
+    
+    // Shipping methods list
+    $html .= '<ul class="shipping-methods-list space-y-2">';
+    
+    foreach ($shipping_methods as $index => $method) {
+        $method_id = 'shipping_method_' . $index;
+        $is_checked = $index === 0 ? 'checked' : ''; // First one selected by default
+        
+        // Create mock method object for consistency
+        $mock_method = (object) array(
+            'id' => $method_id,
+            'label' => $method['courier_name'] . ' - ' . $method['delivery_text'] . ': ' . ($method['is_free'] ? 'FREE' : '₹' . number_format($method['cost'], 0)),
+            'cost' => $method['cost']
+        );
+        
+        $method_data = tostishop_parse_shipping_method_data($mock_method);
+        
+        $html .= '<li class="shipping-method-item">';
+        $html .= sprintf(
+            '<input type="radio" id="%s" name="shipping_method_ajax" value="%s" class="shipping_method sr-only" %s data-cost="%s" data-courier="%s" />',
+            esc_attr($method_id),
+            esc_attr($method_id),
+            $is_checked,
+            esc_attr($method['cost']),
+            esc_attr($method['courier_name'])
+        );
+        
+        $label_classes = tostishop_get_shipping_method_label_classes($method_id, $is_checked ? $method_id : '');
+        
+        $html .= sprintf('<label for="%s" class="%s">', esc_attr($method_id), esc_attr($label_classes));
+        
+        $html .= '<div class="flex items-center flex-1">';
+        
+        // Radio button
+        $html .= '<div class="flex items-center mr-3">';
+        $radio_classes = tostishop_get_shipping_radio_classes($method_id, $is_checked ? $method_id : '');
+        $html .= '<div class="' . esc_attr($radio_classes) . '">';
+        if ($is_checked) {
+            $html .= '<div class="w-1.5 h-1.5 bg-white rounded-full"></div>';
+        }
+        $html .= '</div>';
+        $html .= '</div>';
+        
+        $html .= '<div class="flex-1 min-w-0">';
+        $html .= '<div class="flex items-center gap-2 mb-1">';
+        $html .= '<span class="font-semibold text-gray-900 text-sm truncate">' . esc_html($method['courier_name']) . '</span>';
+        
+        if ($index === 0) {
+            $html .= '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-accent text-white flex-shrink-0">⭐ Best</span>';
+        }
+        
+        if ($method['is_free']) {
+            $html .= '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 flex-shrink-0">FREE</span>';
+        }
+        
+        $html .= '</div>';
+        
+        $html .= '<div class="text-xs ' . esc_attr($method_data['delivery_type_class']) . ' flex items-center">';
+        $html .= '<span class="mr-1">' . esc_html($method_data['delivery_icon']) . '</span>';
+        $html .= '<span>' . esc_html($method['delivery_text']) . '</span>';
+        $html .= '<span class="mx-2">•</span>';
+        $html .= '<span>COD Available</span>';
+        $html .= '</div>';
+        $html .= '</div>';
+        $html .= '</div>';
+        
+        // Price
+        $html .= '<div class="text-right ml-3">';
+        $price_class = $method['is_free'] ? 'text-green-600' : 'text-navy-900';
+        $price_text = $method['is_free'] ? 'FREE' : '₹' . number_format($method['cost'], 0);
+        $html .= '<span class="text-lg font-bold ' . esc_attr($price_class) . '">' . esc_html($price_text) . '</span>';
+        $html .= '</div>';
+        
+        $html .= '</label>';
+        $html .= '</li>';
+    }
+    
+    $html .= '</ul>';
+    $html .= '</div>';
+    
+    return $html;
 }
 
 // Register the new AJAX handler

@@ -113,7 +113,13 @@ function initShippingCalculator() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                displayShippingMethods(data.data.shipping_methods, data.data.cart_total, data.data.free_shipping_threshold);
+                // Check if we have pre-generated HTML (new unified approach)
+                if (data.data.html) {
+                    displayUnifiedShippingMethods(data.data.html);
+                } else {
+                    // Fallback to old method
+                    displayShippingMethods(data.data.shipping_methods, data.data.cart_total, data.data.free_shipping_threshold);
+                }
                 
                 // Save pincode to localStorage
                 localStorage.setItem('tostishop_shipping_pincode', pincode);
@@ -131,7 +137,62 @@ function initShippingCalculator() {
     }
     
     /**
-     * Display shipping methods in the UI
+     * Display unified shipping methods HTML (new approach)
+     */
+    function displayUnifiedShippingMethods(html) {
+        hideError();
+        
+        // Insert the HTML directly
+        methodsList.innerHTML = html;
+        resultsDiv.classList.remove('hidden');
+        
+        // Add event listeners to radio buttons for interactive updates
+        const radioButtons = methodsList.querySelectorAll('input[type="radio"]');
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', function() {
+                updateUnifiedShippingMethodStyles();
+            });
+        });
+        
+        // Trigger initial styling update
+        setTimeout(() => {
+            updateUnifiedShippingMethodStyles();
+        }, 50);
+        
+        // Add smooth scroll to results
+        setTimeout(() => {
+            resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+    }
+    
+    /**
+     * Update unified shipping method styles when selection changes
+     */
+    function updateUnifiedShippingMethodStyles() {
+        const shippingItems = methodsList.querySelectorAll('.shipping-method-item');
+        shippingItems.forEach((item) => {
+            const input = item.querySelector('input[type="radio"]');
+            const label = item.querySelector('label');
+            const radioButton = label?.querySelector('.w-4.h-4');
+            
+            if (input && label && radioButton) {
+                if (input.checked) {
+                    // Checked state
+                    label.className = label.className.replace('border-gray-200', 'border-navy-500 bg-navy-50 ring-1 ring-navy-200');
+                    radioButton.className = 'w-4 h-4 border-2 border-navy-500 bg-navy-500 rounded-full flex items-center justify-center';
+                    radioButton.innerHTML = '<div class="w-1.5 h-1.5 bg-white rounded-full"></div>';
+                } else {
+                    // Unchecked state
+                    label.className = label.className.replace('border-navy-500 bg-navy-50 ring-1 ring-navy-200', 'border-gray-200');
+                    radioButton.className = 'w-4 h-4 border-2 border-gray-300 rounded-full flex items-center justify-center';
+                    radioButton.innerHTML = '';
+                }
+            }
+        });
+    }
+
+    /**
+     * Display shipping methods in the UI (legacy approach)
      */
     function displayShippingMethods(methods, cartTotal, freeShippingThreshold) {
         if (!methods || methods.length === 0) {
