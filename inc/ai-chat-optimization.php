@@ -279,7 +279,7 @@ function tostishop_ai_assistant_meta() {
 
 // Hook the functions
 add_action('wp_head', 'tostishop_ai_business_context', 3);
-add_action('wp_head', 'tostishop_faq_schema', 4);
+add_action('wp_head', 'tostishop_ai_faq_schema', 4);
 add_action('wp_head', 'tostishop_sitemap_schema', 5);
 add_action('wp_head', 'tostishop_ai_assistant_meta', 6);
 
