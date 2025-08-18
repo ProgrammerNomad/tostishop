@@ -141,3 +141,11 @@
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 150ms;
 }
+/* Hide the duplicate "Shipping" text */
+.font-semibold.text-gray-900:has(#shipping_method) {
+    font-size: 0 !important;
+}
+
+.font-semibold.text-gray-900 > #shipping_method {
+    font-size: 1rem !important;
+}
