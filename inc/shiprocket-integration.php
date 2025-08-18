@@ -412,7 +412,7 @@ function tostishop_process_shiprocket_response($available_couriers, $city_name =
         if ($hours <= 3) {
             $responses[] = array(
                 'message' => sprintf(
-                    "🚀 Lightning fast delivery to %s! Get your order delivered within %d hours with %s for ₹%s.",
+                    "Lightning fast delivery to %s! Get your order delivered within %d hours with %s for ₹%s.",
                     esc_html($city_name),
                     $hours,
                     esc_html($courier_name),
@@ -468,7 +468,7 @@ function tostishop_process_shiprocket_response($available_couriers, $city_name =
             } elseif ($days <= 2) {
                 $responses[] = array(
                     'message' => sprintf(
-                        "✅ Fast delivery to %s! Your order arrives in just %d days via %s for ₹%s.",
+                        "Fast delivery to %s! Your order arrives in just %d days via %s for ₹%s.",
                         esc_html($city_name),
                         $days,
                         esc_html($courier_name),
