@@ -40,16 +40,7 @@
     </div>
     
     <nav class="p-4">
-        <?php
-        wp_nav_menu(array(
-            'theme_location' => 'mobile',
-            'menu_class' => 'space-y-2',
-            'container' => false,
-            'fallback_cb' => false,
-            'link_before' => '<span class="block px-3 py-2 text-base font-medium text-gray-900 hover:text-navy-600 hover:bg-gray-50 rounded-md transition-colors duration-200">',
-            'link_after' => '</span>',
-        ));
-        ?>
+        <?php echo tostishop_mobile_categories_menu(); ?>
     </nav>
 </div>
 
@@ -99,19 +90,8 @@
             </div>
             
             <?php if (!is_cart() && !is_checkout()) : ?>
-            <!-- Desktop Navigation -->
-            <nav class="hidden lg:flex lg:space-x-8">
-                <?php
-                wp_nav_menu(array(
-                    'theme_location' => 'primary',
-                    'menu_class' => 'flex space-x-8',
-                    'container' => false,
-                    'fallback_cb' => false,
-                    'link_before' => '<span class="text-sm font-medium text-gray-700 hover:text-navy-600 transition-colors duration-200">',
-                    'link_after' => '</span>',
-                ));
-                ?>
-            </nav>
+            <!-- Desktop Mega Menu Navigation -->
+            <?php echo tostishop_mega_menu(); ?>
             <?php endif; ?>
             
             <?php if (!is_checkout()) : ?>

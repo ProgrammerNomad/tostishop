@@ -1,0 +1,150 @@
+/* Mega Menu Additional Styles */
+
+/* Ensure mega menu dropdowns are properly positioned */
+.mega-menu-container {
+    position: relative;
+}
+
+/* Smooth transitions for mega menu dropdowns */
+.mega-menu-dropdown {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease-out;
+}
+
+.mega-menu-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Enhanced hover states */
+.mega-menu-item:hover {
+    background-color: #f9fafb;
+    border-color: #e5e7eb;
+}
+
+.mega-menu-item:hover .mega-menu-item-icon {
+    background-color: #e0e7ff;
+}
+
+/* Featured product image scaling */
+.mega-menu-product:hover .mega-menu-product-image img {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+}
+
+/* Mobile menu category animations */
+.mobile-menu-subcategory {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.mobile-menu-subcategory.open {
+    max-height: 500px;
+}
+
+/* Arrow rotation for mobile categories */
+.mobile-category-arrow {
+    transition: transform 0.2s ease;
+}
+
+.mobile-category-arrow.rotate {
+    transform: rotate(90deg);
+}
+
+/* Mega menu category header gradient animation */
+.mega-menu-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.mega-menu-dropdown:hover .mega-menu-header::before {
+    left: 100%;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1023px) {
+    .mega-menu-dropdown {
+        display: none !important;
+    }
+}
+
+@media (min-width: 1024px) {
+    .mobile-menu-category {
+        display: none !important;
+    }
+}
+
+/* Loading states for category images */
+.mega-menu-item-icon img,
+.mega-menu-product-image img {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.mega-menu-item-icon img.loaded,
+.mega-menu-product-image img.loaded {
+    opacity: 1;
+}
+
+/* Category count badges */
+.category-count {
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+    color: #6b7280;
+    font-size: 0.75rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+}
+
+/* Enhanced shadow for mega menu */
+.mega-menu-dropdown {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+/* Backdrop for mobile menu */
+.mobile-menu-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.25);
+    z-index: 30;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.mobile-menu-backdrop.show {
+    opacity: 1;
+}
+
+/* Ensure proper z-index stacking */
+.mega-menu-dropdown {
+    z-index: 50;
+}
+
+.mobile-menu {
+    z-index: 40;
+}
+
+/* Accessibility improvements */
+.mega-menu-item:focus,
+.mobile-menu-category-header:focus,
+.mobile-menu-subcategory-item:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Smooth color transitions */
+* {
+    transition-property: color, background-color, border-color;
+    transition-duration: 200ms;
+    transition-timing-function: ease-out;
+}

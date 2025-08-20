@@ -323,6 +323,130 @@
   }
 }
 
+/* Mega Menu Styles */
+@layer components {
+  .mega-menu {
+    @apply relative;
+  }
+
+  .mega-menu-dropdown {
+    @apply absolute left-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden;
+    min-width: 320px;
+    max-width: 400px;
+  }
+
+  .mega-menu-header {
+    @apply bg-gradient-to-r from-navy-900 to-blue-600 px-6 py-4;
+  }
+
+  .mega-menu-header h3 {
+    @apply text-white font-semibold text-lg;
+  }
+
+  .mega-menu-header p {
+    @apply text-blue-100 text-sm mt-1;
+  }
+
+  .mega-menu-content {
+    @apply p-6;
+  }
+
+  .mega-menu-grid {
+    @apply grid grid-cols-2 gap-4;
+  }
+
+  .mega-menu-item {
+    @apply group block p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 border border-transparent hover:border-gray-200;
+  }
+
+  .mega-menu-item-icon {
+    @apply w-8 h-8 rounded-lg flex items-center justify-center mr-3 transition-colors;
+  }
+
+  .mega-menu-item-content {
+    @apply min-w-0 flex-1;
+  }
+
+  .mega-menu-item-title {
+    @apply text-sm font-medium text-gray-900 group-hover:text-navy-600 transition-colors truncate;
+  }
+
+  .mega-menu-item-count {
+    @apply text-xs text-gray-500;
+  }
+
+  .mega-menu-featured {
+    @apply mt-6 pt-6 border-t border-gray-200;
+  }
+
+  .mega-menu-featured h4 {
+    @apply text-sm font-semibold text-gray-900 mb-3;
+  }
+
+  .mega-menu-product {
+    @apply flex items-center group;
+  }
+
+  .mega-menu-product-image {
+    @apply w-12 h-12 bg-gray-100 rounded-lg overflow-hidden mr-3;
+  }
+
+  .mega-menu-product-info {
+    @apply flex-1 min-w-0;
+  }
+
+  .mega-menu-product-name {
+    @apply text-sm font-medium text-gray-900 group-hover:text-navy-600 transition-colors truncate;
+  }
+
+  .mega-menu-product-price {
+    @apply text-sm text-accent font-semibold;
+  }
+
+  /* Mobile Menu Enhancements */
+  .mobile-menu-category {
+    @apply space-y-1;
+  }
+
+  .mobile-menu-category-header {
+    @apply w-full flex items-center justify-between px-3 py-2 text-base font-medium text-gray-900 hover:text-navy-600 hover:bg-gray-50 rounded-md transition-colors duration-200;
+  }
+
+  .mobile-menu-subcategory {
+    @apply ml-4 space-y-1;
+  }
+
+  .mobile-menu-subcategory-item {
+    @apply block px-3 py-2 text-sm text-gray-700 hover:text-navy-600 hover:bg-gray-50 rounded-md transition-colors duration-200;
+  }
+
+  /* Hover effects and animations */
+  .mega-menu-item:hover .mega-menu-item-icon {
+    @apply bg-navy-200;
+  }
+
+  .mega-menu-item:hover .mega-menu-item-icon.bg-navy-100 {
+    @apply bg-navy-200;
+  }
+
+  .mega-menu-item:hover .mega-menu-item-icon.bg-gray-100 {
+    @apply bg-gray-200;
+  }
+
+  /* Responsive adjustments */
+  @screen lg {
+    .mega-menu-dropdown {
+      min-width: 380px;
+    }
+  }
+
+  @screen xl {
+    .mega-menu-dropdown {
+      min-width: 420px;
+    }
+  }
+}
+
 /* Keep only the existing theme imports */
 @import 'custom.css';
 @import 'homepage.css';

@@ -47,6 +47,9 @@ require_once get_template_directory() . '/inc/theme-customizer.php';
 // Helper functions and utilities
 require_once get_template_directory() . '/inc/helper-functions.php';
 
+// Mega menu functionality
+require_once get_template_directory() . '/inc/mega-menu.php';
+
 // Wishlist functionality
 require_once get_template_directory() . '/inc/wishlist.php';
 tostishop_init_wishlist();
