@@ -86,7 +86,7 @@ function tostishop_mega_menu() {
                             
                             <!-- Subcategories Grid -->
                             <div class="p-6">
-                                <div class="space-y-2">
+                                <div class="grid grid-cols-2 gap-3">
                                     <!-- View All Category -->
                                     <a href="<?php echo esc_url($category_url); ?>" 
                                        class="group flex items-center p-4 rounded-lg hover:bg-navy-50 transition-all duration-200 border border-transparent hover:border-navy-200 bg-gradient-to-r from-navy-50 to-blue-50">
