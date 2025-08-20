@@ -246,27 +246,43 @@ get_header(); ?>
                                         
                                         <div class="flex items-center justify-between mt-4">
                                             <!-- Quantity Controls -->
-                                            <div class="quantity-controls flex items-center border border-gray-300 rounded-lg overflow-hidden">
-                                                <button type="button" class="minus flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-800">
+                                            <div class="quantity-controls flex items-center border border-gray-300 rounded-lg overflow-hidden" data-product-id="<?php echo esc_attr($product_id); ?>">
+                                                <button type="button" 
+                                                        class="minus flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-800"
+                                                        data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
+                                                        aria-label="<?php esc_attr_e('Decrease quantity', 'tostishop'); ?>">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
                                                     </svg>
                                                 </button>
                                                 <?php
                                                 if ( $_product->is_sold_individually() ) {
-                                                    $product_quantity = sprintf( '<input type="number" class="qty text-center w-12 h-8 border-0 focus:ring-0 focus:outline-none text-sm" name="cart[%s][qty]" value="1" readonly />', $cart_item_key );
+                                                    $product_quantity = sprintf( '<input type="number" class="qty text-center w-12 h-8 border-0 focus:ring-0 focus:outline-none text-sm" name="cart[%s][qty]" value="1" readonly title="%s" />', $cart_item_key, esc_attr__('This product is sold individually', 'tostishop') );
                                                 } else {
+                                                    $max_qty = $_product->get_max_purchase_quantity();
+                                                    $stock_qty = $_product->get_stock_quantity();
+                                                    
+                                                    // Calculate available stock considering current cart quantity
+                                                    $current_cart_qty = $cart_item['quantity'];
+                                                    $available_stock = $stock_qty ? ($stock_qty + $current_cart_qty) : $max_qty;
+                                                    $final_max = $max_qty > 0 ? min($max_qty, $available_stock) : $available_stock;
+                                                    
                                                     $product_quantity = sprintf(
-                                                        '<input type="number" class="qty text-center w-12 h-8 border-0 focus:ring-0 focus:outline-none text-sm" name="cart[%s][qty]" value="%s" min="0" max="%s" step="1" data-cart-item-key="%s" />',
+                                                        '<input type="number" class="qty text-center w-12 h-8 border-0 focus:ring-0 focus:outline-none text-sm" name="cart[%s][qty]" value="%s" min="0" max="%s" step="1" data-cart-item-key="%s" data-stock-qty="%s" data-product-name="%s" />',
                                                         $cart_item_key,
                                                         esc_attr( $cart_item['quantity'] ),
-                                                        esc_attr( $_product->get_max_purchase_quantity() ),
-                                                        esc_attr( $cart_item_key )
+                                                        esc_attr( $final_max ),
+                                                        esc_attr( $cart_item_key ),
+                                                        esc_attr( $stock_qty ?: 'unlimited' ),
+                                                        esc_attr( $_product->get_name() )
                                                     );
                                                 }
                                                 echo $product_quantity;
                                                 ?>
-                                                <button type="button" class="plus flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-800">
+                                                <button type="button" 
+                                                        class="plus flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-800"
+                                                        data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
+                                                        aria-label="<?php esc_attr_e('Increase quantity', 'tostishop'); ?>">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                                     </svg>
@@ -312,32 +328,57 @@ get_header(); ?>
                                 
                                 <!-- Quantity -->
                                 <div class="col-span-2 flex justify-center">
-                                    <div class="quantity-controls flex items-center border border-gray-300 rounded-lg overflow-hidden">
-                                        <button type="button" class="minus flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-800">
+                                    <div class="quantity-controls flex items-center border border-gray-300 rounded-lg overflow-hidden" data-product-id="<?php echo esc_attr($_product->get_id()); ?>">
+                                        <button type="button" 
+                                                class="minus flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-800" 
+                                                data-cart-item-key="<?php echo esc_attr($cart_item_key); ?>"
+                                                aria-label="<?php esc_attr_e('Decrease quantity', 'tostishop'); ?>">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
                                             </svg>
                                         </button>
                                         <?php
                                         if ( $_product->is_sold_individually() ) {
-                                            $product_quantity = sprintf( '<input type="number" class="qty text-center w-12 h-8 border-0 focus:ring-0 focus:outline-none text-sm" name="cart[%s][qty]" value="1" readonly />', $cart_item_key );
+                                            $product_quantity = sprintf( 
+                                                '<input type="number" class="qty text-center w-12 h-8 border-0 focus:ring-0 focus:outline-none text-sm" name="cart[%s][qty]" value="1" readonly title="%s" />', 
+                                                $cart_item_key,
+                                                esc_attr__('This product can only be purchased individually', 'tostishop')
+                                            );
                                         } else {
+                                            $max_qty = $_product->get_max_purchase_quantity();
+                                            $stock_qty = $_product->get_stock_quantity();
+                                            
+                                            // Calculate available stock considering current cart quantity
+                                            $current_cart_qty = $cart_item['quantity'];
+                                            $available_stock = $stock_qty ? ($stock_qty + $current_cart_qty) : $max_qty;
+                                            $final_max = $max_qty > 0 ? min($max_qty, $available_stock) : $available_stock;
+                                            
                                             $product_quantity = sprintf(
-                                                '<input type="number" class="qty text-center w-12 h-8 border-0 focus:ring-0 focus:outline-none text-sm" name="cart[%s][qty]" value="%s" min="0" max="%s" step="1" data-cart-item-key="%s" />',
+                                                '<input type="number" class="qty text-center w-12 h-8 border-0 focus:ring-0 focus:outline-none text-sm" name="cart[%s][qty]" value="%s" min="0" max="%s" step="1" data-cart-item-key="%s" data-stock-qty="%s" title="%s" />',
                                                 $cart_item_key,
                                                 esc_attr( $cart_item['quantity'] ),
-                                                esc_attr( $_product->get_max_purchase_quantity() ),
-                                                esc_attr( $cart_item_key )
+                                                esc_attr( $final_max ),
+                                                esc_attr( $cart_item_key ),
+                                                esc_attr( $stock_qty ?: 'unlimited' ),
+                                                $stock_qty ? sprintf(esc_attr__('Maximum available: %d in stock', 'tostishop'), $final_max) : esc_attr__('Enter quantity', 'tostishop')
                                             );
                                         }
                                         echo $product_quantity;
                                         ?>
-                                        <button type="button" class="plus flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-800">
+                                        <button type="button" class="plus flex items-center justify-center w-8 h-8 bg-gray-50 hover:bg-gray-100 transition-colors duration-200 text-gray-600 hover:text-gray-800" 
+                                                title="<?php esc_attr_e('Increase quantity', 'tostishop'); ?>">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                             </svg>
                                         </button>
                                     </div>
+                                    
+                                    <!-- Stock Info -->
+                                    <?php if (!$_product->is_sold_individually() && $stock_qty): ?>
+                                        <div class="text-xs text-gray-500 mt-1 text-center">
+                                            <?php printf(__('%d available', 'tostishop'), $final_max); ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
                                 
                                 <!-- Price -->
@@ -382,7 +423,7 @@ get_header(); ?>
                                 </a>
                                 
                                 <button type="submit" name="update_cart" value="<?php esc_attr_e('Update cart', 'woocommerce'); ?>" 
-                                        class="bg-gray-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-gray-700 transition-colors duration-200">
+                                        class="btn-secondary">
                                     <?php _e('Update Cart', 'tostishop'); ?>
                                 </button>
                             </div>
@@ -807,47 +848,11 @@ get_header(); ?>
     background: rgba(255, 255, 255, 0.5);
     border-radius: 0.5rem;
     border: 1px solid #e5d4ed;
-    transition: all 0.2s ease;
-}
-
-.shipping-methods-wrapper .woocommerce-shipping-methods li:hover {
-    border-color: #c084d1;
-    background: rgba(255, 255, 255, 0.7);
-}
-
-
-
 /* Hide shipping heading if it appears */
 .shipping-methods-wrapper h3,
 .shipping-methods-wrapper .shipping-title {
     display: none;
 }
-
-/* WooCommerce messages styling */
-.woocommerce-message,
-.woocommerce-error,
-.woocommerce-info {
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border-radius: 0.5rem;
-    border-left: 4px solid;
-}
-
-.woocommerce-message {
-    background: #f0fdf4;
-    border-left-color: #22c55e;
-    color: #15803d;
-}
-
-.woocommerce-error {
-    background: #fef2f2;
-    border-left-color: #ef4444;
-    color: #dc2626;
-}
-
-.woocommerce-info {
-    background: #eff6ff;
-    border-left-color: #3b82f6;
     color: #1d4ed8;
 }
 

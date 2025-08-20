@@ -152,6 +152,26 @@ function tostishop_ajax_update_cart_item() {
         return;
     }
     
+    // Get cart item and product for stock validation
+    $cart_item = WC()->cart->get_cart_item($cart_item_key);
+    $product = $cart_item['data'];
+    
+    // Validate quantity limits
+    if ($quantity > 0) {
+        $max_quantity = $product->get_max_purchase_quantity();
+        $stock_quantity = $product->get_stock_quantity();
+        
+        if ($max_quantity > 0 && $quantity > $max_quantity) {
+            wp_send_json_error(sprintf('Maximum quantity allowed is %d for "%s"', $max_quantity, $product->get_name()));
+            return;
+        }
+        
+        if ($stock_quantity && $quantity > $stock_quantity) {
+            wp_send_json_error(sprintf('Only %d of "%s" available in stock', $stock_quantity, $product->get_name()));
+            return;
+        }
+    }
+    
     try {
         if ($quantity == 0) {
             $result = WC()->cart->remove_cart_item($cart_item_key);
@@ -169,7 +189,7 @@ function tostishop_ajax_update_cart_item() {
                 'fragments' => apply_filters('woocommerce_add_to_cart_fragments', array())
             ));
         } else {
-            wp_send_json_error('Failed to update cart item');
+            wp_send_json_error('Failed to update cart item - please check stock availability');
         }
     } catch (Exception $e) {
         wp_send_json_error('Error updating cart: ' . $e->getMessage());
@@ -283,3 +303,50 @@ function tostishop_newsletter_signup() {
 }
 add_action('wp_ajax_newsletter_signup', 'tostishop_newsletter_signup');
 add_action('wp_ajax_nopriv_newsletter_signup', 'tostishop_newsletter_signup');
+
+/**
+ * Update shipping method via AJAX
+ */
+function tostishop_ajax_update_shipping_method() {
+    // Check if WooCommerce is available
+    if (!class_exists('WooCommerce')) {
+        wp_send_json_error('WooCommerce not available');
+        return;
+    }
+    
+    // Check nonce
+    if (!wp_verify_nonce($_POST['nonce'], 'tostishop_nonce')) {
+        wp_send_json_error('Security check failed');
+        return;
+    }
+    
+    // Get and validate parameters
+    if (!isset($_POST['shipping_method'])) {
+        wp_send_json_error('Missing shipping method');
+        return;
+    }
+    
+    $shipping_method = sanitize_text_field($_POST['shipping_method']);
+    
+    try {
+        // Set the chosen shipping method
+        $chosen_methods = array($shipping_method);
+        WC()->session->set('chosen_shipping_methods', $chosen_methods);
+        
+        // Recalculate totals
+        WC()->cart->calculate_shipping();
+        WC()->cart->calculate_totals();
+        
+        wp_send_json_success(array(
+            'cart_count' => WC()->cart->get_cart_contents_count(),
+            'cart_total' => WC()->cart->get_cart_total(),
+            'cart_subtotal' => WC()->cart->get_cart_subtotal(),
+            'shipping_total' => WC()->cart->get_shipping_total(),
+            'fragments' => apply_filters('woocommerce_add_to_cart_fragments', array())
+        ));
+    } catch (Exception $e) {
+        wp_send_json_error('Error updating shipping method: ' . $e->getMessage());
+    }
+}
+add_action('wp_ajax_tostishop_update_shipping_method', 'tostishop_ajax_update_shipping_method');
+add_action('wp_ajax_nopriv_tostishop_update_shipping_method', 'tostishop_ajax_update_shipping_method');

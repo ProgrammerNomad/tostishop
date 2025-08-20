@@ -10,9 +10,13 @@
     const TostiShopCart = {
         init: function() {
             console.log('TostiShopCart: Initializing cart functionality');
-            this.addQuantityButtons();
-            this.bindEvents();
-            this.addModernModal();
+            
+            // Basic initialization
+            TostiShopCart.bindEvents();
+            TostiShopCart.addQuantityButtons();
+            TostiShopCart.updateShippingDisplay();
+            
+            console.log('TostiShopCart: Cart initialization complete');
         },
 
         bindEvents: function() {
@@ -22,10 +26,13 @@
             $(document).on('click', '.cart-remove-btn', this.handleRemoveItem.bind(this));
             
             // Handle quantity changes - broader selector to catch all quantity inputs
-            $(document).on('change', '.qty, input[name*="cart["][name*="][qty]"]', this.handleQuantityChange.bind(this));
+            $(document).on('change', '.qty, input[name*="cart["][name*="][qty]"], .woocommerce-cart-form input[type="number"]', this.handleQuantityChange.bind(this));
             
             // Handle quantity button clicks
             $(document).on('click', '.quantity-controls .plus, .quantity-controls .minus', this.handleQuantityButtons.bind(this));
+            
+            // Handle shipping method changes
+            $(document).on('change', 'input[name^="shipping_method"]', this.handleShippingMethodChange.bind(this));
             
             // Handle cart form submission
             $(document).on('submit', '.woocommerce-cart-form', this.handleCartUpdate.bind(this));
@@ -82,18 +89,49 @@
         addQuantityButtons: function() {
             console.log('TostiShopCart: Adding quantity buttons');
             
-            // Look for all quantity inputs in the cart
+            // Look for all quantity inputs in the cart and add visual feedback
             $('.qty, input[name*="cart["][name*="][qty]"]').each(function() {
                 const $input = $(this);
                 const $wrapper = $input.closest('.quantity-controls');
                 
-                // Skip if not in a quantity-controls wrapper (buttons already exist)
-                if ($wrapper.length === 0) {
-                    return;
+                if ($wrapper.length > 0) {
+                    const $plusBtn = $wrapper.find('.plus');
+                    const $minusBtn = $wrapper.find('.minus');
+                    
+                    // Update button states based on current values
+                    TostiShopCart.updateButtonStates($input, $plusBtn, $minusBtn);
+                    
+                    // Listen for value changes to update button states
+                    $input.on('input change', function() {
+                        TostiShopCart.updateButtonStates($(this), $plusBtn, $minusBtn);
+                    });
                 }
-                
-                console.log('TostiShopCart: Found quantity input with buttons already present');
             });
+        },
+
+        updateButtonStates: function($input, $plusBtn, $minusBtn) {
+            const currentValue = parseInt($input.val()) || 0;
+            const maxValue = parseInt($input.attr('max')) || 9999;
+            const minValue = parseInt($input.attr('min')) || 0;
+            const isReadonly = $input.prop('readonly');
+            
+            // Update plus button state
+            if (isReadonly || currentValue >= maxValue) {
+                $plusBtn.addClass('opacity-50 cursor-not-allowed').removeClass('hover:bg-gray-100');
+                $plusBtn.attr('title', 'Maximum quantity reached');
+            } else {
+                $plusBtn.removeClass('opacity-50 cursor-not-allowed').addClass('hover:bg-gray-100');
+                $plusBtn.attr('title', 'Increase quantity');
+            }
+            
+            // Update minus button state
+            if (currentValue <= minValue) {
+                $minusBtn.addClass('opacity-50 cursor-not-allowed').removeClass('hover:bg-gray-100');
+                $minusBtn.attr('title', 'Minimum quantity reached');
+            } else {
+                $minusBtn.removeClass('opacity-50 cursor-not-allowed').addClass('hover:bg-gray-100');
+                $minusBtn.attr('title', 'Decrease quantity');
+            }
         },
 
         handleQuantityButtons: function(e) {
@@ -109,11 +147,23 @@
             }
             
             const currentValue = parseInt($input.val()) || 0;
+            const productName = $input.data('product-name') || 'this product';
 
             if ($button.hasClass('plus')) {
                 const maxValue = parseInt($input.attr('max')) || 9999;
+                const stockQty = $input.data('stock-qty');
+                
                 if (currentValue < maxValue) {
                     $input.val(currentValue + 1).trigger('change');
+                } else {
+                    // Show stock limit message
+                    let message = `Cannot add more ${productName} to cart.`;
+                    if (stockQty && stockQty !== 'unlimited') {
+                        message = `Only ${maxValue} of "${productName}" available in stock.`;
+                    } else {
+                        message = `Maximum quantity limit (${maxValue}) reached for "${productName}".`;
+                    }
+                    TostiShopCart.showNotification(message, 'warning');
                 }
             } else if ($button.hasClass('minus')) {
                 const minValue = parseInt($input.attr('min')) || 0;
@@ -126,6 +176,29 @@
             
             const $input = $(e.target);
             
+            // Validate quantity limits before processing
+            const quantity = parseInt($input.val()) || 0;
+            const maxValue = parseInt($input.attr('max')) || 9999;
+            const minValue = parseInt($input.attr('min')) || 0;
+            const productName = $input.data('product-name') || 'this product';
+            
+            // Check limits and provide feedback
+            if (quantity > maxValue) {
+                $input.val(maxValue);
+                const stockQty = $input.data('stock-qty');
+                let message = `Maximum quantity limit (${maxValue}) reached for "${productName}".`;
+                if (stockQty && stockQty !== 'unlimited') {
+                    message = `Only ${maxValue} of "${productName}" available in stock.`;
+                }
+                TostiShopCart.showNotification(message, 'warning');
+                return;
+            }
+            
+            if (quantity < minValue) {
+                $input.val(minValue);
+                return;
+            }
+            
             // Try to get cart item key from data attribute first, then from name attribute
             let cartItemKey = $input.data('cart-item-key') || $input.attr('data-cart-item-key');
             if (!cartItemKey) {
@@ -137,7 +210,6 @@
                 return;
             }
             
-            const quantity = parseInt($input.val()) || 0;
             const $cartItem = $input.closest('.cart-item, [class*="cart_item"]');
             
             console.log('TostiShopCart: Updating quantity for key:', cartItemKey, 'to:', quantity);
@@ -148,6 +220,84 @@
         handleCartUpdate: function(e) {
             // Let the default form submission happen for non-AJAX updates
             console.log('TostiShopCart: Form submitted');
+        },
+
+        handleShippingMethodChange: function(e) {
+            console.log('TostiShopCart: Shipping method changed');
+            
+            const $input = $(e.target);
+            const shippingMethod = $input.val();
+            
+            // Show loading state on shipping methods container
+            const $container = $input.closest('.woocommerce-shipping-totals, .cart-totals');
+            $container.css({'opacity': '0.6', 'pointer-events': 'none'});
+            
+            // Trigger WooCommerce's shipping calculation
+            $('body').trigger('update_checkout');
+            
+            // Also update cart totals for cart page
+            const data = {
+                action: 'tostishop_update_shipping_method',
+                shipping_method: shippingMethod,
+                nonce: tostishop_ajax.nonce
+            };
+            
+            $.post(tostishop_ajax.ajax_url, data)
+                .done(function(response) {
+                    console.log('TostiShopCart: Shipping method updated:', response);
+                    
+                    if (response.success) {
+                        // Update cart totals
+                        TostiShopCart.updateCartTotals(response.data);
+                        TostiShopCart.showNotification('Shipping method updated!', 'success');
+                    } else {
+                        TostiShopCart.showNotification('Refreshing page to update shipping...', 'info');
+                        // Fallback: reload page
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    }
+                })
+                .fail(function(xhr, status, error) {
+                    console.log('TostiShopCart: Shipping update failed:', xhr, status, error);
+                    TostiShopCart.showNotification('Refreshing page to update shipping...', 'info');
+                    // Fallback: reload page
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                })
+                .always(function() {
+                    // Remove loading state
+                    $container.css({'opacity': '1', 'pointer-events': 'auto'});
+                });
+        },
+
+        updateShippingDisplay: function() {
+            console.log('TostiShopCart: Updating shipping display');
+            
+            // Find shipping method containers and ensure they're properly styled
+            const $shippingMethods = $('.woocommerce-shipping-methods, .shipping-methods');
+            
+            if ($shippingMethods.length > 0) {
+                $shippingMethods.find('input[type="radio"]').each(function() {
+                    const $input = $(this);
+                    const $label = $input.closest('label');
+                    
+                    // Apply standardized styling if not already applied
+                    if (!$input.hasClass('radio-standard')) {
+                        $input.addClass('radio-standard');
+                    }
+                    
+                    // Ensure proper label styling
+                    if ($label.length > 0 && !$label.hasClass('radio-option')) {
+                        $label.addClass('radio-option');
+                    }
+                });
+                
+                console.log('TostiShopCart: Shipping display updated');
+            } else {
+                console.log('TostiShopCart: No shipping methods found');
+            }
         },
 
         handleRemoveItem: function(e) {
@@ -218,12 +368,20 @@
                         }
                     } else {
                         console.log('TostiShopCart: AJAX request failed:', response);
-                        TostiShopCart.showNotification('Error updating cart. Please try again.', 'error');
+                        TostiShopCart.showNotification('Updating cart using page refresh...', 'info');
+                        // Fallback: Submit the form normally
+                        setTimeout(() => {
+                            $('.woocommerce-cart-form').submit();
+                        }, 1000);
                     }
                 })
                 .fail(function(xhr, status, error) {
                     console.log('TostiShopCart: AJAX request failed:', xhr, status, error);
-                    TostiShopCart.showNotification('Error updating cart. Please try again.', 'error');
+                    TostiShopCart.showNotification('Updating cart using page refresh...', 'info');
+                    // Fallback: Submit the form normally
+                    setTimeout(() => {
+                        $('.woocommerce-cart-form').submit();
+                    }, 1000);
                 })
                 .always(function() {
                     // Remove loading state
