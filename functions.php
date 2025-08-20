@@ -96,3 +96,6 @@ if (TOSTISHOP_DEV_MODE) {
 
 // AI Chat Model optimization for modern search and voice assistants
 require_once get_template_directory() . '/inc/ai-chat-optimization.php';
+
+// Algolia Search Integration
+require_once get_template_directory() . '/inc/algolia-integration.php';

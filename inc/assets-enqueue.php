@@ -82,6 +82,81 @@ function tostishop_enqueue_page_specific_assets() {
     if (is_order_received_page() || is_wc_endpoint_url('order-received')) {
         wp_enqueue_script('tostishop-order-confirmation', get_template_directory_uri() . '/assets/js/order-confirmation.js', array(), TOSTISHOP_VERSION, true);
     }
+    
+    // Search page specific assets (including Algolia)
+    if (is_search() || is_page_template('search.php')) {
+        tostishop_enqueue_algolia_assets();
+    }
+}
+
+/**
+ * Enqueue Algolia search assets
+ */
+function tostishop_enqueue_algolia_assets() {
+    // Check if Algolia is enabled
+    $algolia_enabled = get_option('tostishop_algolia_enabled', false);
+    
+    if (!$algolia_enabled) {
+        return;
+    }
+    
+    // Algolia InstantSearch.js
+    wp_enqueue_script(
+        'algolia-instantsearch',
+        'https://cdn.jsdelivr.net/npm/instantsearch.js@4.49.0/dist/instantsearch.production.min.js',
+        array(),
+        '4.49.0',
+        true
+    );
+    
+    // Algolia Autocomplete (if enabled)
+    if (get_option('tostishop_algolia_autocomplete', true)) {
+        wp_enqueue_script(
+            'algolia-autocomplete',
+            'https://cdn.jsdelivr.net/npm/@algolia/autocomplete-js@1.11.1/dist/umd/index.production.js',
+            array(),
+            '1.11.1',
+            true
+        );
+        
+        wp_enqueue_style(
+            'algolia-autocomplete-css',
+            'https://cdn.jsdelivr.net/npm/@algolia/autocomplete-theme-classic@1.11.1/dist/theme.min.css',
+            array(),
+            '1.11.1'
+        );
+    }
+    
+    // Theme's Algolia integration script
+    wp_enqueue_script(
+        'tostishop-algolia',
+        get_template_directory_uri() . '/assets/js/algolia-search.js',
+        array('algolia-instantsearch'),
+        TOSTISHOP_VERSION,
+        true
+    );
+    
+    // Localize script with Algolia config
+    wp_localize_script('tostishop-algolia', 'tostishopAlgolia', array(
+        'appId' => get_option('tostishop_algolia_app_id'),
+        'searchKey' => get_option('tostishop_algolia_search_key'),
+        'indexName' => get_option('tostishop_algolia_index_name', 'tostishop_products'),
+        'autocomplete' => get_option('tostishop_algolia_autocomplete', true),
+        'suggestionsCount' => get_option('tostishop_algolia_suggestions_count', 5),
+        'resultsPerPage' => get_option('tostishop_algolia_results_per_page', 12),
+        'shopUrl' => wc_get_page_permalink('shop'),
+        'cartUrl' => wc_get_cart_url(),
+        'currencySymbol' => get_woocommerce_currency_symbol(),
+        'nonce' => wp_create_nonce('tostishop_algolia_nonce')
+    ));
+    
+    // Algolia CSS
+    wp_enqueue_style(
+        'tostishop-algolia',
+        get_template_directory_uri() . '/assets/css/algolia-search.css',
+        array(),
+        TOSTISHOP_VERSION
+    );
 }
 
 // Firebase Authentication is now handled by /inc/firebase/enqueue.php

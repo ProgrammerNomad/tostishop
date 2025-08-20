@@ -350,3 +350,160 @@ function tostishop_ajax_update_shipping_method() {
 }
 add_action('wp_ajax_tostishop_update_shipping_method', 'tostishop_ajax_update_shipping_method');
 add_action('wp_ajax_nopriv_tostishop_update_shipping_method', 'tostishop_ajax_update_shipping_method');
+
+/**
+ * Algolia - Sync all products to index
+ */
+function tostishop_algolia_sync_all_products() {
+    // Check nonce for security
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'tostishop_algolia_nonce')) {
+        wp_send_json_error('Security check failed');
+        return;
+    }
+    
+    // Check user permissions
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Insufficient permissions');
+        return;
+    }
+    
+    $algolia = TostiShop_Algolia_Integration::get_instance();
+    
+    if (!$algolia->is_algolia_enabled()) {
+        wp_send_json_error('Algolia is not properly configured');
+        return;
+    }
+    
+    try {
+        // Get all published products
+        $products = wc_get_products(array(
+            'status' => 'publish',
+            'limit' => -1,
+            'return' => 'ids'
+        ));
+        
+        if (empty($products)) {
+            wp_send_json_success(array(
+                'message' => 'No products found to sync',
+                'synced' => 0,
+                'total' => 0
+            ));
+            return;
+        }
+        
+        $batch_size = 100; // Process in batches
+        $total_products = count($products);
+        $current_batch = isset($_POST['batch']) ? absint($_POST['batch']) : 0;
+        $start_index = $current_batch * $batch_size;
+        $end_index = min($start_index + $batch_size, $total_products);
+        
+        $batch_products = array_slice($products, $start_index, $batch_size);
+        $algolia_records = array();
+        
+        foreach ($batch_products as $product_id) {
+            $product = wc_get_product($product_id);
+            if ($product) {
+                $algolia_records[] = $algolia->prepare_product_data($product);
+            }
+        }
+        
+        if (!empty($algolia_records)) {
+            $algolia->get_index()->saveObjects($algolia_records);
+        }
+        
+        $synced_count = $end_index;
+        $is_complete = $end_index >= $total_products;
+        
+        wp_send_json_success(array(
+            'message' => sprintf('Synced %d of %d products', $synced_count, $total_products),
+            'synced' => $synced_count,
+            'total' => $total_products,
+            'progress' => ($synced_count / $total_products) * 100,
+            'complete' => $is_complete,
+            'next_batch' => $is_complete ? null : $current_batch + 1
+        ));
+        
+    } catch (Exception $e) {
+        error_log('Algolia sync error: ' . $e->getMessage());
+        wp_send_json_error('Sync failed: ' . $e->getMessage());
+    }
+}
+add_action('wp_ajax_tostishop_algolia_sync_all', 'tostishop_algolia_sync_all_products');
+
+/**
+ * Algolia - Clear index
+ */
+function tostishop_algolia_clear_index() {
+    // Check nonce for security
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'tostishop_algolia_nonce')) {
+        wp_send_json_error('Security check failed');
+        return;
+    }
+    
+    // Check user permissions
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Insufficient permissions');
+        return;
+    }
+    
+    $algolia = TostiShop_Algolia_Integration::get_instance();
+    
+    if (!$algolia->is_algolia_enabled()) {
+        wp_send_json_error('Algolia is not properly configured');
+        return;
+    }
+    
+    try {
+        $algolia->get_index()->clearObjects();
+        
+        wp_send_json_success(array(
+            'message' => 'Index cleared successfully'
+        ));
+        
+    } catch (Exception $e) {
+        error_log('Algolia clear index error: ' . $e->getMessage());
+        wp_send_json_error('Failed to clear index: ' . $e->getMessage());
+    }
+}
+add_action('wp_ajax_tostishop_algolia_clear_index', 'tostishop_algolia_clear_index');
+
+/**
+ * Algolia - Test connection
+ */
+function tostishop_algolia_test_connection() {
+    // Check nonce for security
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'tostishop_algolia_nonce')) {
+        wp_send_json_error('Security check failed');
+        return;
+    }
+    
+    // Check user permissions
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Insufficient permissions');
+        return;
+    }
+    
+    $algolia = TostiShop_Algolia_Integration::get_instance();
+    
+    if (!$algolia->is_algolia_enabled()) {
+        wp_send_json_error('Algolia is not properly configured');
+        return;
+    }
+    
+    try {
+        // Test the connection by performing a simple search
+        $results = $algolia->get_index()->search('', array('hitsPerPage' => 1));
+        
+        wp_send_json_success(array(
+            'message' => 'Connection successful',
+            'index_name' => get_option('tostishop_algolia_index_name', 'tostishop_products'),
+            'total_records' => $results['nbHits'],
+            'processing_time' => $results['processingTimeMS'] . 'ms'
+        ));
+        
+    } catch (Exception $e) {
+        error_log('Algolia connection test error: ' . $e->getMessage());
+        wp_send_json_error('Connection failed: ' . $e->getMessage());
+    }
+}
+add_action('wp_ajax_tostishop_algolia_test_connection', 'tostishop_algolia_test_connection');
