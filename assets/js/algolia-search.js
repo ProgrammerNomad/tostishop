@@ -52,18 +52,14 @@ function createSearchDropdown(searchBox) {
     parent.style.position = 'relative';
     parent.appendChild(dropdown);
     
-    // Show/hide dropdown
-    searchBox.addEventListener('input', (e) => {
-        const query = e.target.value.trim();
-        dropdown.classList.toggle('hidden', query.length === 0);
-    });
-    
     // Hide when clicking outside
     document.addEventListener('click', (e) => {
         if (!parent.contains(e.target)) {
             dropdown.classList.add('hidden');
         }
     });
+    
+    console.log('✅ Search dropdown created');
 }
 
 // Initialize Algolia
@@ -79,19 +75,18 @@ function initAlgolia() {
             indexName: tostishopAlgolia.indexName,
             searchClient,
             searchFunction: (helper) => {
-                if (helper.state.query === '') return;
+                if (helper.state.query === '') {
+                    // Hide dropdown when no query
+                    const dropdown = document.querySelector('#algolia-dropdown');
+                    if (dropdown) dropdown.classList.add('hidden');
+                    return;
+                }
                 helper.search();
             }
         });
         
-        // Add widgets
+        // Add widgets - but don't override the header input
         search.addWidgets([
-            instantsearch.widgets.searchBox({
-                container: '#algolia-search-box',
-                placeholder: 'Search products...',
-                showReset: false,
-                showSubmit: false
-            }),
             instantsearch.widgets.hits({
                 container: '#algolia-hits',
                 templates: {
@@ -131,6 +126,28 @@ function initAlgolia() {
         ]);
         
         search.start();
+        
+        // Connect the header input to Algolia search manually
+        const headerInput = document.querySelector('#algolia-search-box');
+        const dropdown = document.querySelector('#algolia-dropdown');
+        
+        if (headerInput) {
+            headerInput.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                
+                if (query.length === 0) {
+                    if (dropdown) dropdown.classList.add('hidden');
+                    return;
+                }
+                
+                // Show dropdown and trigger search
+                if (dropdown) dropdown.classList.remove('hidden');
+                search.helper.setQuery(query).search();
+            });
+            
+            console.log('✅ Header input connected to Algolia');
+        }
+        
         window.tostishopSearch = search;
         console.log('🎉 Algolia search ready');
         
