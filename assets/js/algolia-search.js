@@ -110,13 +110,7 @@ function initAlgolia() {
                             <div class="flex-1">
                                 <h4 class="font-medium text-gray-900 truncate">{{#helpers.highlight}}{"attribute": "title"}{{/helpers.highlight}}</h4>
                                 <p class="text-sm text-gray-600">
-                                    {{#sale_price}}
-                                    <span class="text-red-600 font-medium">${{sale_price}}</span>
-                                    <span class="text-gray-400 line-through ml-1 text-xs">${{regular_price}}</span>
-                                    {{/sale_price}}
-                                    {{^sale_price}}
-                                    <span class="font-medium">${{price}}</span>
-                                    {{/sale_price}}
+                                    <span class="font-medium">{{price}}</span>
                                 </p>
                             </div>
                         </div>
