@@ -3,8 +3,19 @@
  * InstantSearch.js implementation for WooCommerce products
  */
 
+// Function to dynamically load script if not found
+function loadAlgoliaScript(url, callback) {
+    const script = document.createElement('script');
+    script.src = url;
+    script.onload = callback;
+    script.onerror = function() {
+        console.error('Failed to load script:', url);
+    };
+    document.head.appendChild(script);
+}
+
 // Function to check if Algolia libraries are loaded
-function waitForAlgolia(callback, maxAttempts = 50) {
+function waitForAlgolia(callback, maxAttempts = 20) {
     let attempts = 0;
     
     function checkLibraries() {
@@ -22,17 +33,35 @@ function waitForAlgolia(callback, maxAttempts = 50) {
             return;
         }
         
+        // Try to load missing libraries dynamically
+        if (attempts === 5 && typeof algoliasearch === 'undefined') {
+            console.log('🔄 Attempting to load algoliasearch dynamically...');
+            loadAlgoliaScript('https://unpkg.com/algoliasearch@4/dist/algoliasearch.umd.js', function() {
+                console.log('✅ Algoliasearch loaded via fallback');
+            });
+        }
+        
+        if (attempts === 10 && typeof algoliasearch === 'undefined') {
+            console.log('🔄 Trying alternative CDN for algoliasearch...');
+            loadAlgoliaScript('https://cdnjs.cloudflare.com/ajax/libs/algoliasearch/4.20.0/algoliasearch.umd.min.js', function() {
+                console.log('✅ Algoliasearch loaded via alternative CDN');
+            });
+        }
+        
         // If max attempts reached, show error
         if (attempts >= maxAttempts) {
             console.error('❌ Algolia libraries failed to load after ' + maxAttempts + ' attempts');
             console.error('Missing libraries:');
             if (typeof algoliasearch === 'undefined') console.error('- algoliasearch (Search Client)');
             if (typeof instantsearch === 'undefined') console.error('- instantsearch (InstantSearch.js)');
+            
+            // Try to proceed with minimal functionality
+            initializeMinimalSearch();
             return;
         }
         
-        // Try again in 100ms
-        setTimeout(checkLibraries, 100);
+        // Try again in 200ms
+        setTimeout(checkLibraries, 200);
     }
     
     checkLibraries();
@@ -523,4 +552,77 @@ if (typeof Handlebars !== 'undefined') {
     Handlebars.registerHelper('rating_stars', function() {
         return generateStars(this.rating_average);
     });
+}
+
+// Minimal search functionality without Algolia libraries
+function initializeMinimalSearch() {
+    console.log('🔧 Initializing minimal search functionality...');
+    
+    const searchInput = document.querySelector('#algolia-search-input');
+    const searchResults = document.querySelector('#algolia-search-results');
+    
+    if (searchInput && searchResults) {
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.trim();
+            
+            if (query.length < 2) {
+                searchResults.innerHTML = '';
+                return;
+            }
+            
+            // Show loading state
+            searchResults.innerHTML = '<div class="p-4 text-center">🔍 Searching...</div>';
+            
+            // Fallback to WordPress AJAX search
+            fetch(algolia_search_params.ajax_url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    action: 'tostishop_search_products',
+                    query: query,
+                    nonce: algolia_search_params.nonce
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data.products) {
+                    displaySearchResults(data.data.products);
+                } else {
+                    searchResults.innerHTML = '<div class="p-4 text-center text-gray-500">No products found</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+                searchResults.innerHTML = '<div class="p-4 text-center text-red-500">Search error occurred</div>';
+            });
+        });
+    }
+}
+
+// Function to display search results
+function displaySearchResults(products) {
+    const searchResults = document.querySelector('#algolia-search-results');
+    
+    if (!searchResults) return;
+    
+    if (products.length === 0) {
+        searchResults.innerHTML = '<div class="p-4 text-center text-gray-500">No products found</div>';
+        return;
+    }
+    
+    const resultsHTML = products.map(product => `
+        <div class="flex items-center p-3 hover:bg-gray-50 border-b border-gray-100">
+            <img src="${product.image}" alt="${product.name}" class="w-12 h-12 object-cover rounded mr-3">
+            <div class="flex-1">
+                <h4 class="font-medium text-gray-900 hover:text-blue-600">
+                    <a href="${product.url}">${product.name}</a>
+                </h4>
+                <p class="text-sm text-gray-600">${product.price}</p>
+            </div>
+        </div>
+    `).join('');
+    
+    searchResults.innerHTML = resultsHTML;
 }

@@ -507,3 +507,64 @@ function tostishop_algolia_test_connection() {
     }
 }
 add_action('wp_ajax_tostishop_algolia_test_connection', 'tostishop_algolia_test_connection');
+
+/**
+ * Fallback search handler for when Algolia libraries fail
+ */
+function tostishop_search_products() {
+    // Security check
+    if (!wp_verify_nonce($_POST['nonce'], 'tostishop_ajax_nonce')) {
+        wp_send_json_error('Security check failed');
+        return;
+    }
+    
+    $query = sanitize_text_field($_POST['query']);
+    
+    if (empty($query)) {
+        wp_send_json_error('Empty search query');
+        return;
+    }
+    
+    // Perform WooCommerce product search
+    $args = array(
+        'post_type' => 'product',
+        'post_status' => 'publish',
+        'posts_per_page' => 10,
+        's' => $query,
+        'meta_query' => array(
+            array(
+                'key' => '_visibility',
+                'value' => array('catalog', 'visible'),
+                'compare' => 'IN'
+            )
+        )
+    );
+    
+    $search_query = new WP_Query($args);
+    $products = array();
+    
+    if ($search_query->have_posts()) {
+        while ($search_query->have_posts()) {
+            $search_query->the_post();
+            global $product;
+            
+            if ($product) {
+                $products[] = array(
+                    'id' => get_the_ID(),
+                    'name' => get_the_title(),
+                    'url' => get_permalink(),
+                    'price' => $product->get_price_html(),
+                    'image' => wp_get_attachment_image_url($product->get_image_id(), 'thumbnail') ?: wc_placeholder_img_src('thumbnail')
+                );
+            }
+        }
+        wp_reset_postdata();
+    }
+    
+    wp_send_json_success(array(
+        'products' => $products,
+        'total' => count($products)
+    ));
+}
+add_action('wp_ajax_tostishop_search_products', 'tostishop_search_products');
+add_action('wp_ajax_nopriv_tostishop_search_products', 'tostishop_search_products');

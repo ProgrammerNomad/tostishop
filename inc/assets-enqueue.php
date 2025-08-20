@@ -103,11 +103,23 @@ function tostishop_enqueue_algolia_assets() {
     // Algolia Search Client (required for algoliasearch function)
     wp_enqueue_script(
         'algolia-search-client',
-        'https://cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js',
+        'https://cdn.jsdelivr.net/npm/algoliasearch@4.20.0/dist/algoliasearch.umd.js',
         array(),
         '4.20.0',
         true
     );
+    
+    // Add fallback CDN as inline script
+    $fallback_script = "
+    if (typeof algoliasearch === 'undefined') {
+        console.log('Loading Algolia from fallback CDN...');
+        var script = document.createElement('script');
+        script.src = 'https://unpkg.com/algoliasearch@4/dist/algoliasearch.umd.js';
+        script.onload = function() { console.log('Algolia fallback loaded'); };
+        document.head.appendChild(script);
+    }
+    ";
+    wp_add_inline_script('algolia-search-client', $fallback_script, 'after');
     
     // Algolia InstantSearch.js
     wp_enqueue_script(
