@@ -100,11 +100,20 @@ function tostishop_enqueue_algolia_assets() {
         return;
     }
     
+    // Algolia Search Client (required for algoliasearch function)
+    wp_enqueue_script(
+        'algolia-search-client',
+        'https://cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js',
+        array(),
+        '4.20.0',
+        true
+    );
+    
     // Algolia InstantSearch.js
     wp_enqueue_script(
         'algolia-instantsearch',
         'https://cdn.jsdelivr.net/npm/instantsearch.js@4.49.0/dist/instantsearch.production.min.js',
-        array(),
+        array('algolia-search-client'),
         '4.49.0',
         true
     );
@@ -114,7 +123,7 @@ function tostishop_enqueue_algolia_assets() {
         wp_enqueue_script(
             'algolia-autocomplete',
             'https://cdn.jsdelivr.net/npm/@algolia/autocomplete-js@1.11.1/dist/umd/index.production.js',
-            array(),
+            array('algolia-search-client'),
             '1.11.1',
             true
         );
@@ -128,10 +137,15 @@ function tostishop_enqueue_algolia_assets() {
     }
     
     // Theme's Algolia integration script
+    $dependencies = array('algolia-search-client', 'algolia-instantsearch');
+    if (get_option('tostishop_algolia_autocomplete', true)) {
+        $dependencies[] = 'algolia-autocomplete';
+    }
+    
     wp_enqueue_script(
         'tostishop-algolia',
         get_template_directory_uri() . '/assets/js/algolia-search.js',
-        array('algolia-instantsearch'),
+        $dependencies,
         TOSTISHOP_VERSION,
         true
     );

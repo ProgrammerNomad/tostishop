@@ -3,7 +3,33 @@
  * InstantSearch.js implementation for WooCommerce products
  */
 
-// Wait for DOM to be ready
+// Function to check if Algolia libraries are loaded
+function waitForAlgolia(callback, maxAttempts = 50) {
+    let attempts = 0;
+    
+    function checkLibraries() {
+        attempts++;
+        
+        // Check if required libraries are loaded
+        if (typeof algoliasearch !== 'undefined' && typeof instantsearch !== 'undefined') {
+            callback();
+            return;
+        }
+        
+        // If max attempts reached, show error
+        if (attempts >= maxAttempts) {
+            console.error('Algolia libraries failed to load after ' + maxAttempts + ' attempts');
+            return;
+        }
+        
+        // Try again in 100ms
+        setTimeout(checkLibraries, 100);
+    }
+    
+    checkLibraries();
+}
+
+// Initialize when DOM is ready and Algolia libraries are loaded
 document.addEventListener('DOMContentLoaded', function() {
     // Only initialize if Algolia config is available
     if (typeof tostishopAlgolia === 'undefined' || !tostishopAlgolia.appId) {
@@ -11,37 +37,56 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    console.log('Initializing TostiShop Algolia Search...');
+    console.log('Waiting for Algolia libraries to load...');
     
-    // Initialize Algolia search client
-    const searchClient = algoliasearch(tostishopAlgolia.appId, tostishopAlgolia.searchKey);
-    
-    // Initialize InstantSearch
-    const search = instantsearch({
-        indexName: tostishopAlgolia.indexName,
-        searchClient,
-        searchFunction: function(helper) {
-            // Only search if there's a query or filters
-            if (helper.state.query === '' && Object.keys(helper.state.facetsRefinements).length === 0) {
-                return;
-            }
-            helper.search();
-        }
+    // Wait for Algolia libraries to be available
+    waitForAlgolia(function() {
+        console.log('Algolia libraries loaded, initializing search...');
+        initializeAlgoliaSearch();
     });
-    
-    // Add search widgets
-    addSearchWidgets(search);
-    
-    // Initialize autocomplete if enabled
-    if (tostishopAlgolia.autocomplete) {
-        initializeAutocomplete();
-    }
-    
-    // Start InstantSearch
-    search.start();
-    
-    console.log('Algolia Search initialized successfully');
 });
+
+/**
+ * Initialize Algolia Search
+ */
+function initializeAlgoliaSearch() {
+    try {
+        // Initialize Algolia search client
+        const searchClient = algoliasearch(tostishopAlgolia.appId, tostishopAlgolia.searchKey);
+        
+        // Initialize InstantSearch
+        const search = instantsearch({
+            indexName: tostishopAlgolia.indexName,
+            searchClient,
+            searchFunction: function(helper) {
+                // Only search if there's a query or filters
+                if (helper.state.query === '' && Object.keys(helper.state.facetsRefinements).length === 0) {
+                    return;
+                }
+                helper.search();
+            }
+        });
+        
+        // Add search widgets
+        addSearchWidgets(search);
+        
+        // Initialize autocomplete if enabled
+        if (tostishopAlgolia.autocomplete && typeof autocomplete !== 'undefined') {
+            initializeAutocomplete();
+        }
+        
+        // Start InstantSearch
+        search.start();
+        
+        // Make search instance globally available for debugging
+        window.tostishopSearch = search;
+        
+        console.log('Algolia Search initialized successfully');
+        
+    } catch (error) {
+        console.error('Error initializing Algolia Search:', error);
+    }
+}
 
 /**
  * Add search widgets to InstantSearch instance
@@ -308,54 +353,70 @@ function getEmptyTemplate() {
  * Initialize autocomplete functionality
  */
 function initializeAutocomplete() {
+    // Check if autocomplete library is available
+    if (typeof autocomplete === 'undefined') {
+        console.warn('Autocomplete library not loaded, skipping autocomplete initialization');
+        return;
+    }
+    
     const searchInput = document.querySelector('#algolia-search-box input');
-    if (!searchInput) return;
+    if (!searchInput) {
+        console.warn('Search input not found, skipping autocomplete initialization');
+        return;
+    }
     
-    const searchClient = algoliasearch(tostishopAlgolia.appId, tostishopAlgolia.searchKey);
-    
-    autocomplete({
-        container: searchInput.parentElement,
-        placeholder: 'Search products...',
-        getSources() {
-            return [
-                {
-                    sourceId: 'products',
-                    getItems({ query }) {
-                        return searchClient.search([
-                            {
-                                indexName: tostishopAlgolia.indexName,
-                                query,
-                                params: {
-                                    hitsPerPage: tostishopAlgolia.suggestionsCount
+    try {
+        const searchClient = algoliasearch(tostishopAlgolia.appId, tostishopAlgolia.searchKey);
+        
+        autocomplete({
+            container: searchInput.parentElement,
+            placeholder: 'Search products...',
+            getSources() {
+                return [
+                    {
+                        sourceId: 'products',
+                        getItems({ query }) {
+                            return searchClient.search([
+                                {
+                                    indexName: tostishopAlgolia.indexName,
+                                    query,
+                                    params: {
+                                        hitsPerPage: tostishopAlgolia.suggestionsCount
+                                    }
                                 }
+                            ]).then(({ results }) => {
+                                return results[0].hits;
+                            });
+                        },
+                        templates: {
+                            item({ item, components }) {
+                                return `
+                                <div class="flex items-center p-2 hover:bg-gray-50">
+                                    ${item.image ? `<img src="${item.image}" alt="${item.title}" class="w-10 h-10 object-cover rounded mr-3">` : ''}
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-sm font-medium text-gray-900 truncate">
+                                            ${components.Highlight({ hit: item, attribute: 'title' })}
+                                        </div>
+                                        <div class="text-sm text-gray-500">
+                                            $${item.price}
+                                        </div>
+                                    </div>
+                                </div>`;
                             }
-                        ]).then(({ results }) => {
-                            return results[0].hits;
-                        });
-                    },
-                    templates: {
-                        item({ item, components }) {
-                            return `
-                            <div class="flex items-center p-2 hover:bg-gray-50">
-                                ${item.image ? `<img src="${item.image}" alt="${item.title}" class="w-10 h-10 object-cover rounded mr-3">` : ''}
-                                <div class="flex-1 min-w-0">
-                                    <div class="text-sm font-medium text-gray-900 truncate">
-                                        ${components.Highlight({ hit: item, attribute: 'title' })}
-                                    </div>
-                                    <div class="text-sm text-gray-500">
-                                        $${item.price}
-                                    </div>
-                                </div>
-                            </div>`;
+                        },
+                        getItemUrl({ item }) {
+                            return item.url;
                         }
-                    },
-                    getItemUrl({ item }) {
-                        return item.url;
                     }
-                }
-            ];
-        }
-    });
+                ];
+            }
+        });
+        
+        console.log('Autocomplete initialized successfully');
+        
+    } catch (error) {
+        console.error('Error initializing autocomplete:', error);
+    }
 }
 
 /**
