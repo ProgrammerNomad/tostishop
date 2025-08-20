@@ -75,10 +75,13 @@ if (file_exists($admin_menu_file)) {
 }
 
 // Shiprocket integration for shipping and pincode checking
-$shiprocket_file = get_template_directory() . '/inc/shiprocket-integration.php';
-if (file_exists($shiprocket_file)) {
-    require_once $shiprocket_file;
+function tostishop_load_shiprocket_integration() {
+    $shiprocket_file = get_template_directory() . '/inc/shiprocket-integration.php';
+    if (file_exists($shiprocket_file)) {
+        require_once $shiprocket_file;
+    }
 }
+add_action('after_setup_theme', 'tostishop_load_shiprocket_integration');
 
 // SEO enhancements for search engines and AI chat models
 require_once get_template_directory() . '/inc/seo-enhancements.php';

@@ -329,10 +329,10 @@
     @apply relative;
   }
 
-  .mega-menu-dropdown {
+    .mega-menu-dropdown {
     @apply absolute left-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden;
-    min-width: 320px;
-    max-width: 400px;
+    min-width: 400px;
+    max-width: 500px;
   }
 
   .mega-menu-header {
@@ -348,15 +348,15 @@
   }
 
   .mega-menu-content {
-    @apply p-6;
+    @apply p-8;
   }
 
   .mega-menu-grid {
-    @apply grid grid-cols-2 gap-4;
+    @apply grid grid-cols-3 gap-6;
   }
 
   .mega-menu-item {
-    @apply group block p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 border border-transparent hover:border-gray-200;
+    @apply group block p-4 rounded-lg hover:bg-gray-50 transition-all duration-200 border border-transparent hover:border-gray-200 hover:shadow-sm;
   }
 
   .mega-menu-item-icon {
@@ -368,7 +368,7 @@
   }
 
   .mega-menu-item-title {
-    @apply text-sm font-medium text-gray-900 group-hover:text-navy-600 transition-colors truncate;
+    @apply text-base font-medium text-gray-900 group-hover:text-navy-600 transition-colors leading-relaxed;
   }
 
   .mega-menu-item-count {
@@ -436,13 +436,13 @@
   /* Responsive adjustments */
   @screen lg {
     .mega-menu-dropdown {
-      min-width: 380px;
+      min-width: 480px;
     }
   }
 
   @screen xl {
     .mega-menu-dropdown {
-      min-width: 420px;
+      min-width: 520px;
     }
   }
 }

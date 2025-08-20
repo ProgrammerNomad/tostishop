@@ -72,7 +72,7 @@ function tostishop_mega_menu() {
                              x-transition:leave="transition ease-in duration-150"
                              x-transition:leave-start="opacity-100 scale-100"
                              x-transition:leave-end="opacity-0 scale-95"
-                             class="absolute left-0 top-full mt-1 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
+                             class="absolute left-0 top-full mt-1 w-96 lg:w-[480px] xl:w-[520px] bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
                             
                             <!-- Category Header -->
                             <div class="bg-gradient-to-r from-navy-900 to-blue-600 px-6 py-4">
@@ -86,25 +86,23 @@ function tostishop_mega_menu() {
                             
                             <!-- Subcategories Grid -->
                             <div class="p-6">
-                                <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-2">
                                     <!-- View All Category -->
                                     <a href="<?php echo esc_url($category_url); ?>" 
-                                       class="group block p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 border border-transparent hover:border-gray-200">
-                                        <div class="flex items-center">
-                                            <div class="w-8 h-8 bg-navy-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-navy-200 transition-colors">
+                                       class="group flex items-center p-4 rounded-lg hover:bg-navy-50 transition-all duration-200 border border-transparent hover:border-navy-200 bg-gradient-to-r from-navy-50 to-blue-50">
+                                        <div class="w-10 h-10 bg-navy-100 rounded-lg flex items-center justify-center mr-4 group-hover:bg-navy-200 transition-colors">
                                                 <svg class="w-4 h-4 text-navy-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
                                                 </svg>
                                             </div>
-                                            <div>
+                                            <div class="flex-1">
                                                 <div class="text-sm font-semibold text-gray-900 group-hover:text-navy-600">
                                                     <?php _e('View All', 'tostishop'); ?>
                                                 </div>
-                                                <div class="text-xs text-gray-500">
+                                                <div class="text-xs text-gray-500 mt-1">
                                                     <?php printf(__('%d items', 'tostishop'), $category->count); ?>
                                                 </div>
                                             </div>
-                                        </div>
                                     </a>
                                     
                                     <?php foreach ($subcategories as $subcategory) : 
@@ -114,9 +112,8 @@ function tostishop_mega_menu() {
                                         ?>
                                         
                                         <a href="<?php echo esc_url($subcat_url); ?>" 
-                                           class="group block p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 border border-transparent hover:border-gray-200">
-                                            <div class="flex items-center">
-                                                <div class="w-8 h-8 bg-gray-100 rounded-lg overflow-hidden mr-3 flex-shrink-0">
+                                           class="group flex items-center p-3 rounded-lg hover:bg-gray-50 transition-all duration-200 border border-transparent hover:border-gray-200">
+                                            <div class="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden mr-4 flex-shrink-0">
                                                     <?php if ($image_url) : ?>
                                                         <img src="<?php echo esc_url($image_url); ?>" 
                                                              alt="<?php echo esc_attr($subcategory->name); ?>"
@@ -129,15 +126,14 @@ function tostishop_mega_menu() {
                                                         </div>
                                                     <?php endif; ?>
                                                 </div>
-                                                <div class="min-w-0 flex-1">
-                                                    <div class="text-sm font-medium text-gray-900 group-hover:text-navy-600 transition-colors truncate">
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="text-sm font-medium text-gray-900 group-hover:text-navy-600 transition-colors">
                                                         <?php echo esc_html($subcategory->name); ?>
                                                     </div>
-                                                    <div class="text-xs text-gray-500">
+                                                    <div class="text-xs text-gray-500 mt-1">
                                                         <?php printf(_n('%d item', '%d items', $subcategory->count, 'tostishop'), $subcategory->count); ?>
                                                     </div>
                                                 </div>
-                                            </div>
                                         </a>
                                         
                                     <?php endforeach; ?>

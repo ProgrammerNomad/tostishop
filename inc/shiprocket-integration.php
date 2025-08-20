@@ -1112,17 +1112,28 @@ add_action('woocommerce_cart_collaterals', 'tostishop_shipping_methods_calculato
 add_action('woocommerce_checkout_before_order_review', 'tostishop_checkout_free_shipping_notice');
 
 /**
- * Custom WooCommerce Shipping Method for Shiprocket
+ * Initialize shipping method after plugins loaded
  */
-class TostiShop_Shiprocket_Shipping_Method extends WC_Shipping_Method {
-    
-    public function __construct() {
-        $this->id = 'tostishop_shiprocket';
-        $this->method_title = __('Shiprocket Shipping', 'tostishop');
-        $this->method_description = __('Dynamic shipping rates from Shiprocket with free shipping above ₹500', 'tostishop');
-        
-        $this->init();
+function tostishop_init_shiprocket_shipping_method() {
+    if (!class_exists('WC_Shipping_Method')) {
+        return;
     }
+    
+    // Load our shipping method class
+    if (!class_exists('TostiShop_Shiprocket_Shipping_Method')) {
+        
+        /**
+         * Custom WooCommerce Shipping Method for Shiprocket
+         */
+        class TostiShop_Shiprocket_Shipping_Method extends WC_Shipping_Method {
+            
+            public function __construct() {
+                $this->id = 'tostishop_shiprocket';
+                $this->method_title = __('Shiprocket Shipping', 'tostishop');
+                $this->method_description = __('Dynamic shipping rates from Shiprocket with free shipping above ₹500', 'tostishop');
+                
+                $this->init();
+            }
     
     public function init() {
         $this->init_form_fields();
@@ -1187,6 +1198,8 @@ class TostiShop_Shiprocket_Shipping_Method extends WC_Shipping_Method {
             $this->add_rate($rate);
         }
     }
+        } // End class definition
+    } // End if class_exists check
 }
 
 /**
@@ -1198,17 +1211,4 @@ function tostishop_add_shiprocket_shipping_method($methods) {
 }
 add_filter('woocommerce_shipping_methods', 'tostishop_add_shiprocket_shipping_method');
 
-/**
- * Initialize shipping method after plugins loaded
- */
-function tostishop_init_shiprocket_shipping_method() {
-    if (!class_exists('WC_Shipping_Method')) {
-        return;
-    }
-    
-    // Load our shipping method class
-    if (!class_exists('TostiShop_Shiprocket_Shipping_Method')) {
-        // Class is defined above
-    }
-}
 add_action('woocommerce_shipping_init', 'tostishop_init_shiprocket_shipping_method');
