@@ -1,0 +1,147 @@
+/* Modern Shop Sidebar Filters Styles */
+
+/* Filter sidebar base styling */
+.tostishop-filters {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+}
+
+/* Collapsible sections */
+.filter-section {
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.filter-section:last-child {
+    border-bottom: none;
+}
+
+/* Filter checkboxes and radios */
+.filter-option input[type="checkbox"],
+.filter-option input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #e42029;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+}
+
+.filter-option input[type="radio"] {
+    border-radius: 50%;
+}
+
+.filter-option:hover {
+    background-color: #f9fafb;
+}
+
+/* Filter labels */
+.filter-option label {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    transition: all 0.2s ease;
+}
+
+.filter-option label:hover {
+    color: #374151;
+}
+
+/* Count badges */
+.filter-count {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+/* Price range styling */
+.price-filter {
+    margin: 16px 0;
+}
+
+/* Star ratings */
+.rating-stars {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.rating-stars svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Clear filters button */
+.clear-filters-btn {
+    color: #e42029;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.clear-filters-btn:hover {
+    color: #dc2626;
+    text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .tostishop-filters {
+        margin-bottom: 24px;
+    }
+}
+
+/* Active filter indicators */
+.filter-option input:checked + span {
+    color: #1f2937;
+    font-weight: 500;
+}
+
+/* Loading states */
+.filter-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Animation for collapsible sections */
+.filter-section [x-cloak] {
+    display: none !important;
+}
+
+/* Mobile filter overlay (if needed) */
+@media (max-width: 768px) {
+    .mobile-filter-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 50;
+    }
+
+    .mobile-filter-panel {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-radius: 16px 16px 0 0;
+        max-height: 80vh;
+        overflow-y: auto;
+        z-index: 51;
+        padding: 24px;
+    }
+}
+
+/* Smooth transitions */
+* {
+    transition-property: color, background-color, border-color, opacity, transform;
+    transition-duration: 200ms;
+    transition-timing-function: ease-out;
+}

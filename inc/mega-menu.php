@@ -30,7 +30,7 @@ function tostishop_mega_menu() {
     ?>
     
     <!-- Desktop Mega Menu -->
-    <nav class="hidden lg:block relative" x-data="{ activeMenu: null }" @mouseleave="activeMenu = null">
+    <nav class="hidden lg:block relative" x-data="{ activeMenu: null }" @mouseleave="activeMenu = null" x-cloak>
         <div class="flex space-x-8">
             
             <?php foreach ($categories as $category) : 
@@ -72,6 +72,8 @@ function tostishop_mega_menu() {
                              x-transition:leave="transition ease-in duration-150"
                              x-transition:leave-start="opacity-100 scale-100"
                              x-transition:leave-end="opacity-0 scale-95"
+                             x-cloak
+                             style="display: none;"
                              class="absolute left-0 top-full mt-1 w-96 lg:w-[480px] xl:w-[520px] bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
                             
                             <!-- Category Header -->
@@ -247,8 +249,13 @@ function tostishop_mobile_categories_menu() {
                     
                     <!-- Subcategories -->
                     <div x-show="openCategory === '<?php echo esc_attr($category->slug); ?>'" 
-                         x-collapse 
-                         class="ml-4 space-y-1">
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 max-h-0"
+                         x-transition:enter-end="opacity-100 max-h-screen"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 max-h-screen"
+                         x-transition:leave-end="opacity-0 max-h-0"
+                         class="ml-4 space-y-1 overflow-hidden">
                         <!-- View All -->
                         <a href="<?php echo esc_url($category_url); ?>" 
                            class="block px-3 py-2 text-sm text-gray-700 hover:text-navy-600 hover:bg-gray-50 rounded-md transition-colors duration-200">

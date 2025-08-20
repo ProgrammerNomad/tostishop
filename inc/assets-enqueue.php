@@ -13,17 +13,11 @@ if (!defined('ABSPATH')) {
  * Enqueue scripts and styles
  */
 function tostishop_scripts() {
-    // Main stylesheet (compiled Tailwind CSS)
+    // Main stylesheet (compiled Tailwind CSS with integrated components)
     wp_enqueue_style('tostishop-style', get_stylesheet_uri(), array(), TOSTISHOP_VERSION);
     
-    // Custom CSS for enhanced functionality
+    // Custom CSS for essential WooCommerce overrides only
     wp_enqueue_style('tostishop-custom', get_template_directory_uri() . '/assets/css/custom.css', array('tostishop-style'), TOSTISHOP_VERSION);
-    
-    // Account components CSS - now loaded site-wide for global primary color fixes
-    wp_enqueue_style('tostishop-account-components', get_template_directory_uri() . '/assets/css/components/account-components.css', array('tostishop-style', 'tostishop-custom'), TOSTISHOP_VERSION);
-    
-    // Mega menu CSS - for enhanced navigation styling
-    wp_enqueue_style('tostishop-mega-menu', get_template_directory_uri() . '/assets/css/components/mega-menu.css', array('tostishop-style'), TOSTISHOP_VERSION);
     
     // Alpine.js for interactivity (local version) - deferred loading reduces preload warnings
     wp_enqueue_script('alpinejs', get_template_directory_uri() . '/assets/js/alpine.min.js', array(), '3.14.9', true);

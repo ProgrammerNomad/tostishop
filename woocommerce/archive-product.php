@@ -19,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
 
 get_header(); ?>
 
-<div class="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{ mobileFiltersOpen: false }">
     
     <!-- Breadcrumbs -->
     <?php tostishop_breadcrumbs(); ?>
@@ -52,69 +52,9 @@ get_header(); ?>
     
     <div class="lg:grid lg:grid-cols-6 lg:gap-8">
         
-        <!-- Filters Sidebar (Desktop) -->
+        <!-- Modern Filters Sidebar (Desktop) -->
         <aside class="hidden lg:block">
-            <div class="bg-gray-50 p-6 rounded-lg">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4"><?php _e('Filters', 'tostishop'); ?></h3>
-                
-                <!-- Price Filter -->
-                <div class="mb-6">
-                    <h4 class="font-medium text-gray-900 mb-3"><?php _e('Price Range', 'tostishop'); ?></h4>
-                    <?php the_widget('WC_Widget_Price_Filter'); ?>
-                </div>
-                
-                <!-- Category Filter -->
-                <div class="mb-6">
-                    <h4 class="font-medium text-gray-900 mb-3"><?php _e('Categories', 'tostishop'); ?></h4>
-                    <?php 
-                    // Custom category widget to show only categories with products
-                    $categories = get_terms(array(
-                        'taxonomy'     => 'product_cat',
-                        'hide_empty'   => true,
-                        'exclude'      => array(get_option('default_product_cat')),
-                        'hierarchical' => true,
-                        'orderby'      => 'name',
-                        'order'        => 'ASC'
-                    ));
-                    
-                    if (!empty($categories)) :
-                        echo '<ul class="space-y-2">';
-                        foreach ($categories as $category) :
-                            $current_cat = is_product_category() ? get_queried_object_id() : 0;
-                            $is_current = ($current_cat == $category->term_id);
-                            ?>
-                            <li>
-                                <a href="<?php echo esc_url(get_term_link($category)); ?>" 
-                                   class="flex items-center justify-between text-sm <?php echo $is_current ? 'text-blue-600 font-medium' : 'text-gray-600 hover:text-gray-900'; ?>">
-                                    <span><?php echo esc_html($category->name); ?></span>
-                                    <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"><?php echo $category->count; ?></span>
-                                </a>
-                            </li>
-                            <?php
-                        endforeach;
-                        echo '</ul>';
-                    endif;
-                    ?>
-                </div>
-                
-                <!-- Attribute Filters -->
-                <?php
-                $attribute_taxonomies = wc_get_attribute_taxonomies();
-                if ($attribute_taxonomies) :
-                    foreach ($attribute_taxonomies as $attribute) :
-                        $taxonomy = wc_attribute_taxonomy_name($attribute->attribute_name);
-                        if (taxonomy_exists($taxonomy)) :
-                ?>
-                <div class="mb-6">
-                    <h4 class="font-medium text-gray-900 mb-3"><?php echo esc_html($attribute->attribute_label); ?></h4>
-                    <?php the_widget('WC_Widget_Layered_Nav', array('attribute' => $attribute->attribute_name)); ?>
-                </div>
-                <?php 
-                        endif;
-                    endforeach;
-                endif; 
-                ?>
-            </div>
+            <?php tostishop_shop_sidebar(); ?>
         </aside>
         
         <!-- Mobile Filter Button -->
@@ -235,39 +175,39 @@ get_header(); ?>
             <?php endif; ?>
         </div>
     </div>
-</div>
 
-<!-- Mobile Filters Modal -->
-<div x-show="mobileFiltersOpen" 
-     x-data="{ mobileFiltersOpen: false }"
-     x-transition:enter="transition-opacity ease-linear duration-300"
-     x-transition:enter-start="opacity-0"
-     x-transition:enter-end="opacity-100"
-     class="fixed inset-0 z-50 lg:hidden">
-    <div class="fixed inset-0 bg-black bg-opacity-50" @click="mobileFiltersOpen = false"></div>
-    <div class="fixed right-0 top-0 h-full w-80 max-w-full bg-white shadow-xl overflow-y-auto">
-        <div class="flex items-center justify-between p-6 border-b">
-            <h3 class="text-lg font-semibold"><?php _e('Filters', 'tostishop'); ?></h3>
-            <button @click="mobileFiltersOpen = false" class="p-2 text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
-        <div class="p-6">
-            <!-- Same filter content as desktop sidebar -->
-            <div class="space-y-6">
-                <div>
-                    <h4 class="font-medium text-gray-900 mb-3"><?php _e('Price Range', 'tostishop'); ?></h4>
-                    <?php the_widget('WC_Widget_Price_Filter'); ?>
-                </div>
-                <div>
-                    <h4 class="font-medium text-gray-900 mb-3"><?php _e('Categories', 'tostishop'); ?></h4>
-                    <?php the_widget('WC_Widget_Product_Categories'); ?>
-                </div>
+    <!-- Mobile Filters Modal -->
+    <div x-show="mobileFiltersOpen" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="transform translate-x-full"
+         x-transition:enter-end="transform translate-x-0"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="transform translate-x-0"
+         x-transition:leave-end="transform translate-x-full"
+         class="fixed inset-0 z-50 lg:hidden"
+         style="display: none;">
+        
+        <!-- Modal Backdrop -->
+        <div class="fixed inset-0 bg-black bg-opacity-50" @click="mobileFiltersOpen = false"></div>
+        
+        <!-- Modal Content -->
+        <div class="fixed right-0 top-0 h-full w-80 bg-white shadow-xl overflow-y-auto">
+            <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900"><?php _e('Filters', 'tostishop'); ?></h2>
+                <button @click="mobileFiltersOpen = false" class="p-2 text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Mobile Filter Content -->
+            <div class="p-4">
+                <?php tostishop_shop_sidebar(); ?>
             </div>
         </div>
     </div>
+
 </div>
 
 <?php get_footer(); ?>

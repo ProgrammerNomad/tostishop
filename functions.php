@@ -86,5 +86,13 @@ add_action('after_setup_theme', 'tostishop_load_shiprocket_integration');
 // SEO enhancements for search engines and AI chat models
 require_once get_template_directory() . '/inc/seo-enhancements.php';
 
+// Modern shop sidebar filters
+require_once get_template_directory() . '/inc/shop-sidebar-filters.php';
+
+// Debug filters functionality (only in development mode)
+if (TOSTISHOP_DEV_MODE) {
+    require_once get_template_directory() . '/debug-filters.php';
+}
+
 // AI Chat Model optimization for modern search and voice assistants
 require_once get_template_directory() . '/inc/ai-chat-optimization.php';

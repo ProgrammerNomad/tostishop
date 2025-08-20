@@ -437,11 +437,13 @@ add_filter('robots_txt', 'tostishop_enhanced_robots_txt', 10, 2);
  * Performance optimizations for SEO
  */
 function tostishop_seo_performance_optimizations() {
-    // Preload critical CSS (style.css is the actual compiled CSS file that gets loaded)
-    echo '<link rel="preload" href="' . get_stylesheet_uri() . '" as="style">' . "\n";
+    // Only preload critical CSS on pages that definitely need it immediately
+    if (is_front_page() || is_shop() || is_product()) {
+        echo '<link rel="preload" href="' . get_stylesheet_uri() . '" as="style">' . "\n";
+    }
     
-    // Only preload Alpine.js on pages that actually use it (interactive pages)
-    if (is_front_page() || is_page() || is_shop() || is_product() || is_cart() || is_checkout() || is_account_page()) {
+    // Only preload Alpine.js on pages with heavy interactive content
+    if (is_front_page() || is_shop() || is_product() || is_cart() || is_checkout()) {
         echo '<link rel="preload" href="' . get_theme_file_uri('/assets/js/alpine.min.js') . '" as="script">' . "\n";
     }
     

@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Alpine.js Cloak - Prevents Flash on Load */
+[x-cloak] { 
+  display: none !important; 
+}
+
 /* Custom Components */
 @layer components {
   .btn-primary {
@@ -48,6 +53,49 @@
   
   .select {
     @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-navy-500 focus:border-transparent bg-white transition-colors duration-200;
+  }
+
+  /* Mega Menu Styles */
+  .mega-menu-item:hover {
+    background-color: #f9fafb;
+    border-color: #e5e7eb;
+  }
+
+  .mega-menu-item:hover .mega-menu-item-icon {
+    background-color: #e0e7ff;
+  }
+
+  /* Shop Filter Styles */
+  .tostishop-filters {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+  }
+
+  .filter-section {
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .filter-section:last-child {
+    border-bottom: none;
+  }
+
+  .filter-option input[type="checkbox"],
+  .filter-option input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #e42029;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+  }
+
+  .filter-option input[type="radio"] {
+    border-radius: 50%;
+  }
+
+  .filter-option:hover {
+    background-color: #f9fafb;
   }
   
   /* Accessibility Helpers */
