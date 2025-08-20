@@ -10,15 +10,24 @@ function waitForAlgolia(callback, maxAttempts = 50) {
     function checkLibraries() {
         attempts++;
         
+        console.log(`Attempt ${attempts}: Checking Algolia libraries...`);
+        console.log('- algoliasearch:', typeof algoliasearch);
+        console.log('- instantsearch:', typeof instantsearch);
+        console.log('- autocomplete:', typeof autocomplete);
+        
         // Check if required libraries are loaded
         if (typeof algoliasearch !== 'undefined' && typeof instantsearch !== 'undefined') {
+            console.log('✅ Required Algolia libraries are loaded!');
             callback();
             return;
         }
         
         // If max attempts reached, show error
         if (attempts >= maxAttempts) {
-            console.error('Algolia libraries failed to load after ' + maxAttempts + ' attempts');
+            console.error('❌ Algolia libraries failed to load after ' + maxAttempts + ' attempts');
+            console.error('Missing libraries:');
+            if (typeof algoliasearch === 'undefined') console.error('- algoliasearch (Search Client)');
+            if (typeof instantsearch === 'undefined') console.error('- instantsearch (InstantSearch.js)');
             return;
         }
         
