@@ -24,20 +24,19 @@ function waitForAlgolia(callback, maxAttempts = 20) {
         console.log(`Attempt ${attempts}: Checking Algolia libraries...`);
         console.log('- algoliasearch:', typeof algoliasearch);
         console.log('- instantsearch:', typeof instantsearch);
-        console.log('- autocomplete:', typeof autocomplete);
         
         // Check if required libraries are loaded
         if (typeof algoliasearch !== 'undefined' && typeof instantsearch !== 'undefined') {
-            console.log('✅ Required Algolia libraries are loaded!');
+            console.log('✅ Algolia libraries are loaded successfully!');
             callback();
             return;
         }
         
         // Try to load missing libraries dynamically
         if (attempts === 5 && typeof algoliasearch === 'undefined') {
-            console.log('🔄 Attempting to load algoliasearch dynamically...');
+            console.log('🔄 Loading algoliasearch from fallback CDN...');
             loadAlgoliaScript('https://unpkg.com/algoliasearch@4/dist/algoliasearch.umd.js', function() {
-                console.log('✅ Algoliasearch loaded via fallback');
+                console.log('✅ Algoliasearch loaded via fallback CDN');
             });
         }
         
@@ -54,9 +53,7 @@ function waitForAlgolia(callback, maxAttempts = 20) {
             console.error('Missing libraries:');
             if (typeof algoliasearch === 'undefined') console.error('- algoliasearch (Search Client)');
             if (typeof instantsearch === 'undefined') console.error('- instantsearch (InstantSearch.js)');
-            
-            // Try to proceed with minimal functionality
-            initializeMinimalSearch();
+            console.error('🚫 Search functionality will not be available');
             return;
         }
         
@@ -75,11 +72,23 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
+    // Check if we're on a page that needs Algolia search
+    const hasSearchContainer = document.querySelector('#algolia-search-box') || 
+                              document.querySelector('#algolia-search-input') ||
+                              document.querySelector('.algolia-search-page') ||
+                              document.querySelector('#algolia-hits') ||
+                              document.querySelector('[data-algolia]');
+    
+    if (!hasSearchContainer) {
+        console.log('🔍 Algolia search containers not found on this page, skipping initialization');
+        return;
+    }
+    
     console.log('Waiting for Algolia libraries to load...');
     
     // Wait for Algolia libraries to be available
     waitForAlgolia(function() {
-        console.log('Algolia libraries loaded, initializing search...');
+        console.log('🚀 Initializing Algolia Search...');
         initializeAlgoliaSearch();
     });
 });
@@ -88,7 +97,18 @@ document.addEventListener('DOMContentLoaded', function() {
  * Initialize Algolia Search
  */
 function initializeAlgoliaSearch() {
+    // Check if we have search containers on this page
+    const hasSearchBox = document.querySelector('#algolia-search-box');
+    const hasSearchResults = document.querySelector('#algolia-hits');
+    
+    if (!hasSearchBox && !hasSearchResults) {
+        console.log('ℹ️ No Algolia search containers found on this page');
+        return;
+    }
+    
     try {
+        console.log('🔧 Setting up Algolia search client...');
+        
         // Initialize Algolia search client
         const searchClient = algoliasearch(tostishopAlgolia.appId, tostishopAlgolia.searchKey);
         
@@ -105,6 +125,8 @@ function initializeAlgoliaSearch() {
             }
         });
         
+        console.log('✅ Algolia search client initialized');
+        
         // Add search widgets
         addSearchWidgets(search);
         
@@ -119,10 +141,10 @@ function initializeAlgoliaSearch() {
         // Make search instance globally available for debugging
         window.tostishopSearch = search;
         
-        console.log('Algolia Search initialized successfully');
+        console.log('🎉 Algolia Search is ready!');
         
     } catch (error) {
-        console.error('Error initializing Algolia Search:', error);
+        console.error('❌ Error initializing Algolia Search:', error);
     }
 }
 
@@ -131,165 +153,215 @@ function initializeAlgoliaSearch() {
  */
 function addSearchWidgets(search) {
     // Search Box
-    search.addWidgets([
-        instantsearch.widgets.searchBox({
-            container: '#algolia-search-box',
-            placeholder: 'Search products...',
-            showReset: true,
-            showSubmit: true,
-            cssClasses: {
-                root: 'w-full',
-                form: 'relative',
-                input: 'w-full px-4 py-3 pr-12 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-                submit: 'absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600',
-                reset: 'absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600'
-            }
-        })
-    ]);
+    const searchBoxContainer = document.querySelector('#algolia-search-box');
+    if (searchBoxContainer) {
+        search.addWidgets([
+            instantsearch.widgets.searchBox({
+                container: '#algolia-search-box',
+                placeholder: 'Search products...',
+                showReset: true,
+                showSubmit: true,
+                cssClasses: {
+                    root: 'w-full',
+                    form: 'relative',
+                    input: 'w-full px-4 py-3 pr-12 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                    submit: 'absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600',
+                    reset: 'absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600'
+                }
+            })
+        ]);
+    } else {
+        console.log('⚠️ Search box container (#algolia-search-box) not found');
+    }
     
     // Search Results
-    search.addWidgets([
-        instantsearch.widgets.hits({
-            container: '#algolia-hits',
-            templates: {
-                empty: getEmptyTemplate(),
-                item: getHitTemplate()
-            },
-            cssClasses: {
-                root: 'w-full',
-                list: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6',
-                item: 'bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200'
-            }
-        })
-    ]);
+    const hitsContainer = document.querySelector('#algolia-hits');
+    if (hitsContainer) {
+        search.addWidgets([
+            instantsearch.widgets.hits({
+                container: '#algolia-hits',
+                templates: {
+                    empty: getEmptyTemplate(),
+                    item: getHitTemplate()
+                },
+                cssClasses: {
+                    root: 'w-full',
+                    list: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6',
+                    item: 'bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200'
+                }
+            })
+        ]);
+    } else {
+        console.log('⚠️ Search results container (#algolia-hits) not found');
+    }
     
     // Pagination
-    search.addWidgets([
-        instantsearch.widgets.pagination({
-            container: '#algolia-pagination',
-            cssClasses: {
-                root: 'flex justify-center items-center space-x-2 mt-8',
-                list: 'flex items-center space-x-1',
-                item: 'px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50',
-                selectedItem: 'px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-md',
-                disabledItem: 'px-3 py-2 text-sm font-medium text-gray-300 bg-gray-100 border border-gray-200 rounded-md cursor-not-allowed'
-            }
-        })
-    ]);
+    const paginationContainer = document.querySelector('#algolia-pagination');
+    if (paginationContainer) {
+        search.addWidgets([
+            instantsearch.widgets.pagination({
+                container: '#algolia-pagination',
+                cssClasses: {
+                    root: 'flex justify-center items-center space-x-2 mt-8',
+                    list: 'flex items-center space-x-1',
+                    item: 'px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50',
+                    selectedItem: 'px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-md',
+                    disabledItem: 'px-3 py-2 text-sm font-medium text-gray-300 bg-gray-100 border border-gray-200 rounded-md cursor-not-allowed'
+                }
+            })
+        ]);
+    } else {
+        console.log('⚠️ Pagination container (#algolia-pagination) not found');
+    }
     
     // Stats
-    search.addWidgets([
-        instantsearch.widgets.stats({
-            container: '#algolia-stats',
-            templates: {
-                text: '{{#hasNoResults}}No results{{/hasNoResults}}{{#hasOneResult}}1 result{{/hasOneResult}}{{#hasManyResults}}{{#helpers.formatNumber}}{{nbHits}}{{/helpers.formatNumber}} results{{/hasManyResults}} found in {{processingTimeMS}}ms'
-            },
-            cssClasses: {
-                root: 'text-sm text-gray-600 mb-4'
-            }
-        })
-    ]);
+    const statsContainer = document.querySelector('#algolia-stats');
+    if (statsContainer) {
+        search.addWidgets([
+            instantsearch.widgets.stats({
+                container: '#algolia-stats',
+                templates: {
+                    text: '{{#hasNoResults}}No results{{/hasNoResults}}{{#hasOneResult}}1 result{{/hasOneResult}}{{#hasManyResults}}{{#helpers.formatNumber}}{{nbHits}}{{/helpers.formatNumber}} results{{/hasManyResults}} found in {{processingTimeMS}}ms'
+                },
+                cssClasses: {
+                    root: 'text-sm text-gray-600 mb-4'
+                }
+            })
+        ]);
+    } else {
+        console.log('⚠️ Stats container (#algolia-stats) not found');
+    }
     
     // Refinement List - Categories
-    search.addWidgets([
-        instantsearch.widgets.refinementList({
-            container: '#algolia-categories',
-            attribute: 'categories',
-            limit: 10,
-            showMore: true,
-            showMoreLimit: 20,
-            cssClasses: {
-                root: 'mb-6',
-                list: 'space-y-2',
-                item: 'flex items-center',
-                checkbox: 'mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500',
-                label: 'text-sm text-gray-700 cursor-pointer',
-                count: 'ml-auto text-xs text-gray-500'
-            }
-        })
-    ]);
+    const categoriesContainer = document.querySelector('#algolia-categories');
+    if (categoriesContainer) {
+        search.addWidgets([
+            instantsearch.widgets.refinementList({
+                container: '#algolia-categories',
+                attribute: 'categories',
+                limit: 10,
+                showMore: true,
+                showMoreLimit: 20,
+                cssClasses: {
+                    root: 'mb-6',
+                    list: 'space-y-2',
+                    item: 'flex items-center',
+                    checkbox: 'mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500',
+                    label: 'text-sm text-gray-700 cursor-pointer',
+                    count: 'ml-auto text-xs text-gray-500'
+                }
+            })
+        ]);
+    } else {
+        console.log('⚠️ Categories refinement container (#algolia-categories) not found');
+    }
     
     // Range Input - Price
-    search.addWidgets([
-        instantsearch.widgets.rangeInput({
-            container: '#algolia-price-range',
-            attribute: 'price',
-            precision: 2,
-            templates: {
-                separatorText: 'to'
-            },
-            cssClasses: {
-                root: 'mb-6',
-                form: 'flex items-center space-x-2',
-                input: 'w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500',
-                separator: 'text-sm text-gray-500'
-            }
-        })
-    ]);
+    const priceRangeContainer = document.querySelector('#algolia-price-range');
+    if (priceRangeContainer) {
+        search.addWidgets([
+            instantsearch.widgets.rangeInput({
+                container: '#algolia-price-range',
+                attribute: 'price',
+                precision: 2,
+                templates: {
+                    separatorText: 'to'
+                },
+                cssClasses: {
+                    root: 'mb-6',
+                    form: 'flex items-center space-x-2',
+                    input: 'px-3 py-2 border border-gray-300 rounded-md text-sm',
+                    separator: 'text-gray-500 text-sm'
+                }
+            })
+        ]);
+    } else {
+        console.log('⚠️ Price range container (#algolia-price-range) not found');
+    }
     
     // Toggle Refinement - On Sale
-    search.addWidgets([
-        instantsearch.widgets.toggleRefinement({
-            container: '#algolia-on-sale',
-            attribute: 'on_sale',
-            templates: {
-                labelText: 'On Sale Only'
-            },
-            cssClasses: {
-                root: 'mb-4',
-                checkbox: 'mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500',
-                label: 'text-sm text-gray-700 cursor-pointer'
-            }
-        })
-    ]);
+    const onSaleContainer = document.querySelector('#algolia-on-sale');
+    if (onSaleContainer) {
+        search.addWidgets([
+            instantsearch.widgets.toggleRefinement({
+                container: '#algolia-on-sale',
+                attribute: 'on_sale',
+                templates: {
+                    labelText: 'On Sale Only'
+                },
+                cssClasses: {
+                    root: 'mb-4',
+                    checkbox: 'mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500',
+                    label: 'text-sm text-gray-700 cursor-pointer'
+                }
+            })
+        ]);
+    } else {
+        console.log('⚠️ On Sale toggle container (#algolia-on-sale) not found');
+    }
     
     // Toggle Refinement - In Stock
-    search.addWidgets([
-        instantsearch.widgets.toggleRefinement({
-            container: '#algolia-in-stock',
-            attribute: 'in_stock',
-            templates: {
-                labelText: 'In Stock Only'
-            },
-            cssClasses: {
-                root: 'mb-4',
-                checkbox: 'mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500',
-                label: 'text-sm text-gray-700 cursor-pointer'
-            }
-        })
-    ]);
+    const inStockContainer = document.querySelector('#algolia-in-stock');
+    if (inStockContainer) {
+        search.addWidgets([
+            instantsearch.widgets.toggleRefinement({
+                container: '#algolia-in-stock',
+                attribute: 'in_stock',
+                templates: {
+                    labelText: 'In Stock Only'
+                },
+                cssClasses: {
+                    root: 'mb-4',
+                    checkbox: 'mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500',
+                    label: 'text-sm text-gray-700 cursor-pointer'
+                }
+            })
+        ]);
+    } else {
+        console.log('⚠️ In Stock toggle container (#algolia-in-stock) not found');
+    }
     
     // Sort By
-    search.addWidgets([
-        instantsearch.widgets.sortBy({
-            container: '#algolia-sort-by',
-            items: [
-                { label: 'Relevance', value: tostishopAlgolia.indexName },
-                { label: 'Price: Low to High', value: tostishopAlgolia.indexName + '_price_asc' },
-                { label: 'Price: High to Low', value: tostishopAlgolia.indexName + '_price_desc' },
-                { label: 'Date: Newest First', value: tostishopAlgolia.indexName + '_date_desc' },
-                { label: 'Rating: Highest First', value: tostishopAlgolia.indexName + '_rating_desc' }
-            ],
-            cssClasses: {
-                root: 'mb-4',
-                select: 'w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500'
-            }
-        })
-    ]);
+    const sortByContainer = document.querySelector('#algolia-sort-by');
+    if (sortByContainer) {
+        search.addWidgets([
+            instantsearch.widgets.sortBy({
+                container: '#algolia-sort-by',
+                items: [
+                    { label: 'Relevance', value: tostishopAlgolia.indexName },
+                    { label: 'Price: Low to High', value: tostishopAlgolia.indexName + '_price_asc' },
+                    { label: 'Price: High to Low', value: tostishopAlgolia.indexName + '_price_desc' },
+                    { label: 'Date: Newest First', value: tostishopAlgolia.indexName + '_date_desc' },
+                    { label: 'Rating: Highest First', value: tostishopAlgolia.indexName + '_rating_desc' }
+                ],
+                cssClasses: {
+                    root: 'mb-4',
+                    select: 'w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-blue-500'
+                }
+            })
+        ]);
+    } else {
+        console.log('⚠️ Sort By container (#algolia-sort-by) not found');
+    }
     
     // Clear Refinements
-    search.addWidgets([
-        instantsearch.widgets.clearRefinements({
-            container: '#algolia-clear-refinements',
-            templates: {
-                resetLabel: 'Clear All Filters'
-            },
-            cssClasses: {
-                root: 'mb-4',
-                button: 'w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:ring-2 focus:ring-blue-500'
-            }
-        })
-    ]);
+    const clearRefinementsContainer = document.querySelector('#algolia-clear-refinements');
+    if (clearRefinementsContainer) {
+        search.addWidgets([
+            instantsearch.widgets.clearRefinements({
+                container: '#algolia-clear-refinements',
+                templates: {
+                    resetLabel: 'Clear All Filters'
+                },
+                cssClasses: {
+                    root: 'mb-4',
+                    button: 'w-full px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors duration-200'
+                }
+            })
+        ]);
+    } else {
+        console.log('⚠️ Clear Refinements container (#algolia-clear-refinements) not found');
+    }
 }
 
 /**
@@ -552,77 +624,4 @@ if (typeof Handlebars !== 'undefined') {
     Handlebars.registerHelper('rating_stars', function() {
         return generateStars(this.rating_average);
     });
-}
-
-// Minimal search functionality without Algolia libraries
-function initializeMinimalSearch() {
-    console.log('🔧 Initializing minimal search functionality...');
-    
-    const searchInput = document.querySelector('#algolia-search-input');
-    const searchResults = document.querySelector('#algolia-search-results');
-    
-    if (searchInput && searchResults) {
-        searchInput.addEventListener('input', function(e) {
-            const query = e.target.value.trim();
-            
-            if (query.length < 2) {
-                searchResults.innerHTML = '';
-                return;
-            }
-            
-            // Show loading state
-            searchResults.innerHTML = '<div class="p-4 text-center">🔍 Searching...</div>';
-            
-            // Fallback to WordPress AJAX search
-            fetch(algolia_search_params.ajax_url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    action: 'tostishop_search_products',
-                    query: query,
-                    nonce: algolia_search_params.nonce
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.data.products) {
-                    displaySearchResults(data.data.products);
-                } else {
-                    searchResults.innerHTML = '<div class="p-4 text-center text-gray-500">No products found</div>';
-                }
-            })
-            .catch(error => {
-                console.error('Search error:', error);
-                searchResults.innerHTML = '<div class="p-4 text-center text-red-500">Search error occurred</div>';
-            });
-        });
-    }
-}
-
-// Function to display search results
-function displaySearchResults(products) {
-    const searchResults = document.querySelector('#algolia-search-results');
-    
-    if (!searchResults) return;
-    
-    if (products.length === 0) {
-        searchResults.innerHTML = '<div class="p-4 text-center text-gray-500">No products found</div>';
-        return;
-    }
-    
-    const resultsHTML = products.map(product => `
-        <div class="flex items-center p-3 hover:bg-gray-50 border-b border-gray-100">
-            <img src="${product.image}" alt="${product.name}" class="w-12 h-12 object-cover rounded mr-3">
-            <div class="flex-1">
-                <h4 class="font-medium text-gray-900 hover:text-blue-600">
-                    <a href="${product.url}">${product.name}</a>
-                </h4>
-                <p class="text-sm text-gray-600">${product.price}</p>
-            </div>
-        </div>
-    `).join('');
-    
-    searchResults.innerHTML = resultsHTML;
 }
