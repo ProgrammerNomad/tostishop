@@ -58,6 +58,8 @@ function tostishop_admin_menu() {
         'tostishop_shiprocket_settings_page' // Function
     );
     
+    // Note: Algolia Search submenu is automatically added by the Algolia integration class
+    
     // Remove the old Firebase menu from Appearance
     remove_submenu_page('themes.php', 'tostishop-firebase');
 }
@@ -82,6 +84,7 @@ function tostishop_dashboard_page() {
                     <a href="<?php echo admin_url('customize.php'); ?>" class="button button-primary">Customize Theme</a>
                     <a href="<?php echo admin_url('admin.php?page=tostishop-firebase'); ?>" class="button">Firebase Auth</a>
                     <a href="<?php echo admin_url('admin.php?page=tostishop-shiprocket'); ?>" class="button">Shiprocket</a>
+                    <a href="<?php echo admin_url('admin.php?page=tostishop-algolia'); ?>" class="button">Algolia Search</a>
                 </div>
             </div>
             
@@ -95,11 +98,21 @@ function tostishop_dashboard_page() {
             </div>
             
             <div class="tostishop-card">
+                <h2><span class="dashicons dashicons-search"></span> Search & Performance</h2>
+                <p>Advanced search functionality powered by Algolia for lightning-fast product discovery.</p>
+                <div class="tostishop-card-actions">
+                    <a href="<?php echo admin_url('admin.php?page=tostishop-algolia'); ?>" class="button button-primary">Configure Algolia</a>
+                    <a href="<?php echo home_url('/?s=test'); ?>" class="button" target="_blank">Test Search</a>
+                </div>
+            </div>
+            
+            <div class="tostishop-card">
                 <h2><span class="dashicons dashicons-info"></span> Theme Information</h2>
                 <p>TostiShop Version: <?php echo wp_get_theme()->get('Version'); ?></p>
                 <p>WooCommerce Version: <?php echo class_exists('WooCommerce') ? WC()->version : 'Not Active'; ?></p>
                 <p>Firebase Auth: <?php echo get_option('tostishop_firebase_api_key') ? '<span class="tostishop-status active">Configured</span>' : '<span class="tostishop-status inactive">Not Configured</span>'; ?></p>
                 <p>Shiprocket: <?php echo get_option('tostishop_shiprocket_token') ? '<span class="tostishop-status active">Connected</span>' : '<span class="tostishop-status inactive">Not Connected</span>'; ?></p>
+                <p>Algolia Search: <?php echo get_option('tostishop_algolia_enabled') ? '<span class="tostishop-status active">Active</span>' : '<span class="tostishop-status inactive">Not Configured</span>'; ?></p>
             </div>
         </div>
         

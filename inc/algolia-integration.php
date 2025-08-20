@@ -37,7 +37,7 @@ class TostiShop_Algolia_Integration {
     
     private function __construct() {
         add_action('init', array($this, 'init'));
-        add_action('admin_menu', array($this, 'add_admin_menu'));
+        add_action('admin_menu', array($this, 'add_admin_menu'), 15);
         add_action('admin_init', array($this, 'admin_init'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
         
@@ -99,7 +99,7 @@ class TostiShop_Algolia_Integration {
      */
     public function add_admin_menu() {
         add_submenu_page(
-            'themes.php',
+            'tostishop-theme',
             __('Algolia Search Settings', 'tostishop'),
             __('Algolia Search', 'tostishop'),
             'manage_options',
