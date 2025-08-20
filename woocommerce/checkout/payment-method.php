@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 <li class="wc_payment_method payment_method_<?php echo esc_attr( $gateway->id ); ?> border border-gray-200 rounded-lg p-4 hover:border-accent hover:bg-gray-50 transition-all duration-200 cursor-pointer">
 	<div class="flex items-center">
-		<input id="payment_method_<?php echo esc_attr( $gateway->id ); ?>" type="radio" class="w-4 h-4 text-accent bg-gray-100 border-gray-300 focus:ring-accent focus:ring-2 mr-3 flex-shrink-0" name="payment_method" value="<?php echo esc_attr( $gateway->id ); ?>" <?php checked( $gateway->chosen, true ); ?> data-order_button_text="<?php echo esc_attr( $gateway->order_button_text ); ?>" />
+		<input id="payment_method_<?php echo esc_attr( $gateway->id ); ?>" type="radio" class="radio-standard mr-3 flex-shrink-0" name="payment_method" value="<?php echo esc_attr( $gateway->id ); ?>" <?php checked( $gateway->chosen, true ); ?> data-order_button_text="<?php echo esc_attr( $gateway->order_button_text ); ?>" />
 
 		<label for="payment_method_<?php echo esc_attr( $gateway->id ); ?>" class="flex-1 flex items-center justify-between cursor-pointer min-h-[24px]">
 			<span class="text-gray-900 font-medium text-sm sm:text-base"><?php echo $gateway->get_title(); /* phpcs:ignore WordPress.XSS.EscapeOutput.OutputNotEscaped */ ?></span>

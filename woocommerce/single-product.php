@@ -537,7 +537,7 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                             <button type="submit" 
                                     name="add-to-cart" 
                                     value="<?php echo esc_attr($product->get_id()); ?>"
-                                    class="w-full bg-blue-600 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:bg-blue-700 focus:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+                                    class="btn-primary w-full py-4 px-6 text-lg"
                                     aria-describedby="add-to-cart-description">
                                 <span class="flex items-center justify-center">
                                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -552,7 +552,7 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                         <?php else: ?>
                             <button type="button" 
                                     disabled
-                                    class="w-full bg-gray-400 text-white py-4 px-6 rounded-lg text-lg font-semibold cursor-not-allowed"
+                                    class="btn-secondary w-full py-4 px-6 text-lg cursor-not-allowed" disabled
                                     aria-label="<?php echo $product->is_in_stock() ? esc_attr__('Product not available for purchase', 'tostishop') : esc_attr__('Product is out of stock', 'tostishop'); ?>">
                                 <?php echo $product->is_in_stock() ? esc_html__('Not Available', 'tostishop') : esc_html__('Out of Stock', 'tostishop'); ?>
                             </button>
@@ -929,12 +929,12 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                             <button type="submit" 
                                     name="add-to-cart" 
                                     value="<?php echo esc_attr($product->get_id()); ?>"
-                                    class="w-full lg:flex-1 bg-blue-600 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors duration-200">
+                                    class="btn-primary w-full lg:flex-1 py-4 px-6 text-lg">
                                 <?php echo esc_html($product->single_add_to_cart_text()); ?>
                             </button>
                         <?php else : ?>
                             <button type="button" disabled 
-                                    class="w-full lg:flex-1 bg-gray-300 text-gray-500 py-4 px-6 rounded-lg text-lg font-semibold cursor-not-allowed">
+                                    class="btn-secondary w-full lg:flex-1 py-4 px-6 text-lg cursor-not-allowed" disabled>
                                 <?php _e('Out of Stock', 'tostishop'); ?>
                             </button>
                         <?php endif; ?>
@@ -1281,7 +1281,7 @@ if ( ! empty( $related_products ) ) :
         <button type="button" 
                 onclick="handleFloatingAddToCart()" 
                 id="floating-add-to-cart-btn"
-                class="<?php echo $product->is_in_stock() ? 'bg-blue-600 hover:bg-blue-700 focus:bg-blue-700' : 'bg-gray-300 cursor-not-allowed'; ?> text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                class="<?php echo $product->is_in_stock() ? 'btn-primary' : 'btn-secondary cursor-not-allowed'; ?> px-6 py-3"
                 <?php echo (!$product->is_in_stock() ? 'disabled' : ''); ?>
                 aria-label="<?php echo $product->is_in_stock() ? esc_attr(sprintf(__('Add %s to cart', 'tostishop'), get_the_title())) : esc_attr__('Product is out of stock', 'tostishop'); ?>">
             <span class="flex items-center">

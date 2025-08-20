@@ -1,6 +1,6 @@
-/* TostiShop Custom CSS - Minimal and Clean */
+/* TostiShop Custom CSS - Essential styles only */
 
-/* Essential utilities only */
+/* Line clamp utility (not available in older Tailwind) */
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -9,197 +9,28 @@
     overflow: hidden;
 }
 
-/* Clean shipping methods styling */
+/* WooCommerce shipping methods styling */
 .woocommerce-shipping-methods {
-    margin-top: 0.75rem;
+    @apply mt-3;
 }
 
 .woocommerce-shipping-methods li {
-    display: flex;
-    align-items: center;
-    padding: 0.75rem;
-    background: white;
-    border-radius: 0.5rem;
-    border: 1px solid #e5e7eb;
-    margin-bottom: 0.5rem;
-    transition: border-color 0.2s;
-}
-
-.woocommerce-shipping-methods li:hover {
-    border-color: #d8b4fe;
+    @apply flex items-center p-3 bg-white rounded-lg border border-gray-200 mb-2 transition-colors hover:border-purple-300;
 }
 
 .woocommerce-shipping-methods input[type="radio"] {
-    width: 1rem;
-    height: 1rem;
-    margin-right: 0.75rem;
-    accent-color: #9333ea;
+    @apply radio-standard mr-3;
 }
 
 .woocommerce-shipping-methods label {
-    font-size: 0.875rem;
-    color: #1f2937;
-    cursor: pointer;
-    flex: 1;
+    @apply text-sm text-gray-800 cursor-pointer flex-1;
 }
 
 .woocommerce-shipping-methods .woocommerce-Price-amount {
-    font-weight: 600;
-    color: #9333ea;
+    @apply font-semibold text-accent;
 }
 
-/* ========================================
-   MODERN CART & CHECKOUT ENHANCEMENTS
-   ======================================== */
-
-/* Enhance WooCommerce shipping methods display */
-.woocommerce-shipping-totals .shipping-methods-container {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 1rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-/* Cart and checkout totals section animations */
-.cart-totals-item,
-.checkout-totals-item {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.cart-totals-item:hover,
-.checkout-totals-item:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-/* Subtotal section specific styling */
-.subtotal-section {
-    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-    border: 1px solid #93c5fd;
-}
-
-.subtotal-section:hover {
-    background: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
-    border-color: #60a5fa;
-}
-
-/* Shipping section specific styling */
-.shipping-section {
-    background: linear-gradient(135deg, #fce7f3 0%, #f3e8ff 100%);
-    border: 1px solid #d8b4fe;
-}
-
-.shipping-section:hover {
-    background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
-    border-color: #c084fc;
-}
-
-/* Coupon section styling */
-.coupon-section {
-    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-    border: 1px solid #6ee7b7;
-}
-
-.coupon-section:hover {
-    background: linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%);
-    border-color: #34d399;
-}
-
-/* Order total section styling */
-.order-total-section {
-    background: linear-gradient(135deg, #14175b 0%, #1e40af 100%);
-    color: white;
-    border: 2px solid #14175b;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.order-total-section:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 20px 40px rgba(20, 23, 91, 0.3);
-}
-
-.order-total-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-    transition: left 0.5s ease-in-out;
-}
-
-.order-total-section:hover::before {
-    left: 100%;
-}
-
-/* Pulse animation for price amounts */
-@keyframes price-pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.02); }
-}
-
-.price-animate {
-    animation: price-pulse 2s infinite;
-}
-
-/* Subtotal and shipping sections hover effects */
-.totals-section-hover {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.totals-section-hover:hover {
-    transform: translateY(-1px) scale(1.01);
-}
-
-/* Icon animations */
-.totals-icon {
-    transition: all 0.3s ease;
-}
-
-.group:hover .totals-icon {
-    transform: scale(1.1) rotate(5deg);
-}
-
-/* Responsive adjustments for mobile */
-@media (max-width: 640px) {
-    .cart-totals-item,
-    .checkout-totals-item {
-        padding: 0.75rem !important;
-    }
-    
-    .totals-icon {
-        width: 2rem !important;
-        height: 2rem !important;
-    }
-    
-    .totals-icon svg {
-        width: 1rem !important;
-        height: 1rem !important;
-    }
-}
-
-/* ========================================
-   PRODUCT COMPONENTS
-   ======================================== */
-
-/* Product item base transition */
-.product-item {
-    transition: all 0.3s ease;
-}
-
-.product-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-/* ========================================
-   COLOR SWATCHES
-   ======================================== */
-
+/* Color swatches - specific behavior that needs custom CSS */
 .color-swatch input[type="radio"]:checked + span {
     border-color: #14175b !important;
     border-width: 3px !important;
@@ -208,105 +39,47 @@
 }
 
 .color-swatch span {
-    transition: all 0.2s ease;
-    cursor: pointer;
+    @apply transition-all duration-200 cursor-pointer hover:scale-105 hover:shadow-md;
 }
 
-.color-swatch span:hover {
-    transform: scale(1.05);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* ========================================
-   WOOCOMMERCE MESSAGES
-   ======================================== */
-
+/* WooCommerce messages - override plugin defaults */
 .woocommerce-error,
 .woocommerce-message {
-    padding: 0.75rem 1rem !important;
-    border-radius: 0.5rem !important;
-    margin-bottom: 1rem !important;
+    @apply p-3 rounded-lg mb-4 border;
 }
 
 .woocommerce-error {
-    background: #fef2f2 !important;
-    border: 1px solid #fecaca !important;
-    color: #dc2626 !important;
+    @apply bg-red-50 border-red-300 text-red-700;
 }
 
 .woocommerce-message {
-    background: #f0f9ff !important;
-    border: 1px solid #bae6fd !important;
-    color: #0369a1 !important;
+    @apply bg-blue-50 border-blue-300 text-blue-700;
 }
-
-/* ========================================
-   FORM IMPROVEMENTS
-   ======================================== */
 
 /* Variation form focus states */
 .variation-select:focus {
-    border-color: #14175b;
-    box-shadow: 0 0 0 3px rgba(20, 23, 91, 0.1);
+    @apply border-navy-900 ring-2 ring-navy-900 ring-opacity-10;
 }
 
-/* ========================================
-   GALLERY AND MEDIA
-   ======================================== */
-
-/* Product image transitions */
+/* Product gallery image transitions */
 .product-gallery img {
-    transition: opacity 0.2s ease;
+    @apply transition-opacity duration-200;
 }
 
-/* ========================================
-   WISHLIST BUTTONS
-   ======================================== */
-
-/* Wishlist button icon-only styling */
+/* Wishlist button animations */
 .wishlist-btn svg {
-    transition: all 0.2s ease;
+    @apply transition-transform duration-200 hover:scale-110;
 }
 
-.wishlist-btn:hover svg {
-    transform: scale(1.1);
-}
-
-/* Icon-only wishlist buttons on product cards */
 .product-item .wishlist-btn {
-    backdrop-filter: blur(8px);
+    @apply backdrop-blur-sm;
 }
 
 .product-item .wishlist-btn.in-wishlist {
-    background: rgba(239, 68, 68, 0.1) !important;
-    border-color: rgb(239, 68, 68) !important;
-    color: rgb(239, 68, 68) !important;
+    @apply bg-red-100 border-red-500 text-red-500;
 }
-
-/* ========================================
-   VIEW TOGGLE BUTTONS
-   ======================================== */
-
-.view-toggle-btn {
-    transition: all 0.2s ease;
-}
-
-.view-toggle-btn:hover {
-    transform: translateY(-1px);
-}
-
-/* ========================================
-   TAILWIND UTILITIES (if missing)
-   ======================================== */
 
 /* Aspect ratio utility (fallback for older Tailwind versions) */
 .aspect-square {
     aspect-ratio: 1 / 1;
-}
-
-/* Transition utility (fallback) */
-.transition-transform {
-    transition-property: transform;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
 }

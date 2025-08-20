@@ -815,35 +815,7 @@ get_header(); ?>
     background: rgba(255, 255, 255, 0.7);
 }
 
-.shipping-methods-wrapper .woocommerce-shipping-methods input[type="radio"] {
-    width: 1rem;
-    height: 1rem;
-    margin-right: 0.75rem;
-    accent-color: #9333ea;
-}
 
-.shipping-methods-wrapper .woocommerce-shipping-methods label {
-    flex: 1;
-    font-size: 0.875rem;
-    color: #581c87;
-    font-weight: 500;
-    cursor: pointer;
-    margin: 0;
-}
-
-.shipping-methods-wrapper .woocommerce-shipping-methods label:hover {
-    color: #7c3aed;
-}
-
-/* Price styling within shipping methods */
-.shipping-methods-wrapper .woocommerce-Price-amount {
-    font-weight: 700;
-    color: #9333ea;
-}
-
-.shipping-methods-wrapper .woocommerce-Price-currencySymbol {
-    color: #9333ea;
-}
 
 /* Hide shipping heading if it appears */
 .shipping-methods-wrapper h3,

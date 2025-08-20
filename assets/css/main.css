@@ -15,6 +15,28 @@
   .btn-accent {
     @apply bg-accent text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 focus:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors duration-200;
   }
+
+  /* Standard Radio Button Style */
+  .radio-standard {
+    @apply w-4 h-4 text-accent bg-gray-100 border-gray-300 focus:ring-accent focus:ring-2;
+  }
+
+  /* Radio Button with Label */
+  .radio-option {
+    @apply flex items-center mb-2;
+  }
+
+  .radio-option input[type="radio"] {
+    @apply w-4 h-4 text-accent bg-gray-100 border-gray-300 focus:ring-accent focus:ring-2 mr-3 flex-shrink-0;
+  }
+
+  .radio-option label {
+    @apply text-sm text-gray-700 font-medium cursor-pointer flex-1;
+  }
+
+  .radio-option label:hover {
+    @apply text-accent;
+  }
   
   .card {
     @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
@@ -134,24 +156,16 @@
   }
   
   .woocommerce-pagination .page-numbers {
-    @apply inline-flex items-center justify-center min-w-[40px] h-10 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-navy-500 focus:ring-offset-1;
+    @apply btn-secondary min-w-[40px] h-10 text-sm;
   }
   
   .woocommerce-pagination .page-numbers.current {
-    @apply bg-navy-600 text-white border-navy-600 hover:bg-navy-700 hover:border-navy-700 shadow-md;
-  }
-  
-  .woocommerce-pagination .page-numbers:hover {
-    @apply bg-gray-50 border-gray-400 text-gray-900;
-  }
-  
-  .woocommerce-pagination .page-numbers.current:hover {
-    @apply bg-navy-700 border-navy-700;
+    @apply btn-primary;
   }
   
   .woocommerce-pagination .page-numbers.prev,
   .woocommerce-pagination .page-numbers.next {
-    @apply px-4 font-semibold;
+    @apply btn-secondary px-4 font-semibold;
   }
   
   .woocommerce-pagination .page-numbers.dots {

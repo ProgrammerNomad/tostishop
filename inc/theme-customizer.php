@@ -148,7 +148,7 @@ function tostishop_enhanced_pagination() {
     
     // Previous button
     if ($paged > 1) {
-        echo '<a href="' . esc_url(get_pagenum_link($paged - 1)) . '" class="pagination-btn prev-btn">';
+        echo '<a href="' . esc_url(get_pagenum_link($paged - 1)) . '" class="btn-secondary">Previous</a>';
         echo '<span class="sr-only">' . __('Previous', 'tostishop') . '</span>';
         echo '</a>';
     }
@@ -160,7 +160,7 @@ function tostishop_enhanced_pagination() {
     
     // First page + dots
     if ($start > 1) {
-        echo '<a href="' . esc_url(get_pagenum_link(1)) . '" class="pagination-btn">1</a>';
+        echo '<a href="' . esc_url(get_pagenum_link(1)) . '" class="btn-secondary">1</a>';
         if ($start > 2) {
             echo '<span class="pagination-dots">...</span>';
         }
@@ -169,9 +169,9 @@ function tostishop_enhanced_pagination() {
     // Page range
     for ($i = $start; $i <= $end; $i++) {
         if ($i == $paged) {
-            echo '<span class="pagination-btn current">' . $i . '</span>';
+            echo '<span class="btn-primary current">' . $i . '</span>';
         } else {
-            echo '<a href="' . esc_url(get_pagenum_link($i)) . '" class="pagination-btn">' . $i . '</a>';
+            echo '<a href="' . esc_url(get_pagenum_link($i)) . '" class="btn-secondary">' . $i . '</a>';
         }
     }
     
@@ -180,12 +180,12 @@ function tostishop_enhanced_pagination() {
         if ($end < $max_pages - 1) {
             echo '<span class="pagination-dots">...</span>';
         }
-        echo '<a href="' . esc_url(get_pagenum_link($max_pages)) . '" class="pagination-btn">' . $max_pages . '</a>';
+        echo '<a href="' . esc_url(get_pagenum_link($max_pages)) . '" class="btn-secondary">' . $max_pages . '</a>';
     }
     
     // Next button
     if ($paged < $max_pages) {
-        echo '<a href="' . esc_url(get_pagenum_link($paged + 1)) . '" class="pagination-btn next-btn">';
+        echo '<a href="' . esc_url(get_pagenum_link($paged + 1)) . '" class="btn-secondary">Next</a>';
         echo '<span class="sr-only">' . __('Next', 'tostishop') . '</span>';
         echo '</a>';
     }
