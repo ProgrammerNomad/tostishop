@@ -46,10 +46,10 @@ function tostishop_mega_menu() {
                 $category_url = get_term_link($category);
                 ?>
                 
-                <div class="relative">
+                <div class="relative group">
                     <?php if ($has_subcategories) : ?>
                         <button @mouseenter="activeMenu = '<?php echo esc_attr($category->slug); ?>'" 
-                                class="flex items-center text-sm font-medium text-gray-700 hover:text-navy-600 transition-colors duration-200 py-2 group">
+                                class="flex items-center text-sm font-medium text-gray-700 hover:text-navy-600 transition-colors duration-200 py-3 group">
                             <?php echo esc_html($category->name); ?>
                             <svg class="w-3 h-3 ml-1 transition-transform duration-200 group-hover:rotate-180" 
                                  fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,7 +58,7 @@ function tostishop_mega_menu() {
                         </button>
                     <?php else : ?>
                         <a href="<?php echo esc_url($category_url); ?>" 
-                           class="flex items-center text-sm font-medium text-gray-700 hover:text-navy-600 transition-colors duration-200 py-2">
+                           class="flex items-center text-sm font-medium text-gray-700 hover:text-navy-600 transition-colors duration-200 py-3">
                             <?php echo esc_html($category->name); ?>
                         </a>
                     <?php endif; ?>
@@ -66,6 +66,8 @@ function tostishop_mega_menu() {
                     <?php if ($has_subcategories) : ?>
                         <!-- Mega Menu Dropdown -->
                         <div x-show="activeMenu === '<?php echo esc_attr($category->slug); ?>'" 
+                             @mouseenter="activeMenu = '<?php echo esc_attr($category->slug); ?>'"
+                             @mouseleave="activeMenu = null"
                              x-transition:enter="transition ease-out duration-200"
                              x-transition:enter-start="opacity-0 scale-95"
                              x-transition:enter-end="opacity-100 scale-100"
@@ -74,7 +76,7 @@ function tostishop_mega_menu() {
                              x-transition:leave-end="opacity-0 scale-95"
                              x-cloak
                              style="display: none;"
-                             class="absolute left-0 top-full mt-1 w-96 lg:w-[480px] xl:w-[520px] bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
+                             class="absolute left-0 top-full w-96 lg:w-[480px] xl:w-[520px] bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
                             
                             <!-- Category Header -->
                             <div class="bg-gradient-to-r from-navy-900 to-blue-600 px-6 py-4">

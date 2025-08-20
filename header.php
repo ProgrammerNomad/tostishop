@@ -150,6 +150,8 @@
                              x-transition:leave="transition ease-in duration-150"
                              x-transition:leave-start="opacity-100 scale-100"
                              x-transition:leave-end="opacity-0 scale-95"
+                             x-cloak
+                             style="display: none;"
                              @click.away="userMenuOpen = false"
                              class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                             
@@ -242,6 +244,8 @@
                              x-transition:leave="transition ease-in duration-150"
                              x-transition:leave-start="opacity-100 scale-100"
                              x-transition:leave-end="opacity-0 scale-95"
+                             x-cloak
+                             style="display: none;"
                              @click.away="userMenuOpen = false"
                              class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-4 z-50">
                             
