@@ -437,8 +437,8 @@ add_filter('robots_txt', 'tostishop_enhanced_robots_txt', 10, 2);
  * Performance optimizations for SEO
  */
 function tostishop_seo_performance_optimizations() {
-    // Preload critical CSS (style.css is the actual compiled CSS file)
-    echo '<link rel="preload" href="' . get_stylesheet_uri() . '" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">' . "\n";
+    // Preload critical CSS (style.css is the actual compiled CSS file that gets loaded)
+    echo '<link rel="preload" href="' . get_stylesheet_uri() . '" as="style">' . "\n";
     
     // Only preload Alpine.js on pages that actually use it (interactive pages)
     if (is_front_page() || is_page() || is_shop() || is_product() || is_cart() || is_checkout() || is_account_page()) {

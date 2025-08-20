@@ -22,7 +22,7 @@ function tostishop_scripts() {
     // Account components CSS - now loaded site-wide for global primary color fixes
     wp_enqueue_style('tostishop-account-components', get_template_directory_uri() . '/assets/css/components/account-components.css', array('tostishop-style', 'tostishop-custom'), TOSTISHOP_VERSION);
     
-    // Alpine.js for interactivity (local version)
+    // Alpine.js for interactivity (local version) - deferred loading reduces preload warnings
     wp_enqueue_script('alpinejs', get_template_directory_uri() . '/assets/js/alpine.min.js', array(), '3.14.9', true);
     wp_script_add_data('alpinejs', 'defer', true);
     
