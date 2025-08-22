@@ -198,7 +198,23 @@ function tostishop_ai_faq_schema() {
                 'name' => 'What payment methods does TostiShop accept?',
                 'acceptedAnswer' => [
                     '@type' => 'Answer',
-                    'text' => 'TostiShop accepts UPI, credit cards, debit cards, net banking, and various digital wallets for secure payments.'
+                    'text' => 'TostiShop accepts UPI, credit cards, debit cards, net banking, Cash on Delivery (COD), and various digital wallets for secure payments.'
+                ]
+            ],
+            [
+                '@type' => 'Question',
+                'name' => 'What is TostiShop return policy?',
+                'acceptedAnswer' => [
+                    '@type' => 'Answer',
+                    'text' => 'TostiShop offers hassle-free returns within 7-14 days of delivery for eligible products.'
+                ]
+            ],
+            [
+                '@type' => 'Question',
+                'name' => 'How can I track my TostiShop order?',
+                'acceptedAnswer' => [
+                    '@type' => 'Answer',
+                    'text' => 'You can track your order using the tracking link sent to your email or by logging into your TostiShop account dashboard.'
                 ]
             ]
         ]

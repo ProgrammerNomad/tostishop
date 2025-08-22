@@ -297,54 +297,8 @@ function tostishop_ai_chat_structured_data() {
 }
 add_action('wp_head', 'tostishop_ai_chat_structured_data', 3);
 
-/**
- * FAQ Schema for AI Understanding
- */
-function tostishop_faq_schema() {
-    if (is_front_page()) {
-        $faq_schema = array(
-            '@context' => 'https://schema.org',
-            '@type' => 'FAQPage',
-            'mainEntity' => array(
-                array(
-                    '@type' => 'Question',
-                    'name' => 'What payment methods do you accept?',
-                    'acceptedAnswer' => array(
-                        '@type' => 'Answer',
-                        'text' => 'We accept Cash on Delivery (COD), Credit Cards, Debit Cards, UPI, and Net Banking.'
-                    )
-                ),
-                array(
-                    '@type' => 'Question',
-                    'name' => 'Do you deliver across India?',
-                    'acceptedAnswer' => array(
-                        '@type' => 'Answer',
-                        'text' => 'Yes, we deliver across India with fast and reliable shipping.'
-                    )
-                ),
-                array(
-                    '@type' => 'Question',
-                    'name' => 'What is your return policy?',
-                    'acceptedAnswer' => array(
-                        '@type' => 'Answer',
-                        'text' => 'We offer hassle-free returns within 7-14 days of delivery.'
-                    )
-                ),
-                array(
-                    '@type' => 'Question',
-                    'name' => 'How can I track my order?',
-                    'acceptedAnswer' => array(
-                        '@type' => 'Answer',
-                        'text' => 'You can track your order using the tracking link sent to your email or by logging into your account.'
-                    )
-                )
-            )
-        );
-        
-        echo '<script type="application/ld+json">' . wp_json_encode($faq_schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . '</script>' . "\n";
-    }
-}
-add_action('wp_head', 'tostishop_faq_schema', 4);
+// FAQ Schema removed from here to prevent duplication
+// The comprehensive FAQ schema is now handled in ai-chat-optimization.php
 
 /**
  * AI-Friendly Site Map Generator
