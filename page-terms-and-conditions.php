@@ -274,7 +274,7 @@ get_header();
                     <div class="ml-11 space-y-4 text-gray-600">
                         <p>For questions about these Terms and Conditions, please contact us:</p>
                         <div class="bg-gray-50 rounded-lg p-4 mt-4">
-                            <p><strong>Email:</strong> legal@tostishop.com</p>
+                            <p><strong>Email:</strong> contact@tostishop.com</p>
                             <p><strong>Phone:</strong> +91-79829 99145</p>
                             <p><strong>Address:</strong> L246, 2nd Floor, Sector-12, Pratap Vihar, Ghaziabad, UP 201009</p>
                             <p><strong>Business Hours:</strong> Monday to Saturday, 11 AM to 6 PM IST</p>

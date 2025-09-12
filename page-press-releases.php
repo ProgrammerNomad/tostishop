@@ -293,7 +293,7 @@ get_header();
                         </svg>
                     </div>
                     <h3 class="text-lg font-semibold text-navy-900 mb-2">Email</h3>
-                    <p class="text-gray-600">press@tostishop.com</p>
+                    <p class="text-gray-600">contact@tostishop.com</p>
                 </div>
 
                 <!-- Phone Contact -->

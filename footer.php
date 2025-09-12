@@ -121,7 +121,7 @@
                         <span class="w-2 h-2 bg-accent rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                         Careers
                     </a></li>
-                    <li><a href="<?php echo home_url('/contact/'); ?>" class="text-silver-200 hover:text-white hover:text-accent transition-colors duration-300 flex items-center group">
+                    <li><a href="<?php echo home_url('/contact-us/'); ?>" class="text-silver-200 hover:text-white hover:text-accent transition-colors duration-300 flex items-center group">
                         <span class="w-2 h-2 bg-accent rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                         Contact Us
                     </a></li>
@@ -144,15 +144,15 @@
                     </svg>
                 </button>
                 <ul class="space-y-2 md:space-y-3 transition-all duration-300 md:block" x-show="openSections.service || window.innerWidth >= 768" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 max-h-0" x-transition:enter-end="opacity-100 max-h-96" x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100 max-h-96" x-transition:leave-end="opacity-0 max-h-0" style="overflow: hidden;">
-                    <li><a href="<?php echo home_url('/help/'); ?>" class="text-silver-200 hover:text-white hover:text-accent transition-colors duration-300 flex items-center group">
+                    <li><a href="<?php echo home_url('/contact-us/'); ?>" class="text-silver-200 hover:text-white hover:text-accent transition-colors duration-300 flex items-center group">
                         <span class="w-2 h-2 bg-accent rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                         Help Center
                     </a></li>
-                    <li><a href="<?php echo home_url('/returns/'); ?>" class="text-silver-200 hover:text-white hover:text-accent transition-colors duration-300 flex items-center group">
+                    <li><a href="<?php echo home_url('/refund-and-returns-policy/'); ?>" class="text-silver-200 hover:text-white hover:text-accent transition-colors duration-300 flex items-center group">
                         <span class="w-2 h-2 bg-accent rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                         Returns & Refunds
                     </a></li>
-                    <li><a href="<?php echo home_url('/shipping/'); ?>" class="text-silver-200 hover:text-white hover:text-accent transition-colors duration-300 flex items-center group">
+                    <li><a href="<?php echo home_url('/shipping-policy/'); ?>" class="text-silver-200 hover:text-white hover:text-accent transition-colors duration-300 flex items-center group">
                         <span class="w-2 h-2 bg-accent rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                         Shipping Info
                     </a></li>
@@ -244,7 +244,7 @@
                 <div class="flex flex-wrap items-center space-x-4 md:space-x-6 text-xs md:text-sm">
                     <a href="<?php echo home_url('/privacy-policy/'); ?>" class="text-silver-300 hover:text-accent transition-colors duration-300">Privacy</a>
                     <a href="<?php echo home_url('/terms-and-conditions/'); ?>" class="text-silver-300 hover:text-accent transition-colors duration-300">Terms</a>
-                    <a href="<?php echo home_url('/contact/'); ?>" class="text-silver-300 hover:text-accent transition-colors duration-300">Contact</a>
+                    <a href="<?php echo home_url('/contact-us/'); ?>" class="text-silver-300 hover:text-accent transition-colors duration-300">Contact</a>
                 </div>
             </div>
             

@@ -31,7 +31,7 @@ function tostishop_ai_business_context() {
             'contactType' => 'customer service',
             'areaServed' => 'IN',
             'availableLanguage' => ['Hindi', 'English'],
-            'serviceUrl' => home_url('/contact/'),
+            'serviceUrl' => home_url('/contact-us/'),
             'hoursAvailable' => [
                 '@type' => 'OpeningHoursSpecification',
                 'dayOfWeek' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
@@ -267,7 +267,7 @@ function tostishop_sitemap_schema() {
                 '@type' => 'SiteNavigationElement',
                 'name' => 'Contact',
                 'description' => 'Get in touch with TostiShop customer service',
-                'url' => home_url('/contact/')
+                'url' => home_url('/contact-us/')
             ]
         ]
     ];

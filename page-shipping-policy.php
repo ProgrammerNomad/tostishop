@@ -481,7 +481,7 @@ get_header();
                         </svg>
                     </div>
                     <h3 class="font-semibold mb-2">Email Us</h3>
-                    <p class="text-silver-50">shipping@tostishop.com</p>
+                    <p class="text-silver-50">contact@tostishop.com</p>
                 </div>
                 
                 <div>
