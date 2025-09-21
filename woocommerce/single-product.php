@@ -309,7 +309,7 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                     
                     <!-- Main Image -->
                     <div class="mb-4">
-                        <div class="bg-gray-100 rounded-lg overflow-hidden aspect-square focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
+                        <div class="product-image-container aspect-square focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
                             <?php if (has_post_thumbnail()) : ?>
                                 <?php 
                                 $main_image_alt = get_post_meta(get_post_thumbnail_id(), '_wp_attachment_image_alt', true);
@@ -348,7 +348,7 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                     <div class="flex space-x-2 overflow-x-auto pb-2" role="tablist" aria-label="<?php esc_attr_e('Product image thumbnails', 'tostishop'); ?>">
                         <!-- Main thumbnail -->
                         <button onclick="showGalleryImage(0)" 
-                                class="flex-none w-16 h-16 bg-gray-100 rounded border-2 border-blue-500 overflow-hidden thumbnail-btn focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                class="flex-none w-16 h-16 product-thumbnail active thumbnail-btn focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                 data-thumbnail="main"
                                 role="tab"
                                 aria-selected="true"
@@ -365,7 +365,7 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                         <!-- Gallery thumbnails -->
                         <?php foreach ($attachment_ids as $index => $attachment_id) : ?>
                             <button onclick="showGalleryImage(<?php echo $index + 1; ?>)" 
-                                    class="flex-none w-16 h-16 bg-gray-100 rounded border-2 border-gray-200 overflow-hidden thumbnail-btn focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                    class="flex-none w-16 h-16 product-thumbnail thumbnail-btn focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                                     data-thumbnail="<?php echo $index + 1; ?>"
                                     role="tab"
                                     aria-selected="false"
@@ -669,7 +669,7 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                     <div class="grid grid-cols-2 gap-4">
                         <!-- Main Product Image -->
                         <?php if (has_post_thumbnail()) : ?>
-                            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
+                            <div class="product-image-container aspect-square focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
                                 <?php 
                                 $main_image_alt = get_post_meta(get_post_thumbnail_id(), '_wp_attachment_image_alt', true);
                                 $main_image_alt = $main_image_alt ?: sprintf(__('%s main product image', 'tostishop'), get_the_title());
@@ -692,7 +692,7 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                                 $image_alt = get_post_meta($attachment_id, '_wp_attachment_image_alt', true);
                                 $image_alt = $image_alt ?: sprintf(__('%s product image %d', 'tostishop'), get_the_title(), $index + 2);
                         ?>
-                            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
+                            <div class="product-image-container aspect-square focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
                                 <img src="<?php echo esc_url($image_url); ?>" 
                                      alt="<?php echo esc_attr($image_alt); ?>"
                                      class="w-full h-full object-cover hover:scale-105 transition-transform duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -705,7 +705,7 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                             // If no gallery images, show placeholder images to maintain grid
                             for ($i = 1; $i <= 3; $i++) :
                         ?>
-                            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                            <div class="product-image-container aspect-square flex items-center justify-center">
                                 <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                 </svg>
@@ -1044,7 +1044,7 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
         </div>
         
         <!-- Product Tabs (Mobile-Optimized) -->
-        <div class="mt-16" x-data="{ activeTab: 'description' }">
+        <div class="mt-16 sm:px-6 lg:px-8" x-data="{ activeTab: 'description' }">
             
             <!-- Tab Navigation -->
             <div class="flex border-b border-gray-200 overflow-x-auto">
@@ -1295,5 +1295,27 @@ if ( ! empty( $related_products ) ) :
         </button>
     </div>
 </div>
+
+<script>
+function showGalleryImage(index) {
+    // Update thumbnail active states
+    const thumbnails = document.querySelectorAll('.thumbnail-btn');
+    thumbnails.forEach((thumb, i) => {
+        if (i === index) {
+            thumb.classList.add('active');
+            thumb.setAttribute('aria-selected', 'true');
+            thumb.setAttribute('tabindex', '0');
+        } else {
+            thumb.classList.remove('active');
+            thumb.setAttribute('aria-selected', 'false');
+            thumb.setAttribute('tabindex', '-1');
+        }
+    });
+    
+    // Update main image (if you have image switching functionality)
+    // This would typically update the src of the main product image
+    // You can extend this based on your gallery implementation
+}
+</script>
 
 <?php get_footer(); ?>
