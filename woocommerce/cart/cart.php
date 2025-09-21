@@ -590,6 +590,13 @@ get_header(); ?>
     </form>
     
     <?php do_action('woocommerce_after_cart'); ?>
+    
+    <?php
+    /**
+     * Cart cross-sells
+     */
+    woocommerce_cross_sell_display();
+    ?>
 
 <!-- Sticky Checkout Button (Mobile) -->
 <?php if (!WC()->cart->is_empty()) : ?>

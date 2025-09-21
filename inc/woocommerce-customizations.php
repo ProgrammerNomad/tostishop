@@ -461,3 +461,91 @@ function tostishop_style_shipping_methods_output() {
     <?php
 }
 add_action('wp_footer', 'tostishop_style_shipping_methods_output');
+
+/**
+ * Customize Cross-sells and Upsells Display
+ */
+function tostishop_customize_upsells_cross_sells() {
+    // Customize upsells display
+    remove_action('woocommerce_output_upsells', 'woocommerce_upsell_display');
+    add_action('woocommerce_output_upsells', 'tostishop_output_upsells');
+    
+    // Customize cross-sells display 
+    remove_action('woocommerce_output_cross_sells', 'woocommerce_cross_sell_display');
+    add_action('woocommerce_output_cross_sells', 'tostishop_output_cross_sells');
+}
+add_action('init', 'tostishop_customize_upsells_cross_sells');
+
+/**
+ * Custom Upsells Output
+ */
+function tostishop_output_upsells() {
+    $limit = apply_filters('woocommerce_upsells_total', 4);
+    $columns = apply_filters('woocommerce_upsells_columns', 4);
+    $orderby = apply_filters('woocommerce_upsells_orderby', 'rand');
+    $order = apply_filters('woocommerce_upsells_order', 'desc');
+    
+    // Output upsells using our custom grid layout
+    woocommerce_upsell_display($limit, $columns, $orderby, $order);
+}
+
+/**
+ * Custom Cross-sells Output  
+ */
+function tostishop_output_cross_sells() {
+    $limit = apply_filters('woocommerce_cross_sells_total', 4);
+    $columns = apply_filters('woocommerce_cross_sells_columns', 2);
+    $orderby = apply_filters('woocommerce_cross_sells_orderby', 'rand');
+    $order = apply_filters('woocommerce_cross_sells_order', 'desc');
+    
+    // Output cross-sells using our custom layout
+    woocommerce_cross_sell_display($limit, $columns, $orderby, $order);
+}
+
+/**
+ * Custom styling for upsells and cross-sells products loop
+ */
+function tostishop_style_upsells_cross_sells() {
+    global $woocommerce_loop;
+    
+    // Add custom CSS classes for proper grid display
+    if (isset($woocommerce_loop['is_upsell']) || isset($woocommerce_loop['is_cross_sell'])) {
+        add_filter('post_class', 'tostishop_add_product_grid_classes');
+        add_filter('woocommerce_loop_add_to_cart_link', 'tostishop_customize_loop_add_to_cart_button', 10, 2);
+    }
+}
+add_action('woocommerce_before_shop_loop', 'tostishop_style_upsells_cross_sells');
+
+/**
+ * Add CSS classes for proper grid display
+ */
+function tostishop_add_product_grid_classes($classes) {
+    global $woocommerce_loop;
+    
+    if (isset($woocommerce_loop['is_upsell']) || isset($woocommerce_loop['is_cross_sell'])) {
+        $classes[] = 'bg-white';
+        $classes[] = 'rounded-lg'; 
+        $classes[] = 'shadow-sm';
+        $classes[] = 'hover:shadow-md';
+        $classes[] = 'transition-shadow';
+        $classes[] = 'duration-200';
+        $classes[] = 'overflow-hidden';
+        $classes[] = 'group';
+    }
+    
+    return $classes;
+}
+
+/**
+ * Customize add to cart button in product loops
+ */
+function tostishop_customize_loop_add_to_cart_button($button, $product) {
+    global $woocommerce_loop;
+    
+    if (isset($woocommerce_loop['is_upsell']) || isset($woocommerce_loop['is_cross_sell'])) {
+        // Add custom classes to the add to cart button for better styling
+        $button = str_replace('class="', 'class="btn-primary text-sm py-2 px-4 w-full ', $button);
+    }
+    
+    return $button;
+}

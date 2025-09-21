@@ -1110,6 +1110,14 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
     <?php endwhile; ?>
 </div>
 
+<?php
+/**
+ * Product Upsells
+ * Hook: woocommerce_output_upsells
+ */
+woocommerce_upsell_display();
+?>
+
 <!-- Related Products Cards -->
 <?php
 // Get related products first

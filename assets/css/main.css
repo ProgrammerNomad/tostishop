@@ -516,6 +516,92 @@
       min-width: 520px;
     }
   }
+
+  /* Upsells and Cross-sells Styling */
+  .up-sells,
+  .cross-sells {
+    @apply bg-gray-50 border-t border-gray-200;
+  }
+
+  .up-sells .products,
+  .cross-sells .products {
+    @apply grid gap-6 mt-8;
+  }
+
+  /* Responsive grid for upsells/cross-sells */
+  @screen sm {
+    .up-sells .products,
+    .cross-sells .products {
+      @apply grid-cols-2;
+    }
+  }
+
+  @screen md {
+    .up-sells .products {
+      @apply grid-cols-3;
+    }
+    .cross-sells .products {
+      @apply grid-cols-2;
+    }
+  }
+
+  @screen lg {
+    .up-sells .products {
+      @apply grid-cols-4;
+    }
+    .cross-sells .products {
+      @apply grid-cols-3;
+    }
+  }
+
+  @screen xl {
+    .cross-sells .products {
+      @apply grid-cols-4;
+    }
+  }
+
+  /* Product items in upsells/cross-sells */
+  .up-sells .product,
+  .cross-sells .product {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200;
+  }
+
+
+
+  .up-sells .woocommerce-LoopProduct-link,
+  .cross-sells .woocommerce-LoopProduct-link {
+    @apply block h-full;
+  }
+
+  .up-sells .attachment-woocommerce_thumbnail,
+  .cross-sells .attachment-woocommerce_thumbnail {
+    @apply w-full h-48 object-cover transition-transform duration-300;
+  }
+
+  .up-sells .product:hover .attachment-woocommerce_thumbnail,
+  .cross-sells .product:hover .attachment-woocommerce_thumbnail {
+    @apply scale-105;
+  }
+
+  .up-sells .woocommerce-loop-product__title,
+  .cross-sells .woocommerce-loop-product__title {
+    @apply text-sm font-medium text-gray-900 mb-2 line-clamp-2 px-4;
+  }
+
+  .up-sells .price,
+  .cross-sells .price {
+    @apply text-lg font-bold text-gray-900 px-4 pb-4;
+  }
+
+  .up-sells .price del,
+  .cross-sells .price del {
+    @apply text-gray-500 text-sm font-normal mr-2;
+  }
+
+  .up-sells .add_to_cart_button,
+  .cross-sells .add_to_cart_button {
+    @apply w-full mt-2 mx-4 mb-4 bg-navy-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-navy-700 transition-colors duration-200;
+  }
 }
 
 /* Keep only the existing theme imports */
