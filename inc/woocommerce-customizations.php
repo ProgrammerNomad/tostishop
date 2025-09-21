@@ -462,45 +462,9 @@ function tostishop_style_shipping_methods_output() {
 }
 add_action('wp_footer', 'tostishop_style_shipping_methods_output');
 
-/**
- * Customize Cross-sells and Upsells Display
- */
-function tostishop_customize_upsells_cross_sells() {
-    // Customize upsells display
-    remove_action('woocommerce_output_upsells', 'woocommerce_upsell_display');
-    add_action('woocommerce_output_upsells', 'tostishop_output_upsells');
-    
-    // Customize cross-sells display 
-    remove_action('woocommerce_output_cross_sells', 'woocommerce_cross_sell_display');
-    add_action('woocommerce_output_cross_sells', 'tostishop_output_cross_sells');
-}
-add_action('init', 'tostishop_customize_upsells_cross_sells');
 
-/**
- * Custom Upsells Output
- */
-function tostishop_output_upsells() {
-    $limit = apply_filters('woocommerce_upsells_total', 4);
-    $columns = apply_filters('woocommerce_upsells_columns', 4);
-    $orderby = apply_filters('woocommerce_upsells_orderby', 'rand');
-    $order = apply_filters('woocommerce_upsells_order', 'desc');
-    
-    // Output upsells using our custom grid layout
-    woocommerce_upsell_display($limit, $columns, $orderby, $order);
-}
 
-/**
- * Custom Cross-sells Output  
- */
-function tostishop_output_cross_sells() {
-    $limit = apply_filters('woocommerce_cross_sells_total', 4);
-    $columns = apply_filters('woocommerce_cross_sells_columns', 2);
-    $orderby = apply_filters('woocommerce_cross_sells_orderby', 'rand');
-    $order = apply_filters('woocommerce_cross_sells_order', 'desc');
-    
-    // Output cross-sells using our custom layout
-    woocommerce_cross_sell_display($limit, $columns, $orderby, $order);
-}
+
 
 /**
  * Set limits for upsells and cross-sells display

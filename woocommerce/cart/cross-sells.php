@@ -32,7 +32,21 @@ if ( $cross_sells ) : ?>
 			</p>
 		</header>
 
-		<?php woocommerce_output_cross_sells(); ?>
+		<?php
+		woocommerce_product_loop_start();
+
+		foreach ( $cross_sells as $cross_sell ) :
+			$post_object = get_post( $cross_sell->get_id() );
+
+			setup_postdata( $GLOBALS['post'] =& $post_object ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited, Squiz.PHP.DisallowMultipleAssignments.Found
+
+			wc_get_template_part( 'content', 'product' );
+		endforeach;
+
+		woocommerce_product_loop_end();
+
+		wp_reset_postdata();
+		?>
 
 	</div>
 

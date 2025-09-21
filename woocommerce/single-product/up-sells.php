@@ -24,18 +24,30 @@ if ( $upsells ) : ?>
 	<section class="up-sells upsells products mt-12 lg:mt-16" aria-labelledby="upsells-heading">
 		<div class="px-4 sm:px-6 lg:px-8">
 			
-			<header class="mb-8 text-center">
-				<h2 id="upsells-heading" class="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-					<?php esc_html_e( 'You may also like&hellip;', 'woocommerce' ); ?>
-				</h2>
-				<p class="text-gray-600 max-w-2xl mx-auto">
-					<?php esc_html_e( 'Complete your purchase with these recommended items', 'tostishop' ); ?>
-				</p>
-			</header>
+		<header class="mb-8 text-center">
+			<h2 id="upsells-heading" class="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+				<?php esc_html_e( 'You may also like&hellip;', 'woocommerce' ); ?>
+			</h2>
+			<p class="text-gray-600 max-w-2xl mx-auto">
+				<?php esc_html_e( 'Complete your purchase with these recommended items', 'tostishop' ); ?>
+			</p>
+		</header>
 
-			<?php woocommerce_output_upsells(); ?>
+		<?php
+		woocommerce_product_loop_start();
 
-		</div>
+		foreach ( $upsells as $upsell ) :
+			$post_object = get_post( $upsell->get_id() );
+
+			setup_postdata( $GLOBALS['post'] =& $post_object ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited, Squiz.PHP.DisallowMultipleAssignments.Found
+
+			wc_get_template_part( 'content', 'product' );
+		endforeach;
+
+		woocommerce_product_loop_end();
+
+		wp_reset_postdata();
+		?>		</div>
 	</section>
 
 <?php endif;
