@@ -1044,7 +1044,7 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
         </div>
         
         <!-- Product Tabs (Mobile-Optimized) -->
-        <div class="mt-16 sm:px-6 lg:px-8" x-data="{ activeTab: 'description' }">
+        <div class="mt-16 px-4 sm:px-6 lg:px-8" x-data="{ activeTab: 'description' }">
             
             <!-- Tab Navigation -->
             <div class="flex border-b border-gray-200 overflow-x-auto">
