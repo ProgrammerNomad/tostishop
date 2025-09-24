@@ -1042,6 +1042,14 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                 </div>
             </div>
         </div>
+
+        <?php
+/**
+ * Product Upsells
+ * Hook: woocommerce_output_upsells
+ */
+woocommerce_upsell_display();
+?>
         
         <!-- Product Tabs (Mobile-Optimized) -->
         <div class="mt-16 px-4 sm:px-6 lg:px-8" x-data="{ activeTab: 'description' }">
@@ -1110,13 +1118,7 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
     <?php endwhile; ?>
 </div>
 
-<?php
-/**
- * Product Upsells
- * Hook: woocommerce_output_upsells
- */
-woocommerce_upsell_display();
-?>
+
 
 <!-- Related Products Cards -->
 <?php
