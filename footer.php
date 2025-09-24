@@ -13,7 +13,7 @@
 
 <?php if (!is_cart() && !is_checkout()) : ?>
 <!-- Footer -->
-<footer class="bg-navy-900 text-white mt-16 relative overflow-hidden">
+<footer class="bg-navy-900 text-white relative overflow-hidden">
     <!-- Beauty & Jewelry Themed Background -->
     <div class="absolute inset-0 bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900"></div>
     
