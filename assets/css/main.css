@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import custom CSS */
+@import './custom.css';
+
 /* Alpine.js Cloak - Prevents Flash on Load */
 [x-cloak] { 
   display: none !important; 
