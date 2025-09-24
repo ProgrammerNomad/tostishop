@@ -49,8 +49,17 @@
 }
 
 /* Contact Form 7 Styling */
+.contact-form-wrapper .wpcf7 {
+    @apply w-full;
+}
+
 .contact-form-wrapper .wpcf7-form {
-    @apply space-y-6;
+    @apply space-y-0;
+}
+
+/* Form paragraph spacing */
+.contact-form-wrapper .wpcf7-form p {
+    @apply mb-6 last:mb-0;
 }
 
 /* Labels styling */
@@ -58,20 +67,30 @@
     @apply block text-sm font-medium text-gray-700 mb-2;
 }
 
+/* Hide the screen reader response */
+.contact-form-wrapper .screen-reader-response {
+    @apply sr-only;
+}
+
+/* Form control wrapper */
+.contact-form-wrapper .wpcf7-form-control-wrap {
+    @apply block w-full;
+}
+
 /* All form controls base styling */
 .contact-form-wrapper .wpcf7-form-control {
-    @apply w-full px-4 py-3 border border-gray-300 rounded-lg transition-colors;
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg transition-colors bg-white;
 }
 
 .contact-form-wrapper .wpcf7-form-control:focus {
     @apply ring-2 ring-red-500 border-transparent outline-none;
 }
 
-/* Text inputs (name, subject) */
+/* Text inputs (name, subject, email, tel) */
 .contact-form-wrapper .wpcf7-text,
 .contact-form-wrapper .wpcf7-email,
 .contact-form-wrapper .wpcf7-tel {
-    @apply w-full px-4 py-3 border border-gray-300 rounded-lg transition-colors;
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg transition-colors bg-white;
 }
 
 .contact-form-wrapper .wpcf7-text:focus,
@@ -82,7 +101,8 @@
 
 /* Textarea for message */
 .contact-form-wrapper .wpcf7-textarea {
-    @apply w-full px-4 py-3 border border-gray-300 rounded-lg transition-colors min-h-32 resize-y;
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg transition-colors bg-white resize-y;
+    min-height: 120px;
 }
 
 .contact-form-wrapper .wpcf7-textarea:focus {
@@ -111,9 +131,18 @@
     @apply ring-2 ring-red-500 ring-offset-2 outline-none;
 }
 
+/* Loading spinner */
+.contact-form-wrapper .wpcf7-spinner {
+    @apply inline-block ml-2 w-4 h-4;
+}
+
 /* Response messages */
 .contact-form-wrapper .wpcf7-response-output {
-    @apply p-4 rounded-lg mt-4 border;
+    @apply p-4 rounded-lg mt-4 border text-sm;
+}
+
+.contact-form-wrapper .wpcf7-response-output:empty {
+    @apply hidden;
 }
 
 .contact-form-wrapper .wpcf7-mail-sent-ok {
@@ -134,14 +163,14 @@
     @apply border-red-300 ring-2 ring-red-200;
 }
 
-/* Form wrapper spacing */
-.contact-form-wrapper .wpcf7-form p {
-    @apply mb-6;
+/* Hide Akismet fields */
+.contact-form-wrapper .akismet-fields-container {
+    @apply hidden;
 }
 
-/* Loading spinner */
-.contact-form-wrapper .wpcf7-spinner {
-    @apply inline-block ml-2;
+/* Hidden fields container */
+.contact-form-wrapper .hidden-fields-container {
+    @apply hidden;
 }
 
 .woocommerce-error {
