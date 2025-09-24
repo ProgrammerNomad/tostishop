@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( $upsells ) : ?>
 
-	<section class="up-sells upsells products mt-16 mb-8 lg:mt-16" aria-labelledby="upsells-heading">
+	<section class="up-sells upsells products pb-8 lg:pt-16" aria-labelledby="upsells-heading">
 		<div class="px-4 sm:px-6 lg:px-8">
 			
 		<header class="mb-8 text-center">
