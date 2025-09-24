@@ -24,7 +24,7 @@ if ( $upsells ) : ?>
 	<section class="up-sells upsells products pb-8 lg:pt-16" aria-labelledby="upsells-heading">
 		<div class="px-4 sm:px-6 lg:px-8">
 			
-		<header class="mb-8 text-center">
+		<header class="mb-16 text-center">
 			<h2 id="upsells-heading" class="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
 				<?php esc_html_e( 'You may also like&hellip;', 'woocommerce' ); ?>
 			</h2>
