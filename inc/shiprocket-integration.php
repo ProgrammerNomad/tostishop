@@ -249,6 +249,22 @@ function tostishop_get_shiprocket_couriers($pincode, $product = null, $options =
     if ($product) {
         $defaults['weight'] = floatval($product->get_weight()) ?: 0.2;
         $defaults['declared_value'] = floatval($product->get_price()) ?: 150;
+        
+        // Get product dimensions from WooCommerce
+        $length = $product->get_length();
+        $width = $product->get_width();
+        $height = $product->get_height();
+        
+        // Use actual dimensions if available, fallback to defaults
+        if (!empty($length)) {
+            $defaults['length'] = $length;
+        }
+        if (!empty($width)) {
+            $defaults['breadth'] = $width;
+        }
+        if (!empty($height)) {
+            $defaults['height'] = $height;
+        }
     }
     
     // Merge with provided options
@@ -586,9 +602,13 @@ function tostishop_calculate_shiprocket_shipping_methods($pincode, $cart_items =
         return array();
     }
     
-    // Calculate total weight and value
+    // Calculate total weight, value, and combined dimensions
     $total_weight = 0;
     $total_value = 0;
+    $total_length = 0;
+    $total_width = 0;
+    $total_height = 0;
+    $items_count = 0;
     
     foreach ($cart_items as $cart_item) {
         $product = $cart_item['data'];
@@ -597,18 +617,34 @@ function tostishop_calculate_shiprocket_shipping_methods($pincode, $cart_items =
         $weight = floatval($product->get_weight()) ?: 0.2; // Default 200g
         $price = floatval($product->get_price()) ?: 100;
         
+        // Get product dimensions
+        $length = floatval($product->get_length()) ?: 12;
+        $width = floatval($product->get_width()) ?: 10;
+        $height = floatval($product->get_height()) ?: 10;
+        
         $total_weight += ($weight * $quantity);
         $total_value += ($price * $quantity);
+        
+        // For dimensions, we'll use the maximum dimensions from all products
+        // This is a simplified approach - actual shipping may require more complex calculations
+        $total_length = max($total_length, $length);
+        $total_width = max($total_width, $width);
+        $total_height += ($height * $quantity); // Height can be stacked
+        
+        $items_count += $quantity;
     }
     
     // Minimum values
     $total_weight = max($total_weight, 0.2);
     $total_value = max($total_value, 100);
+    $total_length = max($total_length, 12);
+    $total_width = max($total_width, 10);
+    $total_height = max($total_height, 10);
     
     // Get pickup postcode
     $pickup_postcode = tostishop_get_pickup_postcode();
     
-    // Prepare API parameters
+    // Prepare API parameters with actual product dimensions
     $api_params = array(
         'pickup_postcode' => $pickup_postcode,
         'delivery_postcode' => $pincode,
@@ -621,9 +657,9 @@ function tostishop_calculate_shiprocket_shipping_methods($pincode, $cart_items =
         'is_web' => '1',
         'is_dg' => '0',
         'only_qc_couriers' => '0',
-        'length' => '12',
-        'breadth' => '10',
-        'height' => '10'
+        'length' => $total_length,
+        'breadth' => $total_width,
+        'height' => $total_height
     );
     
     // API endpoint
@@ -675,7 +711,7 @@ function tostishop_process_shipping_methods($couriers, $total_value = 0) {
     $shipping_methods = array();
     
     // Free shipping threshold
-    $free_shipping_threshold = 500; // ₹500
+    $free_shipping_threshold = 700; // ₹700
     $is_free_shipping = ($total_value >= $free_shipping_threshold);
     
     foreach ($couriers as $courier) {
@@ -799,7 +835,7 @@ function tostishop_ajax_calculate_shipping_methods() {
     wp_send_json_success(array(
         'shipping_methods' => $shipping_methods,
         'cart_total' => $cart_total,
-        'free_shipping_threshold' => 500,
+        'free_shipping_threshold' => 700,
         'html' => $html
     ));
 }
@@ -924,7 +960,7 @@ function tostishop_shipping_methods_calculator() {
     }
     
     $cart_total = WC()->cart->get_cart_contents_total();
-    $free_shipping_threshold = 500;
+    $free_shipping_threshold = 700;
     $is_free_shipping = ($cart_total >= $free_shipping_threshold);
     
     ?>
@@ -1064,7 +1100,7 @@ function tostishop_checkout_free_shipping_notice() {
     }
     
     $cart_total = WC()->cart->get_cart_contents_total();
-    $free_shipping_threshold = 500;
+    $free_shipping_threshold = 700;
     $is_free_shipping = ($cart_total >= $free_shipping_threshold);
     
     if ($is_free_shipping) {
@@ -1130,7 +1166,7 @@ function tostishop_init_shiprocket_shipping_method() {
             public function __construct() {
                 $this->id = 'tostishop_shiprocket';
                 $this->method_title = __('Shiprocket Shipping', 'tostishop');
-                $this->method_description = __('Dynamic shipping rates from Shiprocket with free shipping above ₹500', 'tostishop');
+                $this->method_description = __('Dynamic shipping rates from Shiprocket with free shipping above ₹700', 'tostishop');
                 
                 $this->init();
             }

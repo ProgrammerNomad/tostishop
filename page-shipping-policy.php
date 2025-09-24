@@ -95,8 +95,8 @@ get_header();
                         </div>
                     </div>
                     <div class="text-center">
-                        <h2 class="text-2xl font-bold text-navy-900 mb-4">Free Shipping on Orders Above ₹499</h2>
-                        <p class="text-gray-700 mb-6">Enjoy complimentary shipping across India for orders totaling ₹499 or more. No minimum quantity required!</p>
+                        <h2 class="text-2xl font-bold text-navy-900 mb-4">Free Shipping on Orders Above ₹700</h2>
+                        <p class="text-gray-700 mb-6">Enjoy complimentary shipping across India for orders totaling ₹700 or more. No minimum quantity required!</p>
                         <div class="inline-flex items-center bg-white px-6 py-3 rounded-full text-green-600 font-semibold border border-green-200">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -137,8 +137,8 @@ get_header();
                                         <div>
                                             <h4 class="font-semibold text-navy-900 mb-2">Shipping Cost</h4>
                                             <ul class="text-gray-600 text-sm space-y-1">
-                                                <li>• Orders above ₹499: FREE</li>
-                                                <li>• Orders below ₹499: ₹49</li>
+                                                <li>• Orders above ₹700: FREE</li>
+                                                <li>• Orders below ₹700: ₹49</li>
                                                 <li>• Remote areas: ₹99</li>
                                             </ul>
                                         </div>

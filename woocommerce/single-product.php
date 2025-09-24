@@ -620,7 +620,7 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                         <div class="space-y-2 text-sm text-gray-600">
                             <div class="flex items-start">
                                 <span class="text-blue-600 mr-2">•</span>
-                                <span><?php _e('Free shipping on orders over ₹500', 'tostishop'); ?></span>
+                                <span><?php _e('Free shipping on orders over ₹700', 'tostishop'); ?></span>
                             </div>
                             <div class="flex items-start">
                                 <span class="text-blue-600 mr-2">•</span>
@@ -1003,7 +1003,7 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                         <div class="space-y-2 text-sm text-gray-600">
                             <div class="flex items-start">
                                 <span class="text-blue-600 mr-2">•</span>
-                                <span><?php _e('Free shipping on orders over ₹500', 'tostishop'); ?></span>
+                                <span><?php _e('Free shipping on orders over ₹700', 'tostishop'); ?></span>
                             </div>
                             <div class="flex items-start">
                                 <span class="text-blue-600 mr-2">•</span>
@@ -1089,7 +1089,7 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900 mb-4"><?php _e('Shipping Information', 'tostishop'); ?></h3>
                         <div class="space-y-3 text-gray-600">
-                            <p><?php _e('• Free shipping on orders over ₹500', 'tostishop'); ?></p>
+                            <p><?php _e('• Free shipping on orders over ₹700', 'tostishop'); ?></p>
                             <p><?php _e('• Standard delivery: 3-5 business days', 'tostishop'); ?></p>
                             <p><?php _e('• Express delivery: 1-2 business days', 'tostishop'); ?></p>
                         </div>
