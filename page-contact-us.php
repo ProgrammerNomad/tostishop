@@ -12,7 +12,7 @@ get_header();
 
 <div class="min-h-screen bg-gray-50">
     <!-- Hero Section -->
-    <section class="bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900 text-white py-16 relative overflow-hidden">
+    <section class="bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900 text-white pt-16 pb-40 relative overflow-hidden">
         <div class="absolute inset-0 bg-black opacity-20"></div>
         <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center">
@@ -31,7 +31,7 @@ get_header();
         <!-- Decorative wave -->
         <div class="absolute bottom-0 left-0 right-0">
             <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="#f9fafb"/>
+                <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="#ffffff"/>
             </svg>
         </div>
     </section>
@@ -146,83 +146,20 @@ get_header();
                 <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
                     <h2 class="text-2xl font-bold text-navy-900 mb-6">Send us a Message</h2>
                     
-                    <form id="contactForm" class="space-y-6">
-                        <!-- Name Fields -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label for="firstName" class="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
-                                <input type="text" id="firstName" name="firstName" required
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent transition-colors">
-                            </div>
-                            <div>
-                                <label for="lastName" class="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
-                                <input type="text" id="lastName" name="lastName" required
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent transition-colors">
-                            </div>
-                        </div>
+                    <!-- Contact Form 7 -->
+                    <div class="contact-form-wrapper">
+                        <?php echo do_shortcode('[contact-form-7 id="1ca76b2" title="Contact Us"]'); ?>
+                    </div>
 
-                        <!-- Email -->
-                        <div>
-                            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
-                            <input type="email" id="email" name="email" required
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent transition-colors">
-                        </div>
-
-                        <!-- Phone -->
-                        <div>
-                            <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                            <input type="tel" id="phone" name="phone"
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent transition-colors">
-                        </div>
-
-                        <!-- Subject -->
-                        <div>
-                            <label for="subject" class="block text-sm font-medium text-gray-700 mb-2">Subject *</label>
-                            <select id="subject" name="subject" required
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent transition-colors">
-                                <option value="">Select a subject</option>
-                                <option value="general">General Inquiry</option>
-                                <option value="order">Order Support</option>
-                                <option value="product">Product Question</option>
-                                <option value="shipping">Shipping & Delivery</option>
-                                <option value="returns">Returns & Refunds</option>
-                                <option value="technical">Technical Issue</option>
-                                <option value="partnership">Business Partnership</option>
-                                <option value="feedback">Feedback & Suggestions</option>
-                            </select>
-                        </div>
-
-                        <!-- Message -->
-                        <div>
-                            <label for="message" class="block text-sm font-medium text-gray-700 mb-2">Message *</label>
-                            <textarea id="message" name="message" rows="6" required
-                                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent transition-colors"
-                                      placeholder="Please describe your inquiry in detail..."></textarea>
-                        </div>
-
-                        <!-- Submit Button -->
-                        <div>
-                            <button type="submit" 
-                                    class="w-full px-6 py-4 bg-accent text-white font-semibold rounded-lg hover:bg-red-600 transition-colors focus:ring-2 focus:ring-accent focus:ring-offset-2">
-                                <span class="flex items-center justify-center">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                                    </svg>
-                                    Send Message
-                                </span>
-                            </button>
-                        </div>
-
-                        <!-- Privacy Notice -->
-                        <div class="text-sm text-gray-500 bg-gray-50 p-4 rounded-lg">
-                            <p class="flex items-start">
-                                <svg class="w-4 h-4 mr-2 mt-0.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                By submitting this form, you agree to our <a href="/privacy-policy" class="text-accent hover:underline">Privacy Policy</a>. We'll use your information only to respond to your inquiry and won't share it with third parties.
-                            </p>
-                        </div>
-                    </form>
+                    <!-- Privacy Notice -->
+                    <div class="text-sm text-gray-500 bg-gray-50 p-4 rounded-lg mt-6">
+                        <p class="flex items-start">
+                            <svg class="w-4 h-4 mr-2 mt-0.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            By submitting this form, you agree to our <a href="/privacy-policy" class="text-accent hover:underline">Privacy Policy</a>. We'll use your information only to respond to your inquiry and won't share it with third parties.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -356,34 +293,7 @@ get_header();
     </section>
 </div>
 
-<!-- Contact Form JavaScript -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('contactForm');
-    
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Here you would typically send the form data to your server
-        // For now, we'll just show a success message
-        
-        const button = form.querySelector('button[type="submit"]');
-        const originalText = button.innerHTML;
-        
-        // Show loading state
-        button.innerHTML = '<span class="flex items-center justify-center"><svg class="w-5 h-5 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Sending...</span>';
-        button.disabled = true;
-        
-        // Simulate form submission
-        setTimeout(() => {
-            alert('Thank you! Your message has been sent successfully. We\'ll get back to you within 24 hours.');
-            form.reset();
-            button.innerHTML = originalText;
-            button.disabled = false;
-        }, 2000);
-    });
-});
-</script>
+
 
 <!-- Breadcrumbs Structured Data -->
 <script type="application/ld+json">

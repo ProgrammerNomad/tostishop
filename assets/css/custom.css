@@ -48,6 +48,102 @@
     @apply p-3 rounded-lg mb-4 border;
 }
 
+/* Contact Form 7 Styling */
+.contact-form-wrapper .wpcf7-form {
+    @apply space-y-6;
+}
+
+/* Labels styling */
+.contact-form-wrapper .wpcf7-form label {
+    @apply block text-sm font-medium text-gray-700 mb-2;
+}
+
+/* All form controls base styling */
+.contact-form-wrapper .wpcf7-form-control {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg transition-colors;
+}
+
+.contact-form-wrapper .wpcf7-form-control:focus {
+    @apply ring-2 ring-red-500 border-transparent outline-none;
+}
+
+/* Text inputs (name, subject) */
+.contact-form-wrapper .wpcf7-text,
+.contact-form-wrapper .wpcf7-email,
+.contact-form-wrapper .wpcf7-tel {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg transition-colors;
+}
+
+.contact-form-wrapper .wpcf7-text:focus,
+.contact-form-wrapper .wpcf7-email:focus,
+.contact-form-wrapper .wpcf7-tel:focus {
+    @apply ring-2 ring-red-500 border-transparent outline-none;
+}
+
+/* Textarea for message */
+.contact-form-wrapper .wpcf7-textarea {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg transition-colors min-h-32 resize-y;
+}
+
+.contact-form-wrapper .wpcf7-textarea:focus {
+    @apply ring-2 ring-red-500 border-transparent outline-none;
+}
+
+/* Select dropdowns */
+.contact-form-wrapper .wpcf7-select {
+    @apply w-full px-4 py-3 border border-gray-300 rounded-lg transition-colors bg-white;
+}
+
+.contact-form-wrapper .wpcf7-select:focus {
+    @apply ring-2 ring-red-500 border-transparent outline-none;
+}
+
+/* Submit button styling */
+.contact-form-wrapper .wpcf7-submit {
+    @apply w-full px-6 py-4 bg-red-600 text-white font-semibold rounded-lg transition-colors cursor-pointer border-0;
+}
+
+.contact-form-wrapper .wpcf7-submit:hover {
+    @apply bg-red-700;
+}
+
+.contact-form-wrapper .wpcf7-submit:focus {
+    @apply ring-2 ring-red-500 ring-offset-2 outline-none;
+}
+
+/* Response messages */
+.contact-form-wrapper .wpcf7-response-output {
+    @apply p-4 rounded-lg mt-4 border;
+}
+
+.contact-form-wrapper .wpcf7-mail-sent-ok {
+    @apply bg-green-50 border-green-300 text-green-800;
+}
+
+.contact-form-wrapper .wpcf7-validation-errors,
+.contact-form-wrapper .wpcf7-mail-sent-ng {
+    @apply bg-red-50 border-red-300 text-red-800;
+}
+
+/* Validation styling */
+.contact-form-wrapper .wpcf7-not-valid-tip {
+    @apply text-red-600 text-sm mt-1 block;
+}
+
+.contact-form-wrapper .wpcf7-form-control.wpcf7-not-valid {
+    @apply border-red-300 ring-2 ring-red-200;
+}
+
+/* Form wrapper spacing */
+.contact-form-wrapper .wpcf7-form p {
+    @apply mb-6;
+}
+
+/* Loading spinner */
+.contact-form-wrapper .wpcf7-spinner {
+    @apply inline-block ml-2;
+}
+
 .woocommerce-error {
     @apply bg-red-50 border-red-300 text-red-700;
 }

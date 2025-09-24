@@ -19,10 +19,10 @@ global $woocommerce;
 <div class="tostishop-homepage">
 
     <!-- 1. Hero Section -->
-    <section class="hero-section relative bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900 text-white overflow-hidden">
+    <section class="hero-section relative bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900 text-white pt-16 pb-40 overflow-hidden">
         <div class="absolute inset-0 bg-black opacity-20"></div>
         <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="py-16 md:py-24 lg:py-32 text-center">
+            <div class="text-center">
                 <!-- Hero Content -->
                 <div class="max-w-4xl mx-auto">
                     <h1 class="text-3xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
