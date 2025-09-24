@@ -21,7 +21,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 if ( $cross_sells ) : ?>
 
-	<div class="cross-sells pt-8 pb-8 lg:pt-12" aria-labelledby="cross-sells-heading">
+	<div class="cross-sells p-8 lg:pt-12" aria-labelledby="cross-sells-heading">
 		
 		<header class="mb-6 text-center lg:text-left">
 			<h2 id="cross-sells-heading" class="text-xl lg:text-2xl font-bold text-gray-900 mb-2">
