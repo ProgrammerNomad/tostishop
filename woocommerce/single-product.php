@@ -1150,7 +1150,7 @@ if ( count( $related_products ) < 10 ) {
 
 if ( ! empty( $related_products ) ) :
 ?>
-<section class="mt-16 mb-8 bg-gray-500">
+<section class="mt-16 mb-8 bg-gray-300">
     <div class="w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div class="mb-8">
             <h2 class="text-2xl md:text-3xl font-bold text-navy-900 mb-2">
