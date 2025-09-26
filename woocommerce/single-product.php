@@ -221,7 +221,7 @@ if ($product && is_a($product, 'WC_Product') && method_exists($product, 'get_nam
         'sameAs' => array(
             // Add your social media profiles here
             'https://www.facebook.com/tostishop',
-            'https://www.instagram.com/tostishop',
+            'https://www.instagram.com/tostishops',
             'https://www.twitter.com/tostishop'
         )
     );

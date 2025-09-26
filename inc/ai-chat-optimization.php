@@ -79,8 +79,8 @@ function tostishop_ai_business_context() {
         // Social Media
         'sameAs' => [
             'https://www.facebook.com/tostishop',
-            'https://www.instagram.com/tostishop',
-            'https://www.pinterest.com/tostishop'
+            'https://www.instagram.com/tostishops',
+            'https://www.pinterest.com/tostishops'
         ],
         
         // Business Features

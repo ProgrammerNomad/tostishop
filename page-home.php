@@ -617,7 +617,7 @@ global $woocommerce;
         },
         "sameAs": [
             "https://www.facebook.com/tostishop",
-            "https://www.instagram.com/tostishop", 
+            "https://www.instagram.com/tostishops", 
             "https://www.twitter.com/tostishop"
         ]
     }

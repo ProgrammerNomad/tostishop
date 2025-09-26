@@ -125,8 +125,8 @@ function tostishop_business_structured_data() {
         ],
         'sameAs' => [
             'https://www.facebook.com/tostishop',
-            'https://www.instagram.com/tostishop',
-            'https://www.pinterest.com/tostishop'
+            'https://www.instagram.com/tostishops',
+            'https://www.pinterest.com/tostishops'
         ],
         'foundingDate' => '2024',
         'slogan' => 'Your one-stop shop for beauty and personal care',
@@ -262,7 +262,7 @@ function tostishop_ai_chat_structured_data() {
         ),
         'sameAs' => array(
             'https://www.facebook.com/tostishop',
-            'https://www.instagram.com/tostishop',
+            'https://www.instagram.com/tostishops',
             'https://www.twitter.com/tostishop'
         )
     );
