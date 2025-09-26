@@ -501,7 +501,16 @@ global $woocommerce;
                                     <?php echo get_the_date(); ?>
                                 </time>
                                 <span class="mx-2">•</span>
-                                <span><?php echo esc_html(get_the_category_list(', ')); ?></span>
+                                <span><?php 
+                                    $categories = get_the_category();
+                                    if ($categories) {
+                                        $category_names = array();
+                                        foreach ($categories as $category) {
+                                            $category_names[] = $category->name;
+                                        }
+                                        echo esc_html(implode(', ', $category_names));
+                                    }
+                                ?></span>
                             </div>
                             
                             <h3 class="text-xl font-semibold text-navy-900 mb-3 hover:text-accent transition-colors duration-200">
